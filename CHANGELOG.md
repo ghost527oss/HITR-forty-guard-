@@ -312,3 +312,16 @@ All notable changes to this project are documented here. Format inspired by
 - **Humidity factor** — same: requires real FortyGuard API.
 - **Vulnerable-population data** (age, income, equity density) — currently approximated
   via school + transit + hospital density within 800m. Could be sharper with census data.
+
+## [v0.6.6] — 2026-08-23
+### Fixed — Audit triplet: #1 + #2 + #6 (small frontend cleanup)
+- **#1 Map re-centering on city search.** The flyTo effect was already in the working tree
+  (committed in earlier session). Added explicit `Audit #1 fix:` comment so the next agent
+  doesn't regress it. Trigger: change in `[center.lat, center.lng, zoom]` props → smooth flyTo.
+- **#2 Heat-overlay race on first load.** The `isStyleLoaded()` + `map.once("load")` guard was
+  already in the working tree. Added explicit `Audit #2 fix:` comment. Trigger: heat data resolves
+  before base style loads — without the guard, `addSource` throws and the overlay never appears.
+- **#6 Dead `askAi()` GET wrapper removed.** `frontend/src/api.ts` defined `askAi(q)` that called
+  `GET /api/ai/ask?q=` — but the backend only has `POST /api/ai/ask`. The function was never called
+  anywhere. Removed the function definition. The `AiAnswer` interface is kept for now (legacy
+  reference). The live path remains `askAssistant()` (POST).

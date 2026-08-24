@@ -92,14 +92,17 @@ export default function MapView({ center, zoom, onPick, onBoxSelected, heatData,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Move map when center prop changes.
+  // Audit #1 fix: move map when center prop changes (e.g. user searched a new city).
+  // Do NOT remove this effect — without it, the map stays on the initial city.
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     map.flyTo({ center: [center.lng, center.lat], zoom, duration: 1500 });
   }, [center.lat, center.lng, zoom]);
 
-  // Render heat overlay as FortyGuard-style colored rectangle tiles.
+  // Audit #2 fix: render heat overlay as FortyGuard-style colored rectangle tiles.
+  // Guard against MapLibre style not being ready — calling addSource before the
+  // style's "load" event fires throws and the heat overlay never appears.
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !heatData || !heatData.length) return;

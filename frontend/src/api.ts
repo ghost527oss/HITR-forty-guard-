@@ -303,9 +303,10 @@ export interface AiAnswer {
   contacts?: { label: string; phone: string }[];
 }
 
-export function askAi(q: string): Promise<AiAnswer> {
-  return get<AiAnswer>(`/api/ai/ask?q=${encodeURIComponent(q)}`);
-}
+// Audit #6 fix: removed unused `askAi()` GET wrapper. The live assistant path
+// is `askAssistant()` (POST /api/ai/ask, with {question} body). The GET route
+// never existed in the backend (405 Method Not Allowed if anything called it).
+// `AiAnswer` interface kept for now — it's the response shape of the legacy GET.
 
 export function getHeatGrid(
   lat: number,
