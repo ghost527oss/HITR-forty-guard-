@@ -65,7 +65,9 @@ export default function AssistantScreen() {
         </div>
         {stats && (
           <span className="rounded-full bg-gray-100 px-3 py-1 text-xs text-gray-500">
-            {stats.health_conditions + stats.encyclopedia + stats.buildings} topics
+            {((stats.knowledge?.health_conditions ?? stats.health_conditions ?? 0) +
+              (stats.knowledge?.encyclopedia ?? stats.encyclopedia ?? 0) +
+              (stats.knowledge?.buildings ?? stats.buildings ?? 0))} topics
           </span>
         )}
       </div>

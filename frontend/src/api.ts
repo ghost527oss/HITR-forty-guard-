@@ -12,10 +12,21 @@ export interface HeatReading {
   measured_at: string;
 }
 
+// FortyGuard-style colored tile cell (rectangle)
+export interface HeatCell {
+  lat: number;
+  lng: number;
+  temp_f: number;
+  temp_c: number;
+  risk: string;
+  color: string;
+  source: string;
+}
+
 export interface HeatGridResponse {
   provider: string;
   count: number;
-  points: HeatReading[];
+  cells: HeatCell[];
 }
 
 export interface LandInfo {
@@ -28,6 +39,22 @@ export interface LandInfo {
 export interface SpotAnalysis {
   heat: HeatReading;
   land: LandInfo;
+  summary: string;
+}
+
+// Point 4: Pattern recognition result
+export interface PatternAnalysis {
+  lat: number;
+  lng: number;
+  kind: string;
+  land_label: string;
+  temp_f: number;
+  temp_c: number;
+  risk: string;
+  heat_severity: number;
+  heat_severity_pct: string;
+  pattern: string;
+  pattern_label: string;
   summary: string;
 }
 
@@ -48,16 +75,122 @@ export interface Plan {
   change_label: string;
   land: LandInfo;
   temp_f: number;
+  temp_c: number;
   risk: string;
+  pattern: string;
+  pattern_label: string;
   interventions: Intervention[];
 }
 
-export type ChangeLevel = 1 | 2 | 3;
-export const CHANGE_LEVELS: { value: ChangeLevel; label: string }[] = [
-  { value: 1, label: "Light" },
-  { value: 2, label: "Medium" },
-  { value: 3, label: "Full re-plan" },
+// Point 5: 5 change levels (0=observe, 1=light, 2=medium, 3=re-plan, 4=rebuild)
+export type ChangeLevel = 0 | 1 | 2 | 3 | 4;
+export const CHANGE_LEVELS: { value: ChangeLevel; label: string; desc: string }[] = [
+  { value: 0, label: "None", desc: "Just observe current conditions. No interventions." },
+  { value: 1, label: "Light", desc: "Add trees, shade & water. City looks the same." },
+  { value: 2, label: "Medium", desc: "Plus building retrofit & orientation guidance." },
+  { value: 3, label: "Re-plan", desc: "Redesign block layout, solar, water features." },
+  { value: 4, label: "Rebuild", desc: "Full redevelopment: new streets, grid, & zoning." },
 ];
+
+// Point 3: California cities for quick-select
+export interface CaliforniaCity {
+  name: string;
+  lat: number;
+  lng: number;
+  region: string;
+}
+
+export const CALIFORNIA_CITIES: CaliforniaCity[] = [
+  { name: "Los Angeles",    lat: 34.0522, lng: -118.2437, region: "Southern California" },
+  { name: "San Francisco",  lat: 37.7749, lng: -122.4194, region: "Northern California" },
+  { name: "San Diego",      lat: 32.7157, lng: -117.1611, region: "Southern California" },
+  { name: "Sacramento",     lat: 38.5816, lng: -121.4944, region: "Central Valley" },
+  { name: "Fresno",         lat: 36.7378, lng: -119.7871, region: "Central Valley" },
+  { name: "San Jose",       lat: 37.3382, lng: -121.8863, region: "Northern California" },
+  { name: "Oakland",        lat: 37.8044, lng: -122.2712, region: "Northern California" },
+  { name: "Bakersfield",    lat: 35.3733, lng: -119.0187, region: "Central Valley" },
+  { name: "Palm Springs",   lat: 33.8303, lng: -116.5453, region: "Desert" },
+  { name: "Death Valley",   lat: 36.5323, lng: -116.9325, region: "Desert" },
+];
+
+export interface POI {
+  name: string;
+  category: string;
+  lat: number;
+  lng: number;
+}
+
+export interface POIResponse {
+  pois: POI[];
+}
+
+export interface SurfaceCell {
+  lat: number;
+  lng: number;
+  temp_f: number;
+  risk: string;
+  land_kind: string;
+  land_label: string;
+}
+
+export interface HeatZone {
+  kind: "hotspot" | "coolspot";
+  label: string;
+  severity: number;
+  peak_temp_f: number;
+  center_lat: number;
+  center_lng: number;
+  area_cells: number;
+  land_kinds: string[];
+  pattern: string;
+  pattern_explanation: string;
+  cells: { lat: number; lng: number; temp_f: number }[];
+}
+
+export interface TemporalSample {
+  diurnal_sampling: { hour: number; surface_avg_f: number; surface_min_f: number; surface_max_f: number; hotspot_count: number; coolspot_count: number }[];
+  seasonal_sampling: { month: number; surface_avg_f: number; surface_min_f: number; surface_max_f: number }[];
+  hours_analyzed: number[];
+  months_analyzed: number[];
+}
+
+export interface HeatSurfaceResult {
+  center_lat: number;
+  center_lng: number;
+  radius_m: number;
+  resolution: number;
+  rows: number;
+  cols: number;
+  lat_min: number;
+  lat_max: number;
+  lng_min: number;
+  lng_max: number;
+  surface_min_f: number;
+  surface_max_f: number;
+  surface_avg_f: number;
+  hotspots: HeatZone[];
+  coolspots: HeatZone[];
+  temporal: TemporalSample | null;
+  grid_sample: SurfaceCell[];
+}
+
+export interface CitySimulation3D {
+  center: { lat: number; lng: number };
+  buildings: { lat: number; lng: number; height_m: number; temp_f: number }[];
+  roads: { lat: number; lng: number; access_weight: number; temp_f: number }[];
+  vegetation: { lat: number; lng: number; temp_f: number }[];
+  hospitals: POI[];
+  interventions: { type: "tree" | "water_point"; lat: number; lng: number; target_temp_f: number; projected_reduction: number; reason: string }[];
+  stats: { avg_temp: number; max_temp: number; building_count: number; hospital_accessible: boolean };
+}
+
+export interface TrainingResult {
+  status: string;
+  iterations: number;
+  accuracy: number;
+  model_weights: Record<string, number>;
+  logs: string[];
+}
 
 async function get<T>(path: string): Promise<T> {
   const res = await fetch(path);
@@ -75,14 +208,38 @@ export function analyzeSpot(lat: number, lng: number): Promise<SpotAnalysis> {
   return get<SpotAnalysis>(`/api/analysis/spot?lat=${lat}&lng=${lng}`);
 }
 
-export function getPlan(
+export function analyzePattern(lat: number, lng: number): Promise<PatternAnalysis> {
+  return get<PatternAnalysis>(`/api/analysis/pattern?lat=${lat}&lng=${lng}`);
+}
+
+export function getNearbyPOIs(lat: number, lng: number, radius = 500): Promise<POIResponse> {
+  return get<POIResponse>(`/api/analysis/pois?lat=${lat}&lng=${lng}&radius=${radius}`);
+}
+
+export function getHeatSurface(
   lat: number,
   lng: number,
-  changeLevel: ChangeLevel,
-): Promise<Plan> {
-  return get<Plan>(
-    `/api/planner/plan?lat=${lat}&lng=${lng}&change_level=${changeLevel}`,
+  radius_m = 150,
+  resolution = 12,
+): Promise<HeatSurfaceResult> {
+  return get<HeatSurfaceResult>(
+    `/api/analysis/surface?lat=${lat}&lng=${lng}&radius_m=${radius_m}&resolution=${resolution}`,
   );
+}
+
+export function getCitySimulation3D(
+  lat: number,
+  lng: number,
+  radius_m = 150,
+): Promise<CitySimulation3D> {
+  return get<CitySimulation3D>(
+    `/api/analysis/simulation_3d?lat=${lat}&lng=${lng}&radius_m=${radius_m}`,
+  );
+}
+
+export async function trainModel(): Promise<TrainingResult> {
+  const res = await fetch("/api/analysis/train", { method: "POST" });
+  return res.json();
 }
 
 export interface AssistantReply {
@@ -93,12 +250,24 @@ export interface AssistantReply {
 }
 
 export interface KnowledgeStats {
-  cities: number;
-  health_conditions: number;
-  emergency_contacts: number;
-  encyclopedia: number;
-  buildings: number;
-  source: string;
+  // Flat fields (kept for back-compat with AiPanel; the live API nests them under .knowledge).
+  cities?: number;
+  health_conditions?: number;
+  emergency_contacts?: number;
+  encyclopedia?: number;
+  buildings?: number;
+  source?: string;
+  status?: string;
+  scope?: string;
+  provider?: string;
+  knowledge?: {
+    cities: number;
+    health_conditions: number;
+    emergency_contacts: number;
+    encyclopedia: number;
+    buildings: number;
+    source: string;
+  };
 }
 
 export async function askAssistant(question: string): Promise<AssistantReply> {
@@ -115,6 +284,17 @@ export async function askAssistant(question: string): Promise<AssistantReply> {
 
 export function getKnowledgeStats(): Promise<KnowledgeStats> {
   return get<KnowledgeStats>("/api/ai/status");
+}
+
+// Get a ranked intervention plan for a specific spot (Light/Medium/Re-plan)
+export function getPlan(
+  lat: number,
+  lng: number,
+  changeLevel: number,
+): Promise<Plan> {
+  return get<Plan>(
+    `/api/planner/plan?lat=${lat}&lng=${lng}&change_level=${changeLevel}`,
+  );
 }
 
 export interface AiAnswer {

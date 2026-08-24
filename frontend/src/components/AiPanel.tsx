@@ -61,7 +61,7 @@ export default function AiPanel() {
         <h2 className="font-semibold text-gray-800">Heat Assistant</h2>
         {stats && (
           <span className="text-[10px] text-gray-400" title={`Knowledge base: ${stats.source}`}>
-            {stats.health_conditions + stats.encyclopedia + stats.buildings} topics
+            {((stats.health_conditions ?? 0) + (stats.encyclopedia ?? 0) + (stats.buildings ?? 0))} topics
           </span>
         )}
       </div>

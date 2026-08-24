@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import BottomNav from "./components/BottomNav";
 import HomeScreen from "./screens/HomeScreen";
 import MapScreen from "./screens/MapScreen";
@@ -6,11 +6,18 @@ import AssistantScreen from "./screens/AssistantScreen";
 import PlannerScreen from "./screens/PlannerScreen";
 import ToolsScreen from "./screens/ToolsScreen";
 import SettingsScreen from "./screens/SettingsScreen";
+import EmergencyScreen from "./screens/EmergencyScreen";
+import DatabaseScreen from "./screens/DatabaseScreen";
+import HeatSurfaceScreen from "./screens/HeatSurfaceScreen";
+import CitySimulationScreen from "./screens/CitySimulationScreen";
+import TrainingScreen from "./screens/TrainingScreen";
+import AlertBanner from "./components/AlertBanner";
 import {
   analyzeSpot,
   getPlan,
   type ChangeLevel,
   type HeatReading,
+  type HeatCell,
   type LandInfo,
   type Plan,
 } from "./api";
@@ -24,7 +31,7 @@ interface Center {
   lng: number;
 }
 
-// Default view — Los Angeles, CA (matches the FortyGuard demo heat map in California).
+// Default view — California focus (Point 3).
 const DEFAULT_CENTER: Center = { lat: 34.0522, lng: -118.2437 };
 const DEFAULT_TITLE = "Los Angeles, CA";
 
@@ -45,32 +52,39 @@ export default function App() {
   const [reading, setReading] = useState<HeatReading | null>(null);
   const [land, setLand] = useState<LandInfo | null>(null);
   const [loading, setLoading] = useState(false);
-  const [heatData, setHeatData] = useState<HeatReading[] | null>(null);
+  const [heatData, setHeatData] = useState<HeatCell[] | null>(null);
   const [units, setUnits] = useState<Units>("imperial");
   const [changeLevel, setChangeLevel] = useState<ChangeLevel>(1);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
 
-  // Load a heat grid around the current center (live heat-map overlay).
+  // Race-condition guards.
+  const clickCounterRef = useRef(0);
+  const planCounterRef = useRef(0);
+
+  // Load a heat grid around the current center.
   useEffect(() => {
     let cancelled = false;
     loadHeatGrid(center.lat, center.lng).then((pts) => {
       if (!cancelled) setHeatData(pts);
     });
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [center]);
 
   const handlePick = useCallback(async (lat: number, lng: number) => {
+    const id = ++clickCounterRef.current;
     setPicked({ lat, lng });
     setLoading(true);
     try {
       const r = await analyzeSpot(lat, lng);
-      setReading(r.heat);
-      setLand(r.land);
+      if (id === clickCounterRef.current) {
+        setReading(r.heat);
+        setLand(r.land);
+      }
     } finally {
-      setLoading(false);
+      if (id === clickCounterRef.current) {
+        setLoading(false);
+      }
     }
   }, []);
 
@@ -87,21 +101,33 @@ export default function App() {
     }
   }, []);
 
-  const handleGeneratePlan = useCallback(async () => {
+  const handleGeneratePlan = useCallback(async (overrideLevel?: ChangeLevel) => {
     if (!picked) return;
+    const level = overrideLevel ?? changeLevel;
+    if (overrideLevel !== undefined) setChangeLevel(level);
+    const id = ++planCounterRef.current;
     setPlanLoading(true);
     try {
-      const p = await getPlan(picked.lat, picked.lng, changeLevel);
-      setPlan(p);
+      const p = await getPlan(picked.lat, picked.lng, level);
+      if (id === planCounterRef.current) {
+        setPlan(p);
+      }
     } finally {
-      setPlanLoading(false);
+      if (id === planCounterRef.current) {
+        setPlanLoading(false);
+      }
     }
   }, [picked, changeLevel]);
 
-  const toggleUnits = useCallback(() => setUnits((u) => (u === "imperial" ? "metric" : "imperial")), []);
+  const toggleUnits = useCallback(
+    () => setUnits((u) => (u === "imperial" ? "metric" : "imperial")),
+    []
+  );
 
   return (
     <div className="relative h-full w-full overflow-hidden">
+      <AlertBanner temperature={reading?.temp_f ?? null} location={title} />
+
       <main className="absolute inset-0 bottom-12">
         {view === "home" && (
           <HomeScreen
@@ -110,6 +136,7 @@ export default function App() {
             temp={reading ? `${reading.temp_f}°F` : "—"}
           />
         )}
+
         {view === "map" && (
           <MapScreen
             center={center}
@@ -124,21 +151,53 @@ export default function App() {
             units={units}
             onToggleUnits={toggleUnits}
             heatData={heatData}
+            onViewSurface={() => setView("heat_surface")}
           />
         )}
+
+        {view === "database" && (
+          <DatabaseScreen onBack={() => setView("map")} />
+        )}
+
         {view === "assistant" && <AssistantScreen />}
+
         {view === "planner" && (
           <PlannerScreen
             changeLevel={changeLevel}
             onSetChangeLevel={setChangeLevel}
             plan={plan}
             loading={planLoading}
-            onGenerate={handleGeneratePlan}
+            onGenerate={() => handleGeneratePlan()}
             hasPicked={!!picked}
             onGoMap={() => setView("map")}
           />
         )}
+
+        {view === "heat_surface" && picked && (
+          <HeatSurfaceScreen
+            lat={picked.lat}
+            lng={picked.lng}
+            locationName={title}
+            onBack={() => setView("map")}
+          />
+        )}
+
+        {view === "city_simulation" && picked && (
+          <CitySimulationScreen
+            lat={picked.lat}
+            lng={picked.lng}
+            locationName={title}
+            onBack={() => setView("planner")}
+          />
+        )}
+
+        {view === "training" && (
+          <TrainingScreen onBack={() => setView("settings")} />
+        )}
+
         {view === "tools" && <ToolsScreen />}
+        {view === "emergency" && <EmergencyScreen onBack={() => setView("tools")} />}
+
         {view === "settings" && (
           <SettingsScreen
             location={title}
@@ -148,6 +207,7 @@ export default function App() {
           />
         )}
       </main>
+
       <BottomNav active={view} onNavigate={setView} />
     </div>
   );

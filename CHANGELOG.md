@@ -3,6 +3,24 @@
 All notable changes to this project are documented here. Format inspired by
 [Keep a Changelog](https://keepachangelog.com/). Versioning: `v0.x` for pre-release planning/build.
 
+## [v0.6.0] — 2026-08-23
+### Fixed — P0 audit review (3-item triplet)
+- **Knowledge-stats badge (`AssistantScreen.tsx`).** Was rendering `NaN topics` because the
+  endpoint payload nests counts under `.knowledge` and the UI summed the top-level (undefined)
+  fields. Now reads from `.knowledge.*` with fallback to flat fields; result is the actual integer
+  topic count (e.g. "23 topics"). Mirrored same fix in dead `AiPanel.tsx` so the build stays clean.
+- **Map re-centering on city search (`MapView.tsx`).** The flyTo effect was already in the working
+  tree; this commit just preserves it so a future revert can't silently regress it.
+- **Heat-overlay race on first load (`MapView.tsx`).** The `isStyleLoaded()` + `map.once("load")`
+  guard is preserved into the commit; same reason.
+- **Type for `KnowledgeStats`** (`api.ts`) updated to match real backend payload (`{ status, scope,
+  provider, knowledge: { ... } }`). Flat fields kept optional for back-compat with dead `AiPanel.tsx`.
+- **Documentation:** `AGENT_HANDOFF.md` updated with the audit's 30 findings + this triplet's fixes.
+### Added
+- **Missing imports in `App.tsx`** for the four untracked screens (`DatabaseScreen`, `HeatSurfaceScreen`,
+  `CitySimulationScreen`, `TrainingScreen`) so the build compiles. Screens themselves were already
+  on disk; no behavioural change.
+
 ## [v0.5.0] — 2026-08-20
 ### Added — App redesign: home screen + bottom navigation (display layer)
 - **Navigation:** new `src/nav.ts` + `BottomNav` bottom toolbar (Home, Heat Map, Assistant, Planner,
