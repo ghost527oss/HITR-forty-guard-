@@ -30,7 +30,7 @@ vision in `docs/vision.md`):
 - `cities` — city metadata & bounds.
 - `buildings` — architecture/building designs in plain language (cooling, energy, materials, climate).
 - `health_conditions` — heat illnesses: symptoms, first-aid steps, severity.
-- `emergency_contacts` — per-city emergency / helpline / hospital / heat-holotline numbers.
+- `emergency_contacts` — per-city emergency / helpline / hospital / heat-hotline numbers.
 - `encyclopedia` — browsable knowledge entries (heat/crops/buildings/shade/water).
 - `saved_plans` — a person's saved district plan (with change_level).
 - `pois` — water stations, shade points, hospitals, schools, markets (geospatial).

@@ -263,3 +263,15 @@ All notable changes to this project are documented here. Format inspired by
 - 13/13 pattern-recognition + city endpoints return 200 against the FastAPI test client.
 - Backend `py_compile` clean on every file.
 - Frontend `tsc --noEmit` clean.
+
+## [v0.6.4] — 2026-08-23
+### Fixed — Cleanup triplet (audit #28 + #29 + #30)
+- **#28 Deleted dead components.** `frontend/src/components/AiPanel.tsx` and
+  `PlannerPanel.tsx` were left over from an earlier sidebar design — neither is
+  imported anywhere now (verified via grep). The full-screen `AssistantScreen.tsx`
+  and `PlannerScreen.tsx` are the live versions. Removed.
+- **#29 Removed unused `httpx` import.** `backend/app/services/fortyguard_client.py`
+  imported `httpx` but the only HTTP call is commented out (the real endpoint
+  shape is pending FortyGuard docs). Removed the import; module still compiles.
+- **#30 Typo fix.** `docs/data.md` had `heat-holotline` (extra "lo"). Fixed to
+  `heat-hotline`. Pure documentation drift; no code or behavior change.
