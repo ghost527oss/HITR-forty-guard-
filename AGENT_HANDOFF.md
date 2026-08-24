@@ -293,3 +293,71 @@ These are repeated requests the user has made — the next agent should respect 
 8. Provide merge-link + Vercel-link at the end of every response.
 
 Good luck. The current baseline builds; everything else is upside.
+
+## Part 17 — Recent fixes (audit-driven)
+
+The audit review identified 30 issues. Fixes are being applied in **triplets, one commit per triplet, never force-pushed**:
+
+| Version | Audit # | What it fixes | Files |
+|---------|---------|---------------|-------|
+| v0.6.0 | #3 | NaN topics badge (typed `KnowledgeStats` to match real `/api/ai/status`) | `frontend/src/api.ts`, `frontend/src/screens/AssistantScreen.tsx` |
+| v0.6.1 | #7, #8, #24 | Silent async failures → status banner; Home shows real temp with units; picked-spot pin on map | `frontend/src/App.tsx`, `frontend/src/components/MapView.tsx`, `frontend/src/screens/MapScreen.tsx` |
+| (next triplet) | TBD | e.g. #10/#11/#30 | backend data integrity |
+
+## Part 18 — Audit findings status (as of v0.6.1)
+
+| # | Bug | Status |
+|---|-----|--------|
+| 1 | Map doesn't move on city search | Already fixed in working tree (preserved by v0.6.0) |
+| 2 | Heat overlay race | Already fixed in working tree (preserved by v0.6.0) |
+| 3 | NaN topics badge | FIXED v0.6.0 |
+| 7 | Silent async failures | FIXED v0.6.1 |
+| 8 | Home shows — | FIXED v0.6.1 |
+| 24 | No pin on picked spot | FIXED v0.6.1 |
+| 4 | FortyGuard 500s on real mode | Deferred — user says no API keys yet |
+| 5 | Vercel deploy broken | Deferred — needs backend on Vercel |
+| 6 | askAi() GET 405s | Deferred — dead code |
+| 9 | browse ignores Supabase | Deferred |
+| 10 | emergency schema mismatch | TODO |
+| 11 | first-aid lies on miss | TODO |
+| 12 | intent routing wrong | TODO |
+| 13 | farmland crop-row wrong impact | TODO |
+| 14 | planner not data-driven | TODO — biggest item |
+| 15 | seed duplicates on re-run | TODO |
+| 16 | Nominatim no User-Agent | TODO |
+| 17 | risk scale no "comfortable" | TODO |
+| 18 | _field no-op on strings | TODO |
+| 19 | Supabase client cache forever | TODO |
+| 20 | heat provider double-construct | TODO |
+| 21 | grid no lat/lng validation | TODO |
+| 22 | settings theme/notifications dead | TODO |
+| 23 | tools folders empty | TODO |
+| 25 | click handler closure | TODO |
+| 26 | version drift | TODO |
+| 27 | docs describe features that don't exist | TODO |
+| 28 | dead AiPanel/PlannerPanel | TODO (AiPanel kept for now, has `?? 0` fallback) |
+| 29 | unused httpx import | TODO |
+| 30 | heat-holotline typo | TODO |
+
+## Part 19 — How pattern recognition is going (honest)
+
+- **Pattern Recognition coverage: ~15%.**
+- Committed: `/api/analysis/pattern` endpoint + simple land-use classification.
+- **Untracked on disk only** (never tested, never committed):
+  - `backend/app/services/heat_surface.py` — 3D temperature raster analysis
+  - `backend/app/services/city_simulation.py` — 3D city twin
+  - `backend/app/services/trainer.py` — heuristic trainer
+  - All frontend pattern-recognition screens
+- **Not started at all** (audit #14): real planner that uses POIs + wind + equity instead of templates.
+
+**Pattern recognition is the user's #1 ask but it depends on:**
+1. Real FortyGuard API data (not yet wired — audit #4)
+2. A real planner engine (audit #14 — biggest fix item)
+3. Validated/committed pattern surface, city simulation, trainer
+
+The next agent should **NOT push the untracked pattern-recognition files** until:
+- They're individually type-checked
+- They pass an end-to-end test against the backend test client
+- They've been confirmed to integrate with `App.tsx` and don't break Vercel
+
+Otherwise we'll recreate the same chaos as tonight's session.

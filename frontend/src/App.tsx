@@ -57,17 +57,36 @@ export default function App() {
   const [changeLevel, setChangeLevel] = useState<ChangeLevel>(1);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
 
   // Race-condition guards.
   const clickCounterRef = useRef(0);
   const planCounterRef = useRef(0);
 
+  // Bug #8 fix: Home screen should show a real temperature for the default city.
+  // Fetch on mount + whenever the city (center) changes via search.
+  useEffect(() => {
+    let cancelled = false;
+    analyzeSpot(center.lat, center.lng)
+      .then((r) => {
+        if (!cancelled) setReading(r.heat);
+      })
+      .catch(() => {
+        // Silent — Home falls back to "—" if backend is down.
+      });
+    return () => { cancelled = true; };
+  }, [center.lat, center.lng]);
+
   // Load a heat grid around the current center.
   useEffect(() => {
     let cancelled = false;
-    loadHeatGrid(center.lat, center.lng).then((pts) => {
-      if (!cancelled) setHeatData(pts);
-    });
+    loadHeatGrid(center.lat, center.lng)
+      .then((pts) => {
+        if (!cancelled) setHeatData(pts);
+      })
+      .catch((err) => {
+        if (!cancelled) setStatus(`Couldn't load heat map: ${err.message}`);
+      });
     return () => { cancelled = true; };
   }, [center]);
 
@@ -75,11 +94,16 @@ export default function App() {
     const id = ++clickCounterRef.current;
     setPicked({ lat, lng });
     setLoading(true);
+    setStatus(null);
     try {
       const r = await analyzeSpot(lat, lng);
       if (id === clickCounterRef.current) {
         setReading(r.heat);
         setLand(r.land);
+      }
+    } catch (err: any) {
+      if (id === clickCounterRef.current) {
+        setStatus(`Couldn't read this spot: ${err?.message ?? "network error"}`);
       }
     } finally {
       if (id === clickCounterRef.current) {
@@ -90,14 +114,21 @@ export default function App() {
 
   const handleSearch = useCallback(async (q: string) => {
     if (!q.trim()) return;
-    const c = await geocode(q.trim());
-    if (c) {
-      setCenter(c);
-      setTitle(q.trim());
-      setPicked(null);
-      setReading(null);
-      setLand(null);
-      setPlan(null);
+    setStatus(null);
+    try {
+      const c = await geocode(q.trim());
+      if (c) {
+        setCenter(c);
+        setTitle(q.trim());
+        setPicked(null);
+        setReading(null);
+        setLand(null);
+        setPlan(null);
+      } else {
+        setStatus(`Couldn't find "${q}". Try a US city name.`);
+      }
+    } catch (err: any) {
+      setStatus(`Search failed: ${err?.message ?? "network error"}`);
     }
   }, []);
 
@@ -107,10 +138,15 @@ export default function App() {
     if (overrideLevel !== undefined) setChangeLevel(level);
     const id = ++planCounterRef.current;
     setPlanLoading(true);
+    setStatus(null);
     try {
       const p = await getPlan(picked.lat, picked.lng, level);
       if (id === planCounterRef.current) {
         setPlan(p);
+      }
+    } catch (err: any) {
+      if (id === planCounterRef.current) {
+        setStatus(`Couldn't generate plan: ${err?.message ?? "network error"}`);
       }
     } finally {
       if (id === planCounterRef.current) {
@@ -127,13 +163,27 @@ export default function App() {
   return (
     <div className="relative h-full w-full overflow-hidden">
       <AlertBanner temperature={reading?.temp_f ?? null} location={title} />
+      {status && (
+        <div className="absolute top-10 left-0 right-0 z-40 bg-amber-100 border-b border-amber-300 px-4 py-2 text-xs text-amber-900 text-center">
+          {status}
+          <button
+            onClick={() => setStatus(null)}
+            className="ml-2 font-bold text-amber-700 hover:text-amber-900"
+            aria-label="Dismiss"
+          >✕</button>
+        </div>
+      )}
 
       <main className="absolute inset-0 bottom-12">
         {view === "home" && (
           <HomeScreen
             onNavigate={setView}
             location={title}
-            temp={reading ? `${reading.temp_f}°F` : "—"}
+            temp={reading
+              ? (units === "imperial"
+                  ? `${reading.temp_f}°F`
+                  : `${reading.temp_c}°C`)
+              : "—"}
           />
         )}
 

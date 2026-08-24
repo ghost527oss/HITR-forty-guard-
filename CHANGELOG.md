@@ -3,6 +3,18 @@
 All notable changes to this project are documented here. Format inspired by
 [Keep a Changelog](https://keepachangelog.com/). Versioning: `v0.x` for pre-release planning/build.
 
+## [v0.6.1] — 2026-08-23
+### Fixed — User-flow polish (audit triplet: #7 + #8 + #24)
+- **#7 Silent async failures.** Added `try/catch` and a `status` banner to all three async handlers
+  in `App.tsx`: `handleSearch`, `handlePick`, `handleGeneratePlan`, plus the heat-grid load.
+  Network errors now show an amber banner with a dismiss button instead of crashing silently.
+- **#8 Home screen temperature.** `App.tsx` now fetches the current city's temperature on mount and
+  whenever the city changes (via search). Home screen displays the real temperature in the user's
+  selected units (°F for imperial, °C for metric). Falls back to "—" if the backend is unreachable.
+- **#24 Pin on picked map spot.** `MapView.tsx` now drops an orange marker (`#ea580c`) at the picked
+  coordinates. The marker is removed when `picked` is null and re-created when the user picks a new
+  spot. `MapScreen.tsx` passes the picked coordinates through.
+
 ## [v0.6.0] — 2026-08-23
 ### Fixed — P0 audit review (3-item triplet)
 - **Knowledge-stats badge (`AssistantScreen.tsx`).** Was rendering `NaN topics` because the
