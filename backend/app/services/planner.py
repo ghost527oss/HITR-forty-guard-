@@ -155,3 +155,105 @@ def landuse_heat(lat: float, lng: float) -> dict:
     from ..config import settings
     provider = build_provider(use_mock=settings.use_mock_heat)
     return provider.get_temperature(lat, lng).to_dict()
+
+
+def analyze_pattern(lat: float, lng: float) -> dict:
+    """
+    Heat-pattern classification for a single coordinate.
+
+    Inputs: lat, lng.
+    Outputs: heat reading, land classification, detected pattern key
+    (urban_heat_island | road_heat_trap | building_heat | cool_zone |
+    water_cooling | farmland_heat | open_exposure | mixed_zone),
+    heat severity (0..1), and a human-readable summary.
+
+    Used by GET /api/analysis/pattern (pattern-recognition endpoint).
+    """
+    # Heat + land use are the inputs; the pattern classification is the output.
+    from .heat_provider import build_provider
+    from ..config import settings
+    from . import landuse
+
+    provider = build_provider(use_mock=settings.use_mock_heat)
+    heat = provider.get_temperature(lat, lng).to_dict()
+    land = landuse.classify_spot(lat, lng)
+
+    h = _heat_score(heat["temp_f"])
+    kind = land["kind"]
+
+    # Pattern rule (matches the rules in heat_surface._zone_pattern, kept simple here):
+    is_hot = h >= 0.5
+    if is_hot:
+        if kind == "building":
+            pattern = "building_heat"
+            label = "Building Heat"
+            explanation = (
+                "Buildings trap heat from AC exhaust, dark roofs, and low albedo. "
+                "Tree-lined streets + cool roofs reduce by -2 to -4 C."
+            )
+        elif kind == "road":
+            pattern = "road_heat_trap"
+            label = "Road Heat Trap"
+            explanation = (
+                "Dark asphalt absorbs >90% of solar radiation. "
+                "Cool pavement + shade canopy reduce surface temp by -4 to -6 C."
+            )
+        elif kind == "farmland":
+            pattern = "farmland_heat"
+            label = "Farmland Heat Stress"
+            explanation = (
+                "Exposed soil and crops absorb heat. Shelter-belts + crop orientation "
+                "reduce stress by 15-30%."
+            )
+        elif kind == "green":
+            # green should not normally be hot; fall through to mixed
+            pattern = "mixed_zone"
+            label = "Mixed Land Use"
+            explanation = (
+                "Mixed land use with partial shade. Targeted tree planting "
+                "+ green roofs improve comfort."
+            )
+        else:
+            pattern = "open_exposure"
+            label = "Open Exposure"
+            explanation = (
+                "Open ground with no shade heats up fast. "
+                "Tree clusters + shade structures reduce exposure."
+            )
+    else:
+        if kind == "green":
+            pattern = "cool_zone"
+            label = "Park Cool Zone"
+            explanation = (
+                "Trees and grass cool via evapotranspiration. "
+                "This park is 2-5 C cooler than surrounding blocks."
+            )
+        elif kind == "water":
+            pattern = "water_cooling"
+            label = "Water Body Cooling"
+            explanation = (
+                "Water bodies create a microclimate cooling effect, "
+                "lowering nearby temps by -1 to -3 C."
+            )
+        else:
+            pattern = "mixed_zone"
+            label = "Mixed Land Use"
+            explanation = (
+                "Mixed land use with partial shade. "
+                "Targeted tree planting + green roofs improve comfort."
+            )
+
+    return {
+        "lat": lat,
+        "lng": lng,
+        "kind": kind,
+        "land_label": land["label"],
+        "temp_f": heat["temp_f"],
+        "temp_c": heat["temp_c"],
+        "risk": heat["risk"],
+        "heat_severity": h,
+        "heat_severity_pct": _pct(h),
+        "pattern": pattern,
+        "pattern_label": label,
+        "summary": f"{land['label'].capitalize()} at {heat['temp_f']}°F ({heat['risk']}). Pattern: {label}. {explanation}",
+    }

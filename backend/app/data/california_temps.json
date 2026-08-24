@@ -1,0 +1,139 @@
+{
+  "_comment": "Pre-baked California city temperature data for demo + pattern recognition testing. Includes summer afternoon, fall morning, and 24h averages per city. Real FortyGuard API will replace this in production.",
+  "last_updated": "2026-08-23",
+  "cities": {
+    "Los Angeles": {
+      "lat": 34.0522, "lng": -118.2437,
+      "region": "Southern California",
+      "coast_offset_f": -8,
+      "base_summer_f": 95,
+      "summer_afternoon_f": 96.4,
+      "summer_morning_f": 78.2,
+      "fall_morning_f": 68.5,
+      "downtown_anomaly_f": 6.0,
+      "heat_pattern": "urban_heat_island",
+      "neighborhoods": {
+        "Downtown LA": {"lat": 34.0407, "lng": -118.2468, "temp_f": 98.1, "risk": "very_high"},
+        "Santa Monica": {"lat": 34.0195, "lng": -118.4912, "temp_f": 81.3, "risk": "high"},
+        "Hollywood": {"lat": 34.0928, "lng": -118.3287, "temp_f": 95.7, "risk": "very_high"},
+        "Pasadena": {"lat": 34.1478, "lng": -118.1445, "temp_f": 97.2, "risk": "very_high"},
+        "Long Beach": {"lat": 33.7701, "lng": -118.1937, "temp_f": 86.4, "risk": "high"},
+        "Griffith Park": {"lat": 34.1366, "lng": -118.2941, "temp_f": 89.5, "risk": "high"}
+      }
+    },
+    "San Francisco": {
+      "lat": 37.7749, "lng": -122.4194,
+      "region": "Northern California",
+      "coast_offset_f": -15,
+      "base_summer_f": 72,
+      "summer_afternoon_f": 68.4,
+      "summer_morning_f": 58.9,
+      "fall_morning_f": 54.1,
+      "downtown_anomaly_f": 2.0,
+      "heat_pattern": "coastal_microclimate",
+      "neighborhoods": {
+        "Mission District": {"lat": 37.7599, "lng": -122.4148, "temp_f": 73.8, "risk": "high"},
+        "Sunset": {"lat": 37.7510, "lng": -122.4885, "temp_f": 64.1, "risk": "moderate"},
+        "Financial District": {"lat": 37.7937, "lng": -122.4015, "temp_f": 75.2, "risk": "high"},
+        "Golden Gate Park": {"lat": 37.7694, "lng": -122.4862, "temp_f": 66.8, "risk": "moderate"},
+        "Oakland (across bay)": {"lat": 37.8044, "lng": -122.2712, "temp_f": 72.9, "risk": "high"}
+      }
+    },
+    "San Diego": {
+      "lat": 32.7157, "lng": -117.1611,
+      "region": "Southern California",
+      "coast_offset_f": -10,
+      "base_summer_f": 82,
+      "summer_afternoon_f": 79.7,
+      "summer_morning_f": 70.3,
+      "fall_morning_f": 64.8,
+      "downtown_anomaly_f": 3.5,
+      "heat_pattern": "coastal_arid",
+      "neighborhoods": {
+        "Downtown SD": {"lat": 32.7157, "lng": -117.1611, "temp_f": 83.1, "risk": "high"},
+        "La Jolla": {"lat": 32.8427, "lng": -117.2742, "temp_f": 71.2, "risk": "moderate"},
+        "Mission Bay": {"lat": 32.7615, "lng": -117.2211, "temp_f": 76.5, "risk": "moderate"},
+        "El Cajon": {"lat": 32.7948, "lng": -116.9625, "temp_f": 95.4, "risk": "very_high"}
+      }
+    },
+    "Sacramento": {
+      "lat": 38.5816, "lng": -121.4944,
+      "region": "Central Valley",
+      "coast_offset_f": 0,
+      "base_summer_f": 99,
+      "summer_afternoon_f": 100.1,
+      "summer_morning_f": 75.4,
+      "fall_morning_f": 64.0,
+      "downtown_anomaly_f": 4.0,
+      "heat_pattern": "valley_heat",
+      "neighborhoods": {
+        "Midtown": {"lat": 38.5752, "lng": -121.4690, "temp_f": 101.3, "risk": "very_high"},
+        "Natomas": {"lat": 38.6420, "lng": -121.5300, "temp_f": 99.8, "risk": "very_high"},
+        "East Sac": {"lat": 38.5910, "lng": -121.4400, "temp_f": 98.4, "risk": "very_high"},
+        "River Park": {"lat": 38.5914, "lng": -121.4980, "temp_f": 100.2, "risk": "very_high"}
+      }
+    },
+    "Fresno": {
+      "lat": 36.7378, "lng": -119.7871,
+      "region": "Central Valley",
+      "coast_offset_f": 0,
+      "base_summer_f": 102,
+      "summer_afternoon_f": 104.3,
+      "summer_morning_f": 78.1,
+      "fall_morning_f": 65.5,
+      "downtown_anomaly_f": 3.0,
+      "heat_pattern": "valley_heat",
+      "neighborhoods": {
+        "Tower District": {"lat": 36.7467, "lng": -119.7795, "temp_f": 105.1, "risk": "extreme"},
+        "Fig Garden": {"lat": 36.7615, "lng": -119.8025, "temp_f": 103.4, "risk": "extreme"},
+        "Sunnyside": {"lat": 36.7072, "lng": -119.7083, "temp_f": 104.8, "risk": "extreme"}
+      }
+    },
+    "San Jose": {
+      "lat": 37.3382, "lng": -121.8863,
+      "region": "Northern California",
+      "coast_offset_f": -5,
+      "base_summer_f": 88,
+      "summer_afternoon_f": 87.2,
+      "summer_morning_f": 68.0,
+      "fall_morning_f": 60.1,
+      "downtown_anomaly_f": 3.5,
+      "heat_pattern": "urban_heat_island",
+      "neighborhoods": {
+        "Downtown": {"lat": 37.3352, "lng": -121.8911, "temp_f": 89.8, "risk": "high"},
+        "Willow Glen": {"lat": 37.3032, "lng": -121.8895, "temp_f": 86.4, "risk": "high"},
+        "Almaden": {"lat": 37.2416, "lng": -121.8803, "temp_f": 90.1, "risk": "very_high"}
+      }
+    },
+    "Death Valley": {
+      "lat": 36.5323, "lng": -116.9325,
+      "region": "Desert",
+      "coast_offset_f": 0,
+      "base_summer_f": 120,
+      "summer_afternoon_f": 121.5,
+      "summer_morning_f": 92.4,
+      "fall_morning_f": 78.6,
+      "downtown_anomaly_f": 0.0,
+      "heat_pattern": "extreme_heat",
+      "neighborhoods": {
+        "Furnace Creek": {"lat": 36.4619, "lng": -116.8656, "temp_f": 124.7, "risk": "extreme"},
+        "Stovepipe Wells": {"lat": 36.6097, "lng": -117.1450, "temp_f": 119.3, "risk": "extreme"}
+      }
+    },
+    "Palm Springs": {
+      "lat": 33.8303, "lng": -116.5453,
+      "region": "Desert",
+      "coast_offset_f": 0,
+      "base_summer_f": 112,
+      "summer_afternoon_f": 113.8,
+      "summer_morning_f": 84.0,
+      "fall_morning_f": 71.2,
+      "downtown_anomaly_f": 1.5,
+      "heat_pattern": "desert_heat",
+      "neighborhoods": {
+        "Downtown": {"lat": 33.8303, "lng": -116.5453, "temp_f": 113.2, "risk": "extreme"},
+        "Palm Canyon": {"lat": 33.7800, "lng": -116.5400, "temp_f": 110.5, "risk": "extreme"}
+      }
+    }
+  }
+}

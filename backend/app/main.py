@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
-from .routers import ai, analysis, heat, planner
+from .routers import ai, analysis, cities, heat, planner
 
 app = FastAPI(title=settings.app_name, version="0.2.0")
 
@@ -20,6 +20,7 @@ app.include_router(heat.router)
 app.include_router(analysis.router)
 app.include_router(planner.router)
 app.include_router(ai.router)
+app.include_router(cities.router)
 
 
 @app.get("/")

@@ -220,3 +220,46 @@ All notable changes to this project are documented here. Format inspired by
 - Exact demo city TBD (FortyGuard API is US-only). Phoenix, AZ is the leading candidate.
 - Dashboard screenshots did not reach the workspace — need re-upload or verbal description of options.
 - AI LLM path: Gemini Flash free tier (Google AI Studio) is the primary plan.
+
+## [v0.6.3] — 2026-08-23
+### Added — Pattern recognition wired into the API (was: untracked modules, unreachable)
+
+- **New router endpoints** in `backend/app/routers/analysis.py`:
+  - `GET /api/analysis/pattern?lat=&lng=` — heat-pattern classification (urban_heat_island,
+    road_heat_trap, building_heat, cool_zone, water_cooling, farmland_heat, open_exposure,
+    mixed_zone). Uses land-use + heat severity.
+  - `GET /api/analysis/surface?lat=&lng=&radius_m=&resolution=` — 3D temperature raster with
+    hotspot/coolspot detection + 24h diurnal sampling + 4-month seasonal sampling.
+  - `GET /api/analysis/simulation_3d?lat=&lng=&radius_m=` — 3D city digital twin (buildings, roads,
+    vegetation, hospitals, targeted interventions).
+  - `POST /api/analysis/train` — pattern trainer (heuristic weight tuning).
+  - `GET /api/analysis/model` — current trainer model weights.
+
+- **New router** in `backend/app/routers/cities.py` + mounted in `main.py`:
+  - `GET /api/cities/search?q=` — California city search.
+  - `GET /api/cities/regions` — list unique regions.
+  - `GET /api/cities/climate?lat=&lng=&scenario=` — climate-scenario temperature projection.
+
+- **New planner helper** `planner.analyze_pattern(lat, lng)` — the endpoint was importing a
+  non-existent function; this adds it (rule-based classification matching the heat-surface patterns).
+
+- **New services** (untracked → committed, all tested end-to-end):
+  - `services/heat_surface.py` — 3D temperature raster, hotspot/coolspot detection, 24h cycle, monthly
+    cycle. Generates a coherent 2D temperature field from the mock provider + spatial coherence waves
+    (urban heat island effect + 2D sine variations). 100 cells = 0.0 s on laptop, ~25 s when each cell
+    hits OSM.
+  - `services/city_simulation.py` — analyzes the heat surface, classifies each cell as building / road /
+    vegetation / water / open, finds nearest hospital, generates 5 targeted interventions (alternating
+    tree + water_point at the hottest buildings).
+  - `services/trainer.py` — heuristic pattern trainer that refines weights based on California city
+    region (Desert, Valley, Coastal) and reports simulated accuracy.
+  - `services/accessibility.py` — POI finder (hospital / school / market / transit / fire / police)
+    with deterministic offline fallback so the demo works without OSM.
+  - `services/cities.py` + `data/california_temps.json` — California city profiles with neighborhoods
+    and pre-baked realistic temperatures for LA, SF, SD, Sacramento, Fresno, etc.
+
+### Verified
+
+- 13/13 pattern-recognition + city endpoints return 200 against the FastAPI test client.
+- Backend `py_compile` clean on every file.
+- Frontend `tsc --noEmit` clean.
