@@ -124,10 +124,8 @@ def get_health_condition(query: str) -> list[dict]:
         if _match(query, _field(h, "name"), _field(h, "slug"),
                   *_field(h, "symptoms", ""))
     ]
-    return hits or rows[:2]
+    return hits  # audit #11 fix: return empty list on miss (caller decides what to do)
 
-
-def get_emergency_contacts(city: str | None = None) -> list[dict]:
     """Emergency/helpline contacts, optionally filtered by city name."""
     rows = _rows("emergency_contacts", seed.EMERGENCY_CONTACTS)
     if city:

@@ -39,9 +39,15 @@ def knowledge_overview():
 
 @router.get("/browse")
 def browse(category: str = Query("", max_length=40)):
-    """Return entries in a knowledge category for a systematic browse view."""
+    """Return entries in a knowledge category for a systematic browse view.
+
+    Audit #9 fix: previously hardcoded `knowledge.seed.ENCYCLOPEDIA`. Now uses
+    the `_rows()` helper so live Supabase data is respected (same as other
+    knowledge endpoints).
+    """
     cat = category.lower()
-    entries = [e for e in knowledge.seed.ENCYCLOPEDIA if e["category"] == cat]
+    rows = knowledge._rows("encyclopedia", knowledge.seed.ENCYCLOPEDIA)
+    entries = [e for e in rows if e.get("category", "").lower() == cat]
     if not entries:
-        entries = knowledge.seed.ENCYCLOPEDIA
+        entries = rows  # all entries, not just seed ones
     return {"category": cat, "entries": entries}

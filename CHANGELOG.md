@@ -3,6 +3,20 @@
 All notable changes to this project are documented here. Format inspired by
 [Keep a Changelog](https://keepachangelog.com/). Versioning: `v0.x` for pre-release planning/build.
 
+## [v0.6.2] — 2026-08-23
+### Fixed — Backend correctness (audit triplet: #9 + #11 + #21)
+- **#9 `/api/ai/browse` ignored Supabase.** Hardcoded `knowledge.seed.ENCYCLOPOLOGY`; live DB was never
+  read. Now uses `knowledge._rows("encyclopedia", seed.ENCYCLOPEDIA)` so live Supabase rows are respected
+  (same pattern as the other knowledge endpoints). When `category` doesn't match, returns *all* live rows,
+  not just seed ones.
+- **#11 First-aid silently returned heat-stroke.** `get_health_condition(query)` fell back to
+  `rows[:2]` on miss, so "broken toe" / "splinter" silently returned heat-stroke. Now returns `[]`
+  on miss, and the assistant's `_reply_first_aid()` now produces an honest "I don't have first-aid
+  guidance for that; for emergencies call 911" message instead of lying about symptoms.
+- **#21 `/api/heat/grid` accepted any lat/lng.** Other endpoints had `ge=-90, le=90`; `/grid` had no bounds
+  and could request invalid coords. Now mirrors the same `Query(..., ge=-90, le=90)` and
+  `Query(..., ge=-180, le=180)` validation — invalid inputs return 422.
+
 ## [v0.6.1] — 2026-08-23
 ### Fixed — User-flow polish (audit triplet: #7 + #8 + #24)
 - **#7 Silent async failures.** Added `try/catch` and a `status` banner to all three async handlers

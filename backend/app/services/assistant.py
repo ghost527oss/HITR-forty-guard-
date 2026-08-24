@@ -78,6 +78,20 @@ def _reply_emergency(text: str) -> dict:
 
 def _reply_first_aid(text: str) -> dict:
     hits = knowledge.get_health_condition(text)
+    # Audit #11 fix: don't IndexError when no health condition matches.
+    if not hits:
+        return {
+            "answer": (
+                f"I don't have first-aid guidance for \"{text}\" in our knowledge base. "
+                "If this is a real emergency, call 911 immediately.\n\n"
+                "For heat-illness questions, try:\n"
+                "  • 'What should I do for heat stroke?'\n"
+                "  • 'Symptoms of heat exhaustion?'\n"
+                "  • 'How to stay hydrated in heat?'"
+            ),
+            "source": "knowledge/none",
+            "data": [],
+        }
     cond = hits[0]
     symptoms = "; ".join(cond["symptoms"])
     steps = "\n".join(f"  {i+1}. {s}" for i, s in enumerate(cond["first_aid_steps"]))

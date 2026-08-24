@@ -28,8 +28,8 @@ def heat_point(
 
 @router.get("/grid")
 def heat_grid(
-    lat: float = Query(...),
-    lng: float = Query(...),
+    lat: float = Query(..., ge=-90, le=90),  # audit #21 fix: validate coords
+    lng: float = Query(..., ge=-180, le=180),
     span_deg: float = Query(0.05, ge=0.001, le=1.0),
     steps: int = Query(8, ge=2, le=30),
 ):
