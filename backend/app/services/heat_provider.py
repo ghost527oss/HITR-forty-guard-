@@ -15,11 +15,13 @@ from typing import Protocol
 
 RISK_THRESHOLDS = [
     # (max_f, label, color)
+    # Audit #17 fix: added "comfortable" tier so 60-70F weather isn't labelled as heat risk.
+    (70.0, "comfortable", "#3b82f6"),
     (80.0, "moderate", "#4caf50"),
     (90.0, "high", "#ff9800"),
     (100.0, "very_high", "#f44336"),
     (120.0, "extreme", "#b71c1c"),
-]
+]  
 
 
 def risk_for(temp_f: float) -> tuple[str, str]:

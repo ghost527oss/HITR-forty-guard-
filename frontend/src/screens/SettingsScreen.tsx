@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Units } from "../App";
 
 interface SettingsScreenProps {
@@ -8,16 +8,52 @@ interface SettingsScreenProps {
   onToggleUnits: () => void;
 }
 
+const THEME_KEY = "hitr.theme";
+const NOTIF_KEY = "hitr.notifications";
+
 // Settings: location (makes the whole app relative to it), units, theme,
 // notifications, emergency contact.
 export default function SettingsScreen({ location, onSearch, units, onToggleUnits }: SettingsScreenProps) {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
-  const [notifications, setNotifications] = useState(true);
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    // Audit #22 fix: theme now persists to localStorage.
+    const stored = localStorage.getItem(THEME_KEY);
+    return stored === "dark" ? "dark" : "light";
+  });
+  const [notifications, setNotifications] = useState<boolean>(() => {
+    const stored = localStorage.getItem(NOTIF_KEY);
+    return stored === null ? true : stored === "true";
+  });
   const [loc, setLoc] = useState("");
+
+  // Audit #22 fix: actually apply the theme class to the document root so
+  // CSS can hook into it (no-op until app/index.css adds `html.dark { ... }` rules).
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    localStorage.setItem(THEME_KEY, theme);
+  }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem(NOTIF_KEY, notifications ? "true" : "false");
+  }, [notifications]);
 
   const applyLocation = () => {
     if (loc.trim()) onSearch(loc.trim());
     setLoc("");
+  };
+
+  const handleNotificationsToggle = async () => {
+    // Audit #22 fix: request browser permission when the user opts in,
+    // rather than just toggling local state.
+    if (!notifications) {
+      try {
+        if (typeof Notification !== "undefined" && Notification.permission === "default") {
+          await Notification.requestPermission();
+        }
+      } catch {
+        // Permission API not available in some environments — silently continue.
+      }
+    }
+    setNotifications((n) => !n);
   };
 
   return (
@@ -89,7 +125,7 @@ export default function SettingsScreen({ location, onSearch, units, onToggleUnit
         <section>
           <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Notifications</h3>
           <button
-            onClick={() => setNotifications((n) => !n)}
+            onClick={handleNotificationsToggle}
             className="flex w-full items-center justify-between rounded-2xl border border-gray-200 p-3 text-left"
           >
             <span className="text-gray-800">Heat alerts</span>

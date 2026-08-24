@@ -109,7 +109,18 @@ def _rows(table: str, fallback: list[dict]) -> list[dict]:
 
 
 def _field(entry: dict, name: str, default="") -> str:
-    return entry.get(name, entry.get(name, default)) or default
+    """
+    Audit #18 fix: previous implementation was `entry.get(name, entry.get(name, default)) or default`,
+    which is a no-op duplicate — both calls hit the same key with the same default.
+    Now properly normalizes list/dict fields to a space-separated string so token matching
+    still works when a column is a JSON array (e.g. symptoms: ["fever", "dizziness"]).
+    """
+    val = entry.get(name, default)
+    if isinstance(val, list):
+        return " ".join(str(x) for x in val)
+    if isinstance(val, dict):
+        return " ".join(f"{k} {v}" for k, v in val.items())
+    return str(val) if val is not None else default
 
 
 # ---------------------------------------------------------------------------

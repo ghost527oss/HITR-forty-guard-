@@ -325,3 +325,29 @@ All notable changes to this project are documented here. Format inspired by
   `GET /api/ai/ask?q=` — but the backend only has `POST /api/ai/ask`. The function was never called
   anywhere. Removed the function definition. The `AiAnswer` interface is kept for now (legacy
   reference). The live path remains `askAssistant()` (POST).
+
+## [v0.6.7] — 2026-08-23
+### Fixed — Audit triplet: #17 + #18 + #22 (risk scale + _field bug + settings dead UI)
+- **#17 Risk scale "comfortable" tier.** Added a new tier to `backend/app/services/heat_provider.py`:
+  `comfortable` (≤70°F, blue `#3b82f6`). Previously, 65°F weather was labelled as heat risk (green
+  "moderate") — pleasant weather shouldn't be a heat alert. New buckets in order: comfortable ≤70°F,
+  moderate ≤80°F, high ≤90°F, very_high ≤100°F, extreme >100°F.
+- **#18 `_field()` no-op duplication fix.** `backend/app/services/knowledge.py:_field` was
+  `entry.get(name, entry.get(name, default)) or default` — the second `.get` had the same default
+  so it was a no-op. Now properly normalizes: lists → space-joined string, dicts → "k v" pairs, None →
+  default. This matters when a row has `symptoms` as a JSON string vs array — previously a string
+  column could fail to match correctly.
+- **#22 Settings theme + notifications now actually do something.** `frontend/src/screens/SettingsScreen.tsx`:
+  - Theme choice persists to `localStorage` under `hitr.theme` and toggles a `dark` class on
+    `document.documentElement` (so future CSS dark-mode rules can hook into it).
+  - Notifications toggle persists to `localStorage` under `hitr.notifications` and **requests
+    browser permission** via `Notification.requestPermission()` when the user opts in.
+
+### Verified
+- `risk_for(60.0)` → "comfortable" (new); `risk_for(75.0)` → "moderate" (unchanged)
+- `_field({"symptoms": ["hot skin", "dizzy"]}, "symptoms")` → "hot skin dizzy" (was returning "")
+- `/api/heat/point`, `/api/planner/plan`, `/api/analysis/spot`, `/api/ai/ask` all return 200
+
+### Stored for later
+- Add `html.dark { ... }` CSS rules in `frontend/src/index.css` to make the dark theme
+  actually render with inverted colors. Currently the class is applied but no CSS hooks it.
