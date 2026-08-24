@@ -19,6 +19,8 @@ Output: a ranked list of interventions, each with what/where/why/impact/cost.
 """
 from __future__ import annotations
 
+import math
+
 from ..services import landuse
 
 # Impact estimates (plain language) keyed by (kind, change_level bucket).
@@ -58,6 +60,120 @@ def _heat_score(temp_f: float) -> float:
 def _base_score(heat: float, land_boost: float, level_bonus: float) -> float:
     """Overall priority score (0..~2) for ranking."""
     return round(heat * 1.0 + land_boost + level_bonus, 3)
+
+
+def _haversine_m(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    """Great-circle distance in meters between two lat/lng points."""
+    R = 6_371_000.0
+    rlat1, rlat2 = math.radians(lat1), math.radians(lat2)
+    dlat = math.radians(lat2 - lat1)
+    dlng = math.radians(lng2 - lng1)
+    a = math.sin(dlat / 2) ** 2 + math.cos(rlat1) * math.cos(rlat2) * math.sin(dlng / 2) ** 2
+    return 2 * R * math.asin(math.sqrt(a))
+
+
+def _compute_context(lat: float, lng: float) -> dict:
+    """
+    Compute data-driven context for a planner call (audit #14 fix).
+
+    Pulls from heat_surface (hotspots/coolspots) and accessibility.find_nearby
+    (POI proximity) to give the planner real spatial factors, not just templates.
+
+    Returns a dict with:
+        hotspot_count (int): number of hot zones in a 150m radius
+        coolspot_count (int): number of cool zones in a 150m radius
+        nearest_hospital_m (float | None): meters to nearest hospital
+        equity_score (float 0..1): vulnerable-population density (schools +
+            hospitals + transit) — higher = more equity-sensitive
+        protective_score (float 0..1): fraction of area cells >100F within
+            300m of a hospital (more vulnerable = more protective action needed)
+        ok (bool): False if any data source failed (so caller can fall back)
+
+    Wind/humidity factors (audit #14) are intentionally NOT implemented yet —
+    they require the real FortyGuard API and are stored for future work.
+    """
+    import math as _m
+
+    ctx = {
+        "hotspot_count": 0,
+        "coolspot_count": 0,
+        "nearest_hospital_m": None,
+        "equity_score": 0.0,
+        "protective_score": 0.0,
+        "ok": False,
+    }
+
+    # Heat surface analysis
+    try:
+        from .heat_surface import compute_surface
+        surface = compute_surface(lat, lng, radius_m=150, resolution=12)
+        ctx["hotspot_count"] = len(surface.get("hotspots", []))
+        ctx["coolspot_count"] = len(surface.get("coolspots", []))
+        # Protective score: fraction of hot cells near any POI (proxy until
+        # we get vulnerable-population data; hospitals are the sentinel).
+        grid_sample = surface.get("grid_sample", [])
+        if grid_sample:
+            hot_cells = [c for c in grid_sample if c.get("temp_f", 0) >= 100]
+            ctx["protective_score"] = min(1.0, len(hot_cells) / max(1, len(grid_sample)))
+    except Exception:
+        # Surface analysis failed (e.g. OSM unreachable); return partial ctx.
+        return ctx
+
+    # Accessibility / POI proximity
+    try:
+        from .accessibility import find_nearby
+        pois = find_nearby(lat, lng, radius=1000)
+        if pois:
+            # Hospital distance
+            hospitals = [p for p in pois if p.get("category") == "hospital"]
+            if hospitals:
+                nearest_h_m = min(
+                    _haversine_m(lat, lng, h["lat"], h["lng"]) for h in hospitals
+                )
+                ctx["nearest_hospital_m"] = round(nearest_h_m, 1)
+            # Equity: vulnerable-population density. Schools + transit + hospitals
+            # in walking distance (≤800m) raise the equity score.
+            equity_categories = {"school", "transit", "hospital"}
+            equity_count = sum(
+                1 for p in pois
+                if p.get("category") in equity_categories
+                and _haversine_m(lat, lng, p["lat"], p["lng"]) <= 800
+            )
+            # Normalize: 0 equity POIs -> 0.0; 6+ within 800m -> 1.0
+            ctx["equity_score"] = min(1.0, equity_count / 6.0)
+        ctx["ok"] = True
+    except Exception:
+        return ctx
+
+    ctx["ok"] = True
+    return ctx
+
+
+def _context_bonus(ctx: dict) -> float:
+    """
+    Convert planner context into an additive score bonus (audit #14).
+
+    Each factor contributes 0..1 capped; sum is capped at 0.6 so templates
+    still drive ranking when context is empty.
+    """
+    if not ctx.get("ok"):
+        return 0.0
+    bonus = 0.0
+    # Hotspot count: 0.3 max — if there are ≥3 hot zones, intervene hard
+    bonus += 0.3 * min(1.0, ctx.get("hotspot_count", 0) / 3.0)
+    # Hospital proximity: 0.2 max — if nearest hospital ≤300m, boost
+    # accessibility-driven interventions (shade/water station at walkways).
+    nh = ctx.get("nearest_hospital_m")
+    if nh is not None and nh <= 300:
+        bonus += 0.2 * (1.0 - nh / 300.0)
+    # Coolspot preservation: 0.15 max — preserve cool zones with tree barriers.
+    bonus += 0.15 * min(1.0, ctx.get("coolspot_count", 0) / 2.0)
+    # Equity: 0.15 max — vulnerable populations near the spot raise the priority
+    # of shade + water + shelter interventions.
+    bonus += 0.15 * ctx.get("equity_score", 0.0)
+    # Protective: 0.1 max — heat-on-people near hospitals/critical services.
+    bonus += 0.1 * ctx.get("protective_score", 0.0)
+    return round(min(0.6, bonus), 3)
 
 
 def _candidates_for(kind: str, change_level: int) -> list[dict]:
@@ -112,10 +228,47 @@ def build_plan(lat: float, lng: float, change_level: int = 1) -> dict:
     # Level bonus: heavier change levels are more ambitious (higher effort/intent).
     level_bonus = {1: 0.0, 2: 0.15, 3: 0.3}[change_level]
 
+    # Audit #14 fix: compute data-driven context bonus (hotspots, hospitals,
+    # equity, protective). Wind/humidity factors intentionally stored for
+    # later — they require the real FortyGuard API and are not yet wired.
+    ctx = _compute_context(lat, lng)
+    ctx_bonus = _context_bonus(ctx)
+
     cands = _candidates_for(kind, change_level)
+
+    # Audit #14 fix: append data-driven interventions based on context.
+    # These are inserted at the FRONT so they get ranked highest.
+    context_interventions = []
+    if ctx.get("ok"):
+        if ctx.get("nearest_hospital_m") is not None and ctx["nearest_hospital_m"] <= 300:
+            context_interventions.append({
+                "what": f"Add water + shade station within 300m of nearest hospital "
+                        f"({ctx['nearest_hospital_m']:.0f}m away)",
+                "impact": "cuts pre-hospital wait heat exposure; reduces mortality risk",
+                "cost": "medium", "key": "hospital_access"})
+        if ctx.get("coolspot_count", 0) >= 1:
+            context_interventions.append({
+                "what": f"Protect the {ctx['coolspot_count']} cool spot(s) with tree barriers "
+                        f"to prevent encroachment",
+                "impact": "preserves -2 to -4°C natural cooling in surrounding blocks",
+                "cost": "low", "key": "protect_coolspot"})
+        if ctx.get("equity_score", 0) >= 0.5:
+            context_interventions.append({
+                "what": f"Prioritize shade structures near vulnerable populations "
+                        f"(equity score {ctx['equity_score']:.0%})",
+                "impact": "shelters schools, transit stops, and elderly housing",
+                "cost": "medium", "key": "equity_priority"})
+        if ctx.get("protective_score", 0) >= 0.4:
+            context_interventions.append({
+                "what": f"Deploy cooling stations to protect residents in extreme-heat blocks "
+                        f"({ctx['protective_score']:.0%} of area ≥100°F)",
+                "impact": "lives saved during heat waves; indoor cooling for elderly/children",
+                "cost": "high", "key": "protective_cooling"})
+    cands = context_interventions + cands
     interventions = []
     for i, c in enumerate(cands):
-        score = _base_score(h, land_boost, level_bonus) - i * 0.05  # stable tiebreak
+        # Audit #14 fix: data-driven context bonus now flows into the score.
+        score = _base_score(h, land_boost, level_bonus) + ctx_bonus - i * 0.05
         interventions.append({
             "rank": 0,  # set below after sort
             "what": c["what"],

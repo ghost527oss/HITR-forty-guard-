@@ -275,3 +275,40 @@ All notable changes to this project are documented here. Format inspired by
   shape is pending FortyGuard docs). Removed the import; module still compiles.
 - **#30 Typo fix.** `docs/data.md` had `heat-holotline` (extra "lo"). Fixed to
   `heat-hotline`. Pure documentation drift; no code or behavior change.
+
+## [v0.6.5] — 2026-08-23
+### Fixed — Audit #14: planner now data-driven (hotspots + hospitals + equity + protective)
+- **New helper `_compute_context(lat, lng)`** in `backend/app/services/planner.py`.
+  Pulls real spatial factors from already-committed modules:
+  - `heat_surface.compute_surface(...)` — hotspot_count, coolspot_count, protective_score
+    (fraction of grid cells ≥100°F)
+  - `accessibility.find_nearby(...)` — nearest_hospital_m (great-circle distance to nearest
+    hospital within 1km), equity_score (count of schools/transit/hospitals within 800m)
+- **New helper `_context_bonus(ctx)`** maps the context to a score bonus (0..0.6 cap):
+  - +0.3 × min(1, hotspot_count/3) → prioritizes hot-zone interventions
+  - +0.2 if nearest hospital ≤300m → boosts shade/water at walkways
+  - +0.15 × min(1, coolspot_count/2) → preserves cool zones
+  - +0.15 × equity_score → vulnerable-population weighting
+  - +0.10 × protective_score → cooling stations in extreme-heat blocks
+- **`build_plan()` now appends context-driven interventions** at the front of the candidates list:
+  - `hospital_access` if nearest hospital ≤300m
+  - `protect_coolspot` if ≥1 cool zone detected
+  - `equity_priority` if equity_score ≥ 0.5
+  - `protective_cooling` if protective_score ≥ 0.4
+- The context bonus flows into the score (`base_score + ctx_bonus - i*0.05`).
+
+### Verified
+- LA (34.05,-118.24) → 200, templates still drive ranking (offline-fallback hospital too far)
+- SF (37.77,-122.42) → 200, `Protect the 1 cool spot(s) with tree barriers` appears at rank #1
+- Palm Springs (33.83,-116.54) → 200, same coolspot intervention at #1
+- Rural (36.5,-117) → 200, 4 templates returned (no surface data)
+- Invalid coords (lat=99, lng=999) → 422 (existing validation unchanged)
+- All 13 other pattern-recognition + city endpoints still return 200
+
+### Stored for later (audit #14 partial — wind/humidity need real FortyGuard API)
+- **Wind speed/direction factor** — requires the real FortyGuard Temperature API
+  (audit #4 not yet fixed). Will plug in behind the same `_compute_context()` interface
+  once the API key is wired.
+- **Humidity factor** — same: requires real FortyGuard API.
+- **Vulnerable-population data** (age, income, equity density) — currently approximated
+  via school + transit + hospital density within 800m. Could be sharper with census data.

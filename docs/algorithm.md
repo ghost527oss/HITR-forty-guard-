@@ -22,9 +22,13 @@
 1. **Thermal factors** — from FortyGuard API: real-time + historical + forecast temperature, risk level
    per block/parcel; plus derived "heat-on-plants"/"heat-on-people" exposure.
 2. **Micro-climate factors** — prevailing **wind speed/direction**, humidity, orientation of streets
-   (N–S vs E–W), existing shade coverage.
+   (N–S vs E–W), existing shade coverage. *(⚠ Wind + humidity: NOT yet wired — stored for later,
+   requires real FortyGuard API per audit #4. See `docs/algorithm.md` history & v0.6.5 CHANGELOG.)*
 3. **Accessibility / livability factors** — walking distance to **hospitals, schools, markets, transit**;
    equity: prioritize vulnerable zones (elderly housing, shelters, low-income, schools, clinics).
+   *(✅ As of v0.6.5: `services/planner._compute_context()` consumes real `accessibility.find_nearby()`
+   + `heat_surface.compute_surface()` to compute nearest hospital distance, equity score
+   (schools/transit/hospitals within 800m), and protective score (fraction of grid ≥100°F).)*
 4. **Productivity factors** (farm use case) — soil/buildability, water access, sunlight needs of the
    planned crops, hybrid-crop suitability.
 
