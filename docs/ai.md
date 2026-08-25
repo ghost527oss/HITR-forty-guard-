@@ -55,3 +55,7 @@ The next assistant phase will replace the older bounded assistant UI with the of
 ## Central assistant replacement — phase 1
 
 `CentralAssistantScreen` is the active Assistant route. It uses the bundled Patch1.0v deterministic engine and the Knowledge Set for symptoms, heat-safety, cooling-design and household-plan queries. `App.tsx` supplies selected coordinates, heat/risk/source, land use and planner result as context. The previous API-backed assistant screen is retained as unused source during validation. This does not yet make a real FortyGuard request or mutate a planner result.
+
+## Location warnings and optional web fallback
+
+The central assistant displays a California heat warning when the selected reading has `very_high` or `extreme` risk. The setting `hitr.google-search` controls a consent-based fallback: when enabled, an answer asks whether the person wants a Google search and opens Google only after an explicit click. It is not a paid Google Search API and does not search automatically. With the setting off, no search prompt is rendered.

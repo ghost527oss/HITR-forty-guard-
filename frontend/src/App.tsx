@@ -55,6 +55,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [heatData, setHeatData] = useState<HeatCell[] | null>(null);
   const [units, setUnits] = useState<Units>("imperial");
+  const [webSearchEnabled, setWebSearchEnabled] = useState(() => localStorage.getItem("hitr.google-search") === "true");
   const [changeLevel, setChangeLevel] = useState<ChangeLevel>(1);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
@@ -226,6 +227,7 @@ export default function App() {
             land={land}
             plan={plan}
             onOpenPlanner={() => setView("planner")}
+            webSearchEnabled={webSearchEnabled}
           />
         )}
         {view === "architectural_designs" && <ArchitecturalDesignsScreen />}
@@ -273,6 +275,8 @@ export default function App() {
             onSearch={handleSearch}
             units={units}
             onToggleUnits={toggleUnits}
+            webSearchEnabled={webSearchEnabled}
+            onWebSearchEnabledChange={setWebSearchEnabled}
           />
         )}
       </main>

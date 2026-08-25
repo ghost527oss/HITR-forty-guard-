@@ -437,3 +437,7 @@ Current spatial reality: `heat_surface.py` creates a sampled 2D temperature rast
 The visible `assistant` view now uses `frontend/src/screens/CentralAssistantScreen.tsx`, not the old `AssistantScreen.tsx`. It calls the Patch1.0v `offlineAiEngine` locally and receives map/planner context as props from `App.tsx`: picked coordinate, `HeatReading`, `LandInfo`, and generated `Plan`. It does not call Gemini or require Supabase. The legacy screen is intentionally retained but unused until user acceptance.
 
 This phase does **not** implement real FortyGuard calls, planner text parsing, plan mutation, or draft-plan UI. The heat source shown in assistant context must be treated honestly: mock until the real FortyGuard client is implemented and tested. The next safe increment is template-to-draft-plan creation using `draftHistory.ts`; do not create destructive city edits.
+
+### Assistant location warning and web-search consent
+
+`CentralAssistantScreen` now derives a selected-location warning from `HeatReading.risk`: only `very_high` and `extreme` show the red warning. Settings stores `hitr.google-search`; when enabled, the assistant renders a user-confirmed Google search link after an answer. This is a browser Google URL, not a Google Search API integration, so it costs no API money and does not automatically transmit questions. Keep the consent interaction intact. Current Settings applies a California-only input guard based on California/city text; a future geocoder result validation is needed for strict geographic enforcement.

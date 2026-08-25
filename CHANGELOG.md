@@ -396,3 +396,8 @@ All notable changes to this project are documented here. Format inspired by
 
 ### Verification
 - Frontend type-check and production build pass. Backend Python compilation and health/heat/AI-status TestClient checks pass.
+
+### Added — California location warnings and consent-based Google fallback
+- Central Assistant now shows a prominent heat warning for a selected `very_high` or `extreme` risk location, including California/US emergency guidance.
+- Settings now limits the current location entry flow to California hints/cities and adds a persisted **Offer Google search after an answer** switch (`hitr.google-search`).
+- When the switch is enabled, each new local-assistant answer asks whether the user wants to search Google. Search is only opened after the user presses **Yes, search Google**; no query is sent automatically. With the switch disabled, no search question is shown.

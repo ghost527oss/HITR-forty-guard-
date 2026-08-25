@@ -11,9 +11,10 @@ interface CentralAssistantScreenProps {
   land: LandInfo | null;
   plan: Plan | null;
   onOpenPlanner: () => void;
+  webSearchEnabled: boolean;
 }
 
-type Message = { role: "user" | "assistant"; text: string; result?: AiQueryResult };
+type Message = { role: "user" | "assistant"; text: string; result?: AiQueryResult; searchQuery?: string };
 
 const PROMPTS = [
   "Someone is confused and very hot. What should I do?",
@@ -30,7 +31,7 @@ function contextSummary(reading: HeatReading | null, land: LandInfo | null, plan
 
 // The active app-wide assistant. Its decision engine is local and deterministic:
 // Patch1.0v Knowledge Set records + offlineAiEngine, not Gemini or a paid API.
-export default function CentralAssistantScreen({ picked, reading, land, plan, onOpenPlanner }: CentralAssistantScreenProps) {
+export default function CentralAssistantScreen({ picked, reading, land, plan, onOpenPlanner, webSearchEnabled }: CentralAssistantScreenProps) {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([{
     role: "assistant",
@@ -40,6 +41,14 @@ export default function CentralAssistantScreen({ picked, reading, land, plan, on
     const coordinates = picked ? ` Coordinates: ${picked.lat.toFixed(4)}, ${picked.lng.toFixed(4)}.` : "";
     return `${contextSummary(reading, land, plan)}${coordinates}`;
   }, [picked, reading, land, plan]);
+
+  const locationWarning = reading && (reading.risk === "very_high" || reading.risk === "extreme")
+    ? `Heat warning for your selected California location: ${reading.temp_f}°F is marked ${reading.risk}. Reduce outdoor exposure, use cooling breaks, and call 911 for severe symptoms.`
+    : null;
+
+  const openGoogleSearch = (query: string) => {
+    window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, "_blank", "noopener,noreferrer");
+  };
 
   const send = (raw?: string) => {
     const question = (raw ?? input).trim();
@@ -51,7 +60,7 @@ export default function CentralAssistantScreen({ picked, reading, land, plan, on
     setMessages((items) => [
       ...items,
       { role: "user", text: question },
-      { role: "assistant", result, text: `${result.summary}\n\n${result.keyDirectives.join("\n")}${localContext}` },
+      { role: "assistant", result, searchQuery: webSearchEnabled ? question : undefined, text: `${result.summary}\n\n${result.keyDirectives.join("\n")}${localContext}` },
     ]);
     setInput("");
   };
@@ -62,6 +71,7 @@ export default function CentralAssistantScreen({ picked, reading, land, plan, on
         <h1 className="font-semibold text-gray-900">HITR Assistant</h1>
         <p className="mt-1 text-xs text-gray-600">Free local Knowledge Set reasoning · online heat context when available</p>
         <p className="mt-2 rounded-lg bg-heat-50 p-2 text-[11px] text-heat-900">{summary}</p>
+        {locationWarning && <p className="mt-2 rounded-lg bg-red-100 p-2 text-xs font-semibold text-red-900">{locationWarning}</p>}
       </header>
 
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
@@ -70,6 +80,7 @@ export default function CentralAssistantScreen({ picked, reading, land, plan, on
             {message.text}
             {message.result?.medicalAlert && <p className="mt-3 rounded-lg bg-red-100 p-2 text-xs font-semibold text-red-900">Emergency guidance only — for California, USA only. Call 911 for a life-threatening emergency.</p>}
             {message.result?.recommendedDesigns.length ? <p className="mt-3 text-xs font-medium">Knowledge Set matches: {message.result.recommendedDesigns.slice(0, 3).map((d) => `#${d.id} ${d.name}`).join(" · ")}</p> : null}
+            {message.searchQuery && <div className="mt-3 border-t border-gray-300 pt-2 text-xs"><p>Would you like to search Google for current additional information?</p><button onClick={() => openGoogleSearch(message.searchQuery!)} className="mt-1 rounded-lg bg-white px-2 py-1 font-semibold text-heat-700">Yes, search Google</button></div>}
           </article>
         ))}
         <div className="flex flex-wrap gap-2">
