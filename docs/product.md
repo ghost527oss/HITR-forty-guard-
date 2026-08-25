@@ -46,3 +46,7 @@ analysis and a **ranked intervention plan** (see `docs/algorithm.md`).
 ## Non-goals (for now)
 - Rebuilding cities from scratch (explicitly excluded by team).
 - AI generating autonomous city plans (explicitly excluded).
+
+## Database feature hub (unreleased navigation update)
+
+The compact mobile bottom navigation contains Home, Map, Assistant, Database, and Settings. Database is an organised entry point rather than a replacement for existing features. It exposes three folders: **Architectural Designs** (the future 100-method cooling-design library), **City Planner** (the existing map-connected intervention planner), and **Tools** (the existing tools screen). This preserves access to all current functions while keeping the bottom bar usable on a phone.

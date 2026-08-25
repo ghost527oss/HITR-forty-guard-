@@ -30,3 +30,11 @@ README.md
 CHANGELOG.md
 PLAN.md
 ```
+
+## Database feature hub (unreleased)
+
+`App.tsx` owns location, selected map point, heat, land-use and plan state. The Database screen is a frontend navigation hub only: it routes City Planner to the existing `PlannerScreen`, so no planner/map state is duplicated or moved. The future Architectural Designs library must be added as an isolated frontend feature and must not replace the FastAPI backend, MapLibre map, Supabase schema, or existing assistant.
+
+## Architectural Designs feature (unreleased)
+
+The complete Patch1.0v source is isolated at `frontend/src/features/architectural-designs/`, preserving its original feature-level layout (`data/`, `components/`, `utils/`). `ArchitecturalDesignsScreen` hosts it under Database; it does not replace the React app root, FastAPI backend, MapLibre map, or HITR planner. The source is client-side only and uses `lucide-react` for its imported icon components. Its local advisor reads bundled design and medical records through `utils/offlineAiEngine.ts`; it has no remote dependency.

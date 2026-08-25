@@ -351,3 +351,31 @@ All notable changes to this project are documented here. Format inspired by
 ### Stored for later
 - Add `html.dark { ... }` CSS rules in `frontend/src/index.css` to make the dark theme
   actually render with inverted colors. Currently the class is applied but no CSS hooks it.
+
+## [Unreleased] — 2026-08-25
+### Added — Database navigation foundation (phase 1)
+- Added `frontend/src/screens/DatabaseScreen.tsx`, a mobile-first feature hub with the three requested entries:
+  - **Architectural Designs** — reserved for the separately ported Patch1.0v design library; intentionally not wired until that library is added and verified.
+  - **City Planner** — opens the existing planner, retaining its selected-map-point workflow.
+  - **Tools** — opens the existing tools screen.
+- The bottom navigation is now deliberately limited to **Home, Map, Assistant, Database, Settings**. Existing Planner and Tools source/screens were not deleted; they are accessed through Database.
+
+### Removed — stale uncommitted integration only
+- Removed the uncommitted `frontend/src/cooling-library/` and `CoolingLibraryScreen.tsx` files that came from the retired `100-cooling-ways` attempt. These files used a different data model from the requested `Patch1.0v` replica and were never committed HITR functionality.
+- Removed its unneeded `lucide-react` dependency addition. No committed HITR feature, backend code, database code, or documentation was removed.
+
+### Verification
+- `npm ci` completed successfully (npm reports two existing dependency audit findings: one moderate, one high; no automatic audit upgrade was applied).
+- `./node_modules/.bin/tsc --noEmit` still fails because of pre-existing missing files from the prior handoff: `EmergencyScreen`, `HeatSurfaceScreen`, `CitySimulationScreen`, `TrainingScreen`, `AlertBanner`, `HeatMapFAB`, `PlanSheet`, and the unrelated `BottomBar` `onViewSurface` prop mismatch. The new Database screen introduced no error in this check.
+- Architectural Designs implementation is deferred to phase 2; Patch1.0v's offline assistant remains analysis-only and unchanged by request.
+
+### Added — Patch1.0v Architectural Designs + offline advisor (phase 2)
+- Added the complete Patch1.0v catalogue as the isolated `frontend/src/features/architectural-designs/` feature: its 100 cooling-design records, categories, catalogue, filters, design details, comparison, saved-project drawer, house-anatomy view, household cooling planner, medical knowledge and offline advisor.
+- Added `ArchitecturalDesignsScreen` and connected Database → Architectural Designs. The feature keeps Patch1.0v's deterministic browser-side rule engine: it uses local design and medical records and makes no Gemini/API request.
+- Restored the missing frontend feature modules that prevented compilation: heat alert banner, map action button, plan sheet, emergency screen, heat surface screen, city simulation screen and trainer screen. The map action menu is connected to Assistant, Emergency, Database and plan generation.
+- `BottomBar` now accepts its already-used heat-surface action.
+
+### Verification
+- `frontend`: `./node_modules/.bin/tsc --noEmit` and `npm run build` pass.
+- `backend`: FastAPI TestClient checks for health, heat point, heat surface, planner and assistant status return HTTP 200.
+- Vite reports one non-blocking bundle-size warning (main JavaScript bundle is over 500 kB after minification); code splitting can be considered later.

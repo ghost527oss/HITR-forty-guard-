@@ -5,7 +5,7 @@ interface BottomNavProps {
   onNavigate: (v: View) => void;
 }
 
-// Bottom toolbar: Home, Heat Map, Assistant, Planner, Tools, Settings.
+// Bottom toolbar: Home, Map, Assistant, Database, Settings.
 export default function BottomNav({ active, onNavigate }: BottomNavProps) {
   return (
     <nav className="absolute bottom-0 left-0 right-0 z-30 border-t border-gray-200 bg-white/95 backdrop-blur">

@@ -7,10 +7,11 @@ interface BottomBarProps {
   land: LandInfo | null;
   loading: boolean;
   units: Units;
+  onViewSurface?: () => void;
 }
 
 // Bottom bar showing the selected spot's live temperature + land use (structure first).
-export default function BottomBar({ picked, reading, land, loading, units }: BottomBarProps) {
+export default function BottomBar({ picked, reading, land, loading, units, onViewSurface }: BottomBarProps) {
   return (
     <footer className="absolute bottom-0 left-0 right-0 z-10 p-3">
       <div className="mx-auto max-w-lg rounded-2xl bg-white/90 shadow-lg p-4 backdrop-blur">
@@ -54,6 +55,7 @@ export default function BottomBar({ picked, reading, land, loading, units }: Bot
                 heat: {reading.source}
                 {land && land.source === "fallback" ? " · land: estimated" : ""}
               </div>
+              {onViewSurface && <button onClick={onViewSurface} className="mt-1 text-xs font-medium text-heat-700">View surface</button>}
             </div>
           </div>
         )}

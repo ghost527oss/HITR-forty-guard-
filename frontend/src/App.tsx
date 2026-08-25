@@ -3,6 +3,7 @@ import BottomNav from "./components/BottomNav";
 import HomeScreen from "./screens/HomeScreen";
 import MapScreen from "./screens/MapScreen";
 import AssistantScreen from "./screens/AssistantScreen";
+import ArchitecturalDesignsScreen from "./screens/ArchitecturalDesignsScreen";
 import PlannerScreen from "./screens/PlannerScreen";
 import ToolsScreen from "./screens/ToolsScreen";
 import SettingsScreen from "./screens/SettingsScreen";
@@ -202,14 +203,24 @@ export default function App() {
             onToggleUnits={toggleUnits}
             heatData={heatData}
             onViewSurface={() => setView("heat_surface")}
+            onAssistant={() => setView("assistant")}
+            onSOS={() => setView("emergency")}
+            onDatabase={() => setView("database")}
+            onGeneratePlan={handleGeneratePlan}
+            planLoading={planLoading}
           />
         )}
 
         {view === "database" && (
-          <DatabaseScreen onBack={() => setView("map")} />
+          <DatabaseScreen
+            onOpenArchitecturalDesigns={() => setView("architectural_designs")}
+            onOpenPlanner={() => setView("planner")}
+            onOpenTools={() => setView("tools")}
+          />
         )}
 
         {view === "assistant" && <AssistantScreen />}
+        {view === "architectural_designs" && <ArchitecturalDesignsScreen />}
 
         {view === "planner" && (
           <PlannerScreen

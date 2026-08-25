@@ -42,3 +42,7 @@ Concrete, defined jobs:
 ## LLM provider (future option)
 - **Gemini Flash** via Google AI Studio free tier could add conversational depth later, but is NOT
   required — the current assistant is fully grounded without it.
+
+## Offline Architectural Designs advisor (unreleased)
+
+The Database → Architectural Designs feature includes the Patch1.0v local advisor as a separate, browser-side capability. It is deterministic and free: `offlineAiEngine.ts` matches a question against the bundled 100 cooling designs and bundled heat-safety protocols; it does not call Gemini, Supabase, or a network endpoint. It can produce cooling-design recommendations, a three-phase household plan and medically sensitive heat guidance. This feature is intentionally separate from the main HITR Assistant until a future approved integration unifies the application context. Emergency text must retain California/US-specific and general-information disclaimers.
