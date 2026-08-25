@@ -42,7 +42,7 @@ export default function DatabaseScreen({ onOpenArchitecturalDesigns, onOpenPlann
         <h1 className="mt-1 text-2xl font-bold text-gray-900">Database</h1>
         <p className="mt-2 text-sm leading-6 text-gray-600">Browse HITR knowledge and planning tools without removing the live map workflow.</p>
         <div className="mt-6 space-y-3">
-          <FolderCard icon="🏛️" title="Architectural Designs" description="Browse the 100-method cooling design library, comparison tools, house anatomy and offline advisor." action={onOpenArchitecturalDesigns} />
+          <FolderCard icon="🏛️" title="Knowledge Set" description="Browse the 100-method cooling design library, comparison tools, house anatomy and offline advisor." action={onOpenArchitecturalDesigns} />
           <FolderCard icon="🌳" title="City Planner" description="Create a location-specific heat intervention plan using the selected map point." action={onOpenPlanner} />
           <FolderCard icon="🧰" title="Tools" description="Open HITR's supporting analysis and reference tools." action={onOpenTools} />
         </div>

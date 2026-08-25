@@ -46,3 +46,8 @@ Concrete, defined jobs:
 ## Offline Architectural Designs advisor (unreleased)
 
 The Database → Architectural Designs feature includes the Patch1.0v local advisor as a separate, browser-side capability. It is deterministic and free: `offlineAiEngine.ts` matches a question against the bundled 100 cooling designs and bundled heat-safety protocols; it does not call Gemini, Supabase, or a network endpoint. It can produce cooling-design recommendations, a three-phase household plan and medically sensitive heat guidance. This feature is intentionally separate from the main HITR Assistant until a future approved integration unifies the application context. Emergency text must retain California/US-specific and general-information disclaimers.
+
+
+## Approved central-assistant direction (not yet implemented)
+
+The next assistant phase will replace the older bounded assistant UI with the offline Patch1.0v advisor capability and connect it to selected map coordinates, heat/risk/source, land-use, Knowledge Set records and planner output. It must remain offline/free first. Any real FortyGuard call is deferred until the real client implementation and authenticated API tests are complete. Planner “add/remove changes” requires a separate mutable draft-plan model; the current backend returns recommendations only.

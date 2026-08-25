@@ -379,3 +379,8 @@ All notable changes to this project are documented here. Format inspired by
 - `frontend`: `./node_modules/.bin/tsc --noEmit` and `npm run build` pass.
 - `backend`: FastAPI TestClient checks for health, heat point, heat surface, planner and assistant status return HTTP 200.
 - Vite reports one non-blocking bundle-size warning (main JavaScript bundle is over 500 kB after minification); code splitting can be considered later.
+
+
+### Changed — Knowledge Set terminology (unreleased follow-up)
+- Renamed the Database folder visible to users from **Architectural Designs** to **Knowledge Set**. The contained Patch1.0v cooling-design/advisor feature remains unchanged.
+- Documented the offline-first/Supabase-optional decision, central-assistant direction, planner-edit limitation and current 2D-vs-3D spatial-model boundary. No planner scoring or assistant behavior changed in this follow-up.

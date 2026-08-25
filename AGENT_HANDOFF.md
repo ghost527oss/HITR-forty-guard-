@@ -379,7 +379,7 @@ Home | Map | Assistant | Database | Settings
 `Planner` and `Tools` must **not** be deleted. They have moved behind the Database screen, which contains exactly these folders:
 
 ```
-Architectural Designs
+Knowledge Set
 City Planner
 Tools
 ```
@@ -416,3 +416,14 @@ The user approved an exact feature-level port of Patch1.0v. The feature is now l
 To keep the current HITR TypeScript configuration (`noUnusedLocals`) compatible with unmodified imported Patch1.0v presentation sources, the Patch UI/controller files carry `// @ts-nocheck`. Its data/type files remain type-checked. Future cleanup may remove unused imports one file at a time; do not undertake an unreviewed rewrite.
 
 Build verification as of 2026-08-25: `frontend ./node_modules/.bin/tsc --noEmit` and `npm run build` pass; FastAPI checks for health, heat point, heat surface, planner and AI status return 200. Vite warns that the minified client bundle exceeds 500 kB; future dynamic import/code splitting is appropriate but was not bundled into this feature port.
+
+
+### Next approved direction — central offline assistant and planning research
+
+The Database folder label is **Knowledge Set** (the imported 100 cooling designs, Patch1.0v offline advisor and safety records). Supabase is optional and is not required for the current offline/demo flow: HITR falls back to bundled Python data and the Knowledge Set is bundled client data. Do not remove the optional Supabase code/schema; it remains a later persistence/synchronisation option.
+
+The user has approved a future replacement of the old bounded Assistant screen with the Patch1.0v offline advisor as a **central HITR assistant**. Before replacing it, preserve/map these context inputs: selected coordinate, current heat reading/risk/source, land-use result, generated planner result, and Knowledge Set records. The first integration must stay offline/free and clearly label mock vs real FortyGuard data. Do not claim real FortyGuard temperature data until `fortyguard_client.py` is implemented and tested with user-provided credentials.
+
+Planning edits need a separate, deliberate design phase: current `planner.py` generates ranked interventions but has no mutable plan model or add/remove/edit endpoint. A safe next slice is a local draft-plan state with template buttons and a review/apply flow; it must not claim to modify real city infrastructure. The user intends to supply research papers before pattern-recognition/scoring changes.
+
+Current spatial reality: `heat_surface.py` creates a sampled 2D temperature raster (with hotspot/coolspot heuristics and temporal estimates), and `city_simulation.py` returns a lightweight simulated city data model. HITR does not yet construct a true 3D GIS/building mesh or render a 3D map. Evaluate a browser renderer such as Three.js/React Three Fiber or a MapLibre-compatible 3D extrusion layer only after requirements/research are supplied; do not import an external 3D app wholesale.

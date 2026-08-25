@@ -38,3 +38,8 @@ PLAN.md
 ## Architectural Designs feature (unreleased)
 
 The complete Patch1.0v source is isolated at `frontend/src/features/architectural-designs/`, preserving its original feature-level layout (`data/`, `components/`, `utils/`). `ArchitecturalDesignsScreen` hosts it under Database; it does not replace the React app root, FastAPI backend, MapLibre map, or HITR planner. The source is client-side only and uses `lucide-react` for its imported icon components. Its local advisor reads bundled design and medical records through `utils/offlineAiEngine.ts`; it has no remote dependency.
+
+
+## Current spatial-model boundary and future 3D work
+
+The current heat surface is a computed 2D raster, not a real 3D city mesh. `city_simulation.py` returns simulated building/road/vegetation records but the frontend does not yet render a 3D GIS model. A future 3D visualisation should be evaluated separately (for example, a map extrusion layer or Three.js/React Three Fiber) after data/provenance and performance requirements are defined. It must consume HITR analysis data rather than replace the existing map/planner stack.
