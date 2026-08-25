@@ -214,6 +214,10 @@ export function getMedicalTriage(query: string): MedicalEmergencyProtocol | null
     q.includes('delirium') ||
     q.includes('seizure') ||
     q.includes('confusion') ||
+    q.includes('disoriented') ||
+    q.includes('slurred speech') ||
+    q.includes('collapse') ||
+    q.includes('passed out') ||
     q.includes('104') ||
     q.includes('40 degree')
   ) {
@@ -225,7 +229,19 @@ export function getMedicalTriage(query: string): MedicalEmergencyProtocol | null
     q.includes('nausea') ||
     q.includes('clammy') ||
     q.includes('pale') ||
-    q.includes('heavy sweat')
+    q.includes('heavy sweat') ||
+    q.includes('sweating') ||
+    q.includes('headache') ||
+    q.includes('vomit') ||
+    q.includes('weakness') ||
+    q.includes('fatigue') ||
+    q.includes('dehydration') ||
+    q.includes('thirsty') ||
+    q.includes('dark urine') ||
+    q.includes('hot skin') ||
+    q.includes('feel sick') ||
+    q.includes('medical symptom') ||
+    q.includes('heat illness')
   ) {
     return HEAT_MEDICAL_PROTOCOLS[1]; // Heat Exhaustion
   }
