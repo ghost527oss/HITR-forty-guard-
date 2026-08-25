@@ -51,3 +51,7 @@ The Database → Architectural Designs feature includes the Patch1.0v local advi
 ## Approved central-assistant direction (not yet implemented)
 
 The next assistant phase will replace the older bounded assistant UI with the offline Patch1.0v advisor capability and connect it to selected map coordinates, heat/risk/source, land-use, Knowledge Set records and planner output. It must remain free to run while using online live heat-wave, emergency-alert and weather context when available. Any real FortyGuard call is deferred until the real client implementation and authenticated API tests are complete. Planner “add/remove changes” requires a separate mutable draft-plan model; the current backend returns recommendations only.
+
+## Central assistant replacement — phase 1
+
+`CentralAssistantScreen` is the active Assistant route. It uses the bundled Patch1.0v deterministic engine and the Knowledge Set for symptoms, heat-safety, cooling-design and household-plan queries. `App.tsx` supplies selected coordinates, heat/risk/source, land use and planner result as context. The previous API-backed assistant screen is retained as unused source during validation. This does not yet make a real FortyGuard request or mutate a planner result.

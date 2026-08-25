@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import BottomNav from "./components/BottomNav";
 import HomeScreen from "./screens/HomeScreen";
 import MapScreen from "./screens/MapScreen";
-import AssistantScreen from "./screens/AssistantScreen";
+import CentralAssistantScreen from "./screens/CentralAssistantScreen";
 import ArchitecturalDesignsScreen from "./screens/ArchitecturalDesignsScreen";
 import PlannerScreen from "./screens/PlannerScreen";
 import ToolsScreen from "./screens/ToolsScreen";
@@ -219,7 +219,15 @@ export default function App() {
           />
         )}
 
-        {view === "assistant" && <AssistantScreen />}
+        {view === "assistant" && (
+          <CentralAssistantScreen
+            picked={picked}
+            reading={reading}
+            land={land}
+            plan={plan}
+            onOpenPlanner={() => setView("planner")}
+          />
+        )}
         {view === "architectural_designs" && <ArchitecturalDesignsScreen />}
 
         {view === "planner" && (

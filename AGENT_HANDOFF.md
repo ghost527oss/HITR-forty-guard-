@@ -431,3 +431,9 @@ Current spatial reality: `heat_surface.py` creates a sampled 2D temperature rast
 ### Draft-plan history foundation (in progress)
 
 `frontend/src/planner/draftHistory.ts` provides the initial immutable proposal model: base plan, parent-linked revisions, change records, current selection, undo, and child-branch lookup. Keep it local until a reviewed persistence/export design is chosen. Never mutate the base analysed `Plan`; an “add hospital” followed by “change hospital to police station” must become distinct revisions/branches rather than destructive edits.
+
+### Central assistant replacement — phase 1 completed
+
+The visible `assistant` view now uses `frontend/src/screens/CentralAssistantScreen.tsx`, not the old `AssistantScreen.tsx`. It calls the Patch1.0v `offlineAiEngine` locally and receives map/planner context as props from `App.tsx`: picked coordinate, `HeatReading`, `LandInfo`, and generated `Plan`. It does not call Gemini or require Supabase. The legacy screen is intentionally retained but unused until user acceptance.
+
+This phase does **not** implement real FortyGuard calls, planner text parsing, plan mutation, or draft-plan UI. The heat source shown in assistant context must be treated honestly: mock until the real FortyGuard client is implemented and tested. The next safe increment is template-to-draft-plan creation using `draftHistory.ts`; do not create destructive city edits.

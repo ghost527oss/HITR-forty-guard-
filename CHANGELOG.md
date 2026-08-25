@@ -388,3 +388,11 @@ All notable changes to this project are documented here. Format inspired by
 ### Added — Draft plan history foundation (next planning phase)
 - Added `frontend/src/planner/draftHistory.ts`, an immutable client-side draft revision model. It keeps the analysed backend plan unchanged while allowing changes to form parent-linked alternatives, undo to move to a parent, and later revision-branch selection without deleting another scenario.
 - This is a data-model foundation only; no city infrastructure is changed and no planner edit UI is exposed yet.
+
+### Changed — central offline assistant replacement (phase 1)
+- Replaced the visible Assistant route with `CentralAssistantScreen`. It uses Patch1.0v's local `offlineAiEngine` and Knowledge Set records for free deterministic symptom, heat-safety, cooling-design and household-plan guidance.
+- The central assistant receives selected coordinate, current heat/risk/source, land-use and current planner result from `App.tsx`. It clearly exposes whether a source is mock or live through the supplied heat-reading source and includes a City Planner handoff button.
+- The previous `AssistantScreen.tsx` remains in source as a recoverable legacy implementation; it is not deleted until the replacement receives user acceptance.
+
+### Verification
+- Frontend type-check and production build pass. Backend Python compilation and health/heat/AI-status TestClient checks pass.
