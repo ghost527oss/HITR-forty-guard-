@@ -49,9 +49,9 @@ analysis and a **ranked intervention plan** (see `docs/algorithm.md`).
 
 ## Database feature hub (unreleased navigation update)
 
-The compact mobile bottom navigation contains Home, Map, Assistant, Database, and Settings. Database is an organised entry point rather than a replacement for existing features. It exposes three folders: **Architectural Designs** (the future 100-method cooling-design library), **City Planner** (the existing map-connected intervention planner), and **Tools** (the existing tools screen). This preserves access to all current functions while keeping the bottom bar usable on a phone.
+The compact mobile bottom navigation contains Home, Map, Assistant, Database, and Settings. Database is an organised entry point rather than a replacement for existing features. It exposes three folders: **Knowledge Set** (the 100-method cooling-design library and local advisory records), **City Planner** (the existing map-connected intervention planner), and **Tools** (the existing tools screen). This preserves access to all current functions while keeping the bottom bar usable on a phone.
 
 
-## Knowledge Set and offline-first operation
+## Knowledge Set and online-first operation
 
-Database exposes **Knowledge Set**, the bundled architectural cooling designs and local heat-safety/advisor records. Supabase is optional for the current demo: the application operates from bundled data when it is not configured. Supabase remains available later for durable shared knowledge and saved-plan persistence. The intended next assistant evolution is a central, offline/free navigator over map heat context, the Knowledge Set and planner output.
+Database exposes **Knowledge Set**, the bundled architectural cooling designs and local heat-safety/advisor records. Supabase is optional for the current demo. The Knowledge Set can be bundled locally, while live heat-wave, emergency-alert and weather context is intended to be online when connectivity is available; bundled content is only a fallback. Supabase remains available later for durable shared knowledge and saved-plan persistence. The intended next assistant evolution is a central, offline/free navigator over map heat context, the Knowledge Set and planner output.

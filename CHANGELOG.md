@@ -381,6 +381,6 @@ All notable changes to this project are documented here. Format inspired by
 - Vite reports one non-blocking bundle-size warning (main JavaScript bundle is over 500 kB after minification); code splitting can be considered later.
 
 
-### Changed — Knowledge Set terminology (unreleased follow-up)
+### Changed — Knowledge Set terminology and online-first correction (unreleased follow-up)
 - Renamed the Database folder visible to users from **Architectural Designs** to **Knowledge Set**. The contained Patch1.0v cooling-design/advisor feature remains unchanged.
-- Documented the offline-first/Supabase-optional decision, central-assistant direction, planner-edit limitation and current 2D-vs-3D spatial-model boundary. No planner scoring or assistant behavior changed in this follow-up.
+- Corrected product direction: the application is online-first for live heat-wave, emergency-alert and weather context; bundled knowledge/mock data is a free fallback, not the intended primary source. Supabase remains optional. Documented the central-assistant direction, planner-edit limitation and current 2D-vs-3D spatial-model boundary. No planner scoring or assistant behavior changed in this follow-up.
