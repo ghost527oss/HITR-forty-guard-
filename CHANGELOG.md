@@ -384,3 +384,7 @@ All notable changes to this project are documented here. Format inspired by
 ### Changed — Knowledge Set terminology and online-first correction (unreleased follow-up)
 - Renamed the Database folder visible to users from **Architectural Designs** to **Knowledge Set**. The contained Patch1.0v cooling-design/advisor feature remains unchanged.
 - Corrected product direction: the application is online-first for live heat-wave, emergency-alert and weather context; bundled knowledge/mock data is a free fallback, not the intended primary source. Supabase remains optional. Documented the central-assistant direction, planner-edit limitation and current 2D-vs-3D spatial-model boundary. No planner scoring or assistant behavior changed in this follow-up.
+
+### Added — Draft plan history foundation (next planning phase)
+- Added `frontend/src/planner/draftHistory.ts`, an immutable client-side draft revision model. It keeps the analysed backend plan unchanged while allowing changes to form parent-linked alternatives, undo to move to a parent, and later revision-branch selection without deleting another scenario.
+- This is a data-model foundation only; no city infrastructure is changed and no planner edit UI is exposed yet.

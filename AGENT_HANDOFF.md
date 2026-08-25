@@ -427,3 +427,7 @@ The user has approved a future replacement of the old bounded Assistant screen w
 Planning edits need a separate, deliberate design phase: current `planner.py` generates ranked interventions but has no mutable plan model or add/remove/edit endpoint. A safe next slice is a local draft-plan state with template buttons and a review/apply flow; it must not claim to modify real city infrastructure. The user intends to supply research papers before pattern-recognition/scoring changes.
 
 Current spatial reality: `heat_surface.py` creates a sampled 2D temperature raster (with hotspot/coolspot heuristics and temporal estimates), and `city_simulation.py` returns a lightweight simulated city data model. HITR does not yet construct a true 3D GIS/building mesh or render a 3D map. Evaluate a browser renderer such as Three.js/React Three Fiber or a MapLibre-compatible 3D extrusion layer only after requirements/research are supplied; do not import an external 3D app wholesale.
+
+### Draft-plan history foundation (in progress)
+
+`frontend/src/planner/draftHistory.ts` provides the initial immutable proposal model: base plan, parent-linked revisions, change records, current selection, undo, and child-branch lookup. Keep it local until a reviewed persistence/export design is chosen. Never mutate the base analysed `Plan`; an “add hospital” followed by “change hospital to police station” must become distinct revisions/branches rather than destructive edits.
