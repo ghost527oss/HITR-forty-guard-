@@ -59,3 +59,7 @@ The next assistant phase will replace the older bounded assistant UI with the of
 ## Location warnings and optional web fallback
 
 The central assistant displays a California heat warning when the selected reading has `very_high` or `extreme` risk. The setting `hitr.google-search` controls a consent-based fallback: when enabled, an answer asks whether the person wants a Google search and opens Google only after an explicit click. It is not a paid Google Search API and does not search automatically. With the setting off, no search prompt is rendered.
+
+## Medical-triage priority
+
+The active central assistant now evaluates symptom/medical language before architecture retrieval. This prevents a health question from falling through to a building recommendation. Precise matches use the bundled protocol; broad health wording starts with cautious heat-exhaustion guidance and emergency escalation language. This is general safety information, not a diagnosis or substitute for emergency services.

@@ -4,6 +4,11 @@ import {
   queryOfflineAiEngine,
   type AiQueryResult,
 } from "../features/architectural-designs/utils/offlineAiEngine";
+import {
+  HEAT_MEDICAL_PROTOCOLS,
+  getMedicalTriage,
+  type MedicalEmergencyProtocol,
+} from "../features/architectural-designs/data/medicalKnowledge";
 
 interface CentralAssistantScreenProps {
   picked: { lat: number; lng: number } | null;
@@ -22,6 +27,29 @@ const PROMPTS = [
   "What should this hot location prioritise?",
   "How do I protect elderly people during a heatwave?",
 ];
+
+const MEDICAL_TERMS = /symptom|symptoms|medical|health|ill|sick|pain|fever|temperature|dizzy|dizziness|nausea|vomit|vomiting|headache|cramp|faint|collapse|confus|unconscious|seizure|sweat|dehydrat|thirst|urine|weak|fatigue|heat stroke|heat exhaustion|heat illness|elderly|infant|baby|pregnan|medication/i;
+
+function medicalResponse(question: string): AiQueryResult | null {
+  if (!MEDICAL_TERMS.test(question)) return null;
+  // If the exact terminology is absent, choose a cautious heat-exhaustion
+  // starting point rather than returning unrelated building architecture.
+  const protocol: MedicalEmergencyProtocol = getMedicalTriage(question) ?? HEAT_MEDICAL_PROTOCOLS[1];
+  return {
+    title: protocol.condition,
+    category: "medical-emergency",
+    badge: protocol.severity,
+    summary: `Medical safety guidance: ${protocol.condition}. ${protocol.whenToCallEMS}`,
+    keyDirectives: [
+      ...protocol.immediateActions,
+      `Do not: ${protocol.criticalContraindications[0] ?? "ignore worsening symptoms."}`,
+      `Cooling: ${protocol.coolingTechnique}`,
+    ],
+    recommendedDesigns: [],
+    medicalAlert: protocol,
+    contraindications: protocol.criticalContraindications,
+  };
+}
 
 function contextSummary(reading: HeatReading | null, land: LandInfo | null, plan: Plan | null) {
   if (!reading) return "No selected heat reading yet. Pick a map location to give the assistant local context.";
@@ -53,7 +81,9 @@ export default function CentralAssistantScreen({ picked, reading, land, plan, on
   const send = (raw?: string) => {
     const question = (raw ?? input).trim();
     if (!question) return;
-    const result = queryOfflineAiEngine(question);
+    // Medical triage is deliberately evaluated before architectural matching.
+    // A symptom question must never fall through to a building recommendation.
+    const result = medicalResponse(question) ?? queryOfflineAiEngine(question);
     const localContext = reading
       ? `\n\nSelected map context: ${summary}`
       : "";
@@ -78,7 +108,7 @@ export default function CentralAssistantScreen({ picked, reading, land, plan, on
         {messages.map((message, index) => (
           <article key={index} className={`whitespace-pre-line rounded-2xl px-4 py-3 text-sm ${message.role === "user" ? "ml-auto max-w-[82%] bg-heat-600 text-white" : "mr-auto max-w-[92%] bg-gray-100 text-gray-800"}`}>
             {message.text}
-            {message.result?.medicalAlert && <p className="mt-3 rounded-lg bg-red-100 p-2 text-xs font-semibold text-red-900">Emergency guidance only — for California, USA only. Call 911 for a life-threatening emergency.</p>}
+            {message.result?.medicalAlert && <div className="mt-3 rounded-lg bg-red-100 p-2 text-xs text-red-900"><p className="font-semibold">Emergency guidance only — for California, USA only. Call 911 for a life-threatening emergency.</p><p className="mt-1">When to call EMS: {message.result.medicalAlert.whenToCallEMS}</p>{message.result.contraindications?.length ? <p className="mt-1">Do not: {message.result.contraindications.slice(0, 2).join(" ")}</p> : null}</div>}
             {message.result?.recommendedDesigns.length ? <p className="mt-3 text-xs font-medium">Knowledge Set matches: {message.result.recommendedDesigns.slice(0, 3).map((d) => `#${d.id} ${d.name}`).join(" · ")}</p> : null}
             {message.searchQuery && <div className="mt-3 border-t border-gray-300 pt-2 text-xs"><p>Would you like to search Google for current additional information?</p><button onClick={() => openGoogleSearch(message.searchQuery!)} className="mt-1 rounded-lg bg-white px-2 py-1 font-semibold text-heat-700">Yes, search Google</button></div>}
           </article>

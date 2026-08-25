@@ -441,3 +441,7 @@ This phase does **not** implement real FortyGuard calls, planner text parsing, p
 ### Assistant location warning and web-search consent
 
 `CentralAssistantScreen` now derives a selected-location warning from `HeatReading.risk`: only `very_high` and `extreme` show the red warning. Settings stores `hitr.google-search`; when enabled, the assistant renders a user-confirmed Google search link after an answer. This is a browser Google URL, not a Google Search API integration, so it costs no API money and does not automatically transmit questions. Keep the consent interaction intact. Current Settings applies a California-only input guard based on California/city text; a future geocoder result validation is needed for strict geographic enforcement.
+
+### Medical-triage priority fix
+
+`CentralAssistantScreen` has a `medicalResponse()` guard before `queryOfflineAiEngine()`. It matches broad symptom/health terms and resolves a protocol through `getMedicalTriage`; if no exact match is found, it defaults to the safer heat-exhaustion protocol rather than architectural content. Keep medical text clearly labelled as safety guidance and preserve 911 escalation. Do not remove the guard when extending building/planner abilities.
