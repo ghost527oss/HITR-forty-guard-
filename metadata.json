@@ -1,0 +1,6 @@
+{
+  "name": "HITR 100 House Cooling Architectural Designs",
+  "description": "Comprehensive catalogue and interactive planner for 100 architectural house cooling strategies, from passive vernacular techniques to modern high-tech solutions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
