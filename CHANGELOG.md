@@ -3,6 +3,38 @@
 All notable changes to this project are documented here. Format inspired by
 [Keep a Changelog](https://keepachangelog.com/). Versioning: `v0.x` for pre-release planning/build.
 
+## [v0.7.0] — 2026-08-26
+### Added — Planner launch popup + Design Studio (research-grounded)
+- **`uhiFactors.ts` (new, `frontend/src/planner/`)** — peer-reviewed UHI factor engine from the
+  3-paper research base (`docs/research/`): Oke canyon law `Δt=7.45+3.97·ln(H/w)`, SVF proxy,
+  full **Fanger PMV / PPD (ISO 7730)** with damped iteration (raw fixed-point diverges for
+  summer clo), official **heatwave definitions** (35 °C × 3 days, or 3-day mean ≥ 28 °C with
+  nights ≥ 21 °C — Lee & Kim 2022), wind helpers, and a **design simulator**: placements
+  (tree cluster / water station / cool roofs / garden) with literature-calibrated °C effects,
+  linear distance decay, per-kind stacking caps and a −3.5 °C total cap; premium temp colour
+  ramp; greedy **water-station auto-placement** (hottest-first, ≥ 120 m spacing, refuge rule).
+- **`PlannerStartModal.tsx` (new)** — premium glass popup when tapping *City Planner*
+  (Database hub or Assistant): step 1 pick place (with "Select on map" → map-view pill flow
+  that returns to the popup), step 2 level of change — 5 scopes: Spot retouch (L1), Block
+  retrofit (L2), District re-plan (L3), Whole city (L4), **Farm & garden** build. Launches
+  the Design Studio; "classic ranked-list planner" link kept.
+- **`DesignStudioScreen.tsx` (new)** — premium dark 2D map studio (CARTO dark basemap,
+  MapLibre): live heat-grid overlay (400 cells, honest "mock model (FortyGuard slot)" badge
+  until real API), factor layers — **Wind** (animated streaks from live Open-Meteo vector,
+  free/no key, graceful synthetic fallback), Structures (height-sized buildings from
+  `/api/analysis/simulation_3d`), Green, backend tree/water suggestions with reasons, and
+  auto-placed water stations (tap = why-here popup). **Design mode**: tap-to-place
+  interventions with teal halos; "After design" layer shows simulated cooler map; impact
+  card = avg/peak before→after °F, avg °C drop, PMV/PPD "feels" chip, undo/clear. Heatwave
+  banner fires on the official definitions + 33 °C design-failure rule (Ancona 2016).
+- **App wiring** — new `design_studio` view; planner buttons now open the popup; floating
+  pill on Map view during location pick.
+- **API** — `getWeatherNow()` (Open-Meteo current + 3-day min/max, free, no key);
+  `HeatGridResponse.points` tolerated.
+### Fixed
+- **Heat overlay never rendered** — `/api/heat/grid` returns `points` but the client read
+  `cells` (known mismatch): `loadHeatGrid()` now accepts either shape; main heat map works.
+
 ## [v0.6.2] — 2026-08-23
 ### Fixed — Backend correctness (audit triplet: #9 + #11 + #21)
 - **#9 `/api/ai/browse` ignored Supabase.** Hardcoded `knowledge.seed.ENCYCLOPOLOGY`; live DB was never

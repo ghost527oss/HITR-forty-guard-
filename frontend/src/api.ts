@@ -26,7 +26,45 @@ export interface HeatCell {
 export interface HeatGridResponse {
   provider: string;
   count: number;
-  cells: HeatCell[];
+  cells?: HeatCell[];
+  /** Backend field name (known contract mismatch — tolerated until backend fix). */
+  points?: HeatCell[];
+}
+
+// ── Live weather (Open-Meteo: free, no API key) ──────────────────────────────
+
+export interface WeatherDay {
+  t_max_c: number;
+  t_min_c: number;
+}
+
+export interface WeatherNow {
+  temp_c: number;
+  wind_ms: number;
+  wind_dir: number;
+  rh: number;
+  days: WeatherDay[];
+}
+
+export async function getWeatherNow(lat: number, lng: number): Promise<WeatherNow> {
+  const url =
+    `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}` +
+    `&current=temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m` +
+    `&daily=temperature_2m_max,temperature_2m_min&forecast_days=3&timezone=auto`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`open-meteo ${res.status}`);
+  const j = (await res.json()) as any;
+  const times: string[] = j.daily?.time ?? [];
+  return {
+    temp_c: j.current?.temperature_2m ?? 0,
+    wind_ms: j.current?.wind_speed_10m ?? 0,
+    wind_dir: j.current?.wind_direction_10m ?? 0,
+    rh: j.current?.relative_humidity_2m ?? 40,
+    days: times.map((_, i) => ({
+      t_max_c: j.daily?.temperature_2m_max?.[i] ?? 0,
+      t_min_c: j.daily?.temperature_2m_min?.[i] ?? 0,
+    })),
+  };
 }
 
 export interface LandInfo {

@@ -300,7 +300,8 @@ function estimateSpan(cells: HeatCell[]): { lat: number; lng: number } {
 }
 
 // Helper used by App to load a heat grid around the current map center.
+// Backend returns `points` (not `cells`) — tolerate both shapes.
 export async function loadHeatGrid(lat: number, lng: number): Promise<HeatCell[]> {
   const res = await getHeatGrid(lat, lng, 0.04, 24);
-  return res.cells;
+  return res.cells ?? res.points ?? [];
 }

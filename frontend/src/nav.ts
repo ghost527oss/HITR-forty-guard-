@@ -8,6 +8,7 @@ export type View =
   | "settings"
   | "database"
   | "architectural_designs"
+  | "design_studio"
   | "heat_surface"
   | "city_simulation"
   | "training"

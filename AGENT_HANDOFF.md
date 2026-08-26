@@ -13,7 +13,7 @@
 **Demo scope:** California only, US-style emergency numbers. Default city Los Angeles (34.0522, -118.2437).
 
 **Repo:** `https://github.com/ghost527oss/HITR-forty-guard-`
-**Branch always:** `arena/01a02b11-hitr-forty-guard` (don't switch)
+**Branch always:** `arena/01a037bb-hitr-forty-guard` (don't switch)
 **Constraints:** user is on phone 95% of time, $0 budget, no API keys yet, occasional laptop only.
 
 ---
@@ -34,6 +34,20 @@
 ---
 
 ## Part 3 — Where the repo is RIGHT NOW
+
+> **⚡ Session update 2026-08-26 (read this first):**
+> - New flagship flow: **Database → City Planner → popup → Design Studio** (`DesignStudioScreen.tsx`
+>   + `PlannerStartModal.tsx` + `planner/uhiFactors.ts`). Premium dark 2D map: heat overlay
+>   (mock/FortyGuard slot), wind streaks (Open-Meteo, free), structures/green layers, backend
+>   suggestions, auto water-station placement, tap-to-place design tools with simulated
+>   before→after temps (literature-calibrated, capped −3.5 °C), PMV/PPD feels-chip, heatwave
+>   banner (35 °C×3d or 28-mean/21-night rules). Scopes: spot/block/district/city/farm.
+> - **3 research papers** analyzed in `docs/research/` (untracked by user request):
+>   PAPER-1 Ancona (physics), PAPER-2 Lee & Kim (evidence + planning scales),
+>   PAPER-3 Wicki (trade-off UX), SYNTHESIS.md (merged factor system + roadmap).
+> - Fixed: heat-grid `points`/`cells` mismatch — main map heat overlay now renders.
+> - Classic `PlannerScreen.tsx` unchanged, reachable via popup footer.
+> - Backend untouched this session. Test: `cd frontend && npm ci && ./node_modules/.bin/tsc --noEmit && npm run build`.
 
 **Branch tip right now:** `3546ec0` (v0.5.0 — `app redesign: home screen + bottom navigation`). This is the last known safe, Vercel-deployable state.
 

@@ -12,6 +12,8 @@ import DatabaseScreen from "./screens/DatabaseScreen";
 import HeatSurfaceScreen from "./screens/HeatSurfaceScreen";
 import CitySimulationScreen from "./screens/CitySimulationScreen";
 import TrainingScreen from "./screens/TrainingScreen";
+import DesignStudioScreen from "./screens/DesignStudioScreen";
+import PlannerStartModal, { type PlannerScope } from "./components/PlannerStartModal";
 import AlertBanner from "./components/AlertBanner";
 import {
   analyzeSpot,
@@ -60,6 +62,11 @@ export default function App() {
   const [plan, setPlan] = useState<Plan | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  // Planner launch flow: popup → (optional) map pick → Design Studio.
+  const [plannerModal, setPlannerModal] = useState(false);
+  const [plannerPicking, setPlannerPicking] = useState(false);
+  const [studioSpot, setStudioSpot] = useState<{ lat: number; lng: number } | null>(null);
+  const [studioScope, setStudioScope] = useState<PlannerScope>("spot");
 
   // Race-condition guards.
   const clickCounterRef = useRef(0);
@@ -93,6 +100,11 @@ export default function App() {
   }, [center]);
 
   const handlePick = useCallback(async (lat: number, lng: number) => {
+    // Planner setup: capture the tap and return to the launch popup.
+    if (plannerPicking) {
+      setPlannerPicking(false);
+      setPlannerModal(true);
+    }
     const id = ++clickCounterRef.current;
     setPicked({ lat, lng });
     setLoading(true);
@@ -112,7 +124,7 @@ export default function App() {
         setLoading(false);
       }
     }
-  }, []);
+  }, [plannerPicking]);
 
   const handleSearch = useCallback(async (q: string) => {
     if (!q.trim()) return;
@@ -215,7 +227,7 @@ export default function App() {
         {view === "database" && (
           <DatabaseScreen
             onOpenArchitecturalDesigns={() => setView("architectural_designs")}
-            onOpenPlanner={() => setView("planner")}
+            onOpenPlanner={() => setPlannerModal(true)}
             onOpenTools={() => setView("tools")}
           />
         )}
@@ -226,11 +238,21 @@ export default function App() {
             reading={reading}
             land={land}
             plan={plan}
-            onOpenPlanner={() => setView("planner")}
+            onOpenPlanner={() => setPlannerModal(true)}
             webSearchEnabled={webSearchEnabled}
           />
         )}
         {view === "architectural_designs" && <ArchitecturalDesignsScreen />}
+
+        {view === "design_studio" && studioSpot && (
+          <DesignStudioScreen
+            lat={studioSpot.lat}
+            lng={studioSpot.lng}
+            scope={studioScope}
+            locationName={title}
+            onBack={() => setView("database")}
+          />
+        )}
 
         {view === "planner" && (
           <PlannerScreen
@@ -280,6 +302,47 @@ export default function App() {
           />
         )}
       </main>
+
+      {/* Planner launch popup (Database → City Planner) */}
+      <PlannerStartModal
+        open={plannerModal}
+        spot={picked}
+        locationName={title}
+        onClose={() => setPlannerModal(false)}
+        onChooseOnMap={() => {
+          setPlannerModal(false);
+          setPlannerPicking(true);
+          setView("map");
+        }}
+        onLaunch={(spot, scope) => {
+          setStudioSpot(spot);
+          setStudioScope(scope);
+          setPlannerModal(false);
+          setView("design_studio");
+        }}
+        onOpenClassic={() => {
+          setPlannerModal(false);
+          setView("planner");
+        }}
+      />
+
+      {/* Floating pill: planner location-pick mode on the map */}
+      {plannerPicking && view === "map" && (
+        <div className="absolute inset-x-4 bottom-16 z-40 flex items-center justify-between gap-3 rounded-2xl bg-slate-900/95 px-4 py-3 shadow-2xl ring-1 ring-white/15">
+          <p className="text-xs font-medium text-white">
+            <span className="mr-1">🎯</span> Tap the map to place your project…
+          </p>
+          <button
+            onClick={() => {
+              setPlannerPicking(false);
+              setPlannerModal(true);
+            }}
+            className="shrink-0 rounded-full bg-heat-600 px-3 py-1.5 text-[11px] font-bold text-white"
+          >
+            Back to setup
+          </button>
+        </div>
+      )}
 
       <BottomNav active={view} onNavigate={setView} />
     </div>
