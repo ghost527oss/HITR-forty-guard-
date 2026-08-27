@@ -3,6 +3,16 @@
 All notable changes to this project are documented here. Format inspired by
 [Keep a Changelog](https://keepachangelog.com/). Versioning: `v0.x` for pre-release planning/build.
 
+## [v0.7.1] — 2026-08-27
+### Added — API-key security guide (safe FortyGuard key storage)
+- **`docs/secrets.md`** — plain-language rules for keeping keys private: key lives only in
+  backend env vars (local gitignored `backend/.env` or Vercel Environment Variables), never in
+  `frontend/` (public bundle), never `VITE_`-prefixed, never in chat/commits. Includes phone steps
+  for Vercel, leak-rotation procedure, and the browser→backend→FortyGuard flow diagram.
+- **`backend/.env.example`** — committed template (empty values, safe) for local dev: copy to
+  `backend/.env` (gitignored) and fill in. `HEAT_PROVIDER=auto` already switches mock→real when
+  the key appears — no code change needed.
+
 ## [v0.7.0] — 2026-08-26
 ### Added — Planner launch popup + Design Studio (research-grounded)
 - **`uhiFactors.ts` (new, `frontend/src/planner/`)** — peer-reviewed UHI factor engine from the
