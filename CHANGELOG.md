@@ -3,6 +3,16 @@
 All notable changes to this project are documented here. Format inspired by
 [Keep a Changelog](https://keepachangelog.com/). Versioning: `v0.x` for pre-release planning/build.
 
+## [v0.7.2] — 2026-08-27
+### Added — One-project Vercel deployment (frontend + backend together)
+- **`api/index.py`** — serverless entrypoint exposing the FastAPI app (ASGI export +
+  Mangum fallback). No second Vercel project or backend URL needed.
+- **`vercel.json`** — `/api/*` now rewrites to the Python function (`/api/index`) instead of the
+  old `https://your-backend.vercel.app` placeholder (which pointed nowhere).
+- **Root `requirements.txt`** — Python function deps (backend mirror + mangum). Local dev
+  unchanged (still `backend/requirements.txt` + uvicorn + Vite proxy).
+- Frontend version bumped to 0.7.2.
+
 ## [v0.7.1] — 2026-08-27
 ### Added — API-key security guide (safe FortyGuard key storage)
 - **`docs/secrets.md`** — plain-language rules for keeping keys private: key lives only in
