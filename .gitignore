@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Builds
+dist/
+build/
+.next/
+out/
+
+# Environment & secrets — NEVER commit real keys
+.env
+.env.*
+!.env.example
+*.local
+*.pem
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Logs
+*.log
+npm-debug.log*
+
+# Data artifacts
+*.db
+*.sqlite
+*.sqlite3
+data/generated/
+
+# TypeScript build info
+*.tsbuildinfo

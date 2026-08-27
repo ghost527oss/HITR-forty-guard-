@@ -1,0 +1,9 @@
+# Requirements for Vercel serverless functions (Python runtime).
+# Mirrors backend/requirements.txt + mangum (ASGI adapter fallback).
+# Local dev does NOT use this file — see backend/requirements.txt + uvicorn.
+fastapi>=0.115
+pydantic>=2.7
+pydantic-settings>=2.3
+httpx>=0.27
+python-dotenv>=1.0
+mangum>=0.17
