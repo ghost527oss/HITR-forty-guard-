@@ -5,7 +5,6 @@ import MapScreen from "./screens/MapScreen";
 import CentralAssistantScreen from "./screens/CentralAssistantScreen";
 import ArchitecturalDesignsScreen from "./screens/ArchitecturalDesignsScreen";
 import PlannerScreen from "./screens/PlannerScreen";
-import ToolsScreen from "./screens/ToolsScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 import EmergencyScreen from "./screens/EmergencyScreen";
 import DatabaseScreen from "./screens/DatabaseScreen";
@@ -261,7 +260,6 @@ export default function App() {
           <DatabaseScreen
             onOpenArchitecturalDesigns={() => setView("architectural_designs")}
             onOpenPlanner={() => setPlannerModal(true)}
-            onOpenTools={() => setView("tools")}
           />
         )}
 
@@ -321,7 +319,6 @@ export default function App() {
           <TrainingScreen onBack={() => setView("settings")} />
         )}
 
-        {view === "tools" && <ToolsScreen />}
         {view === "emergency" && <EmergencyScreen onBack={() => setView("map")} />}
 
         {view === "settings" && (

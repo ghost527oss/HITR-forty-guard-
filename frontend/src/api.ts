@@ -174,10 +174,6 @@ export interface POI {
   lng: number;
 }
 
-export interface POIResponse {
-  pois: POI[];
-}
-
 export interface SurfaceCell {
   lat: number;
   lng: number;
@@ -264,10 +260,6 @@ export function analyzeSpot(lat: number, lng: number): Promise<SpotAnalysis> {
 
 export function analyzePattern(lat: number, lng: number): Promise<PatternAnalysis> {
   return get<PatternAnalysis>(`/api/analysis/pattern?lat=${lat}&lng=${lng}`);
-}
-
-export function getNearbyPOIs(lat: number, lng: number, radius = 500): Promise<POIResponse> {
-  return get<POIResponse>(`/api/analysis/pois?lat=${lat}&lng=${lng}&radius=${radius}`);
 }
 
 export function getHeatSurface(

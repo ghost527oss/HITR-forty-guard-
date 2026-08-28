@@ -5,6 +5,79 @@ All notable changes to this project are documented here. Format inspired by
 
 ## [Unreleased]
 
+### Fixed — the planner is now factor-driven, local, and explainable (the big one)
+The user's standing ask: the planner had to understand *the factors that affect
+a neighbourhood's temperature* (the three research papers) and use them to
+decide **where** to put trees and water — and to explain **why** any
+temperature changes. Five defects, five fixes:
+
+1. **The mock heat grid was a checkerboard.** `MockHeatProvider` hashed each
+   coordinate independently, so every cell was unrelated to its neighbours
+   (adjacent cells differed by ~10 °F). Anything computed from the grid —
+   auto water stations, "hottest cell" suggestions — landed on random-looking
+   specks. The field is now a spatially coherent pseudo-climate: two smooth
+   wave scales (district ≈ 1.1 km, street ≈ 0.27 km) + fine jitter. Adjacent
+   cells now differ ~2.8 °F; hot zones form contiguous regions. Still a pure
+   function of (lat, lng) — deterministic, $0, no key. Tests pass unchanged
+   (bounds 80–110, determinism, conversion).
+2. **Auto-placement is now factor-driven, not random.** New `suggestPlacements()`
+   in `uhiFactors.ts` (the "Auto place ×5" button in the studio):
+   - tree clusters → hottest cells, but only where there is **no canopy within
+     60 m** (diminishing returns — never plant where trees already are), ≥80 m
+     apart, with a **canyon bonus** beside tall buildings (Oke 1981: narrow
+     street canyons trap heat);
+   - cool roofs → must sit **on a building** (hottest cells with a roof within
+     60 m, tallest wins; Lee & Kim 2022: urban air −1.2…−2 K);
+   - community gardens → hot cells on **open ground only** (no building within
+     40 m; Seoul: ≈300 m² polygonal green ≈ −1 °C);
+   - water stations → hottest-first + spacing, with a **hospital proximity**
+     note (Lee & Kim 2022: vulnerable people need easy-access cool refuges).
+   Deterministic (hottest-first, stable tie-break, no randomness), and nothing
+   is placed below 95 °F ("high" risk) — no invented interventions in
+   comfortable weather.
+3. **Every placement explains itself.** Tap any placed dot: it shows the kind,
+   the calibrated drop (e.g. "−0.80 °C at site · fades to 0 over 100 m") and
+   the factor reason ("104 °F hotspot · no canopy within 60 m · beside 24 m
+   building — canyon traps heat (Oke 1981)"). Smart placements carry their
+   reason; hand-placed ones show the paper note.
+4. **The impact card no longer implies city-wide change.** It used to say
+   "Avg temp 94 → 93.8 °F · avg −0.03 °C across map", which reads as *the
+   whole city cooled*. Now: **Peak temp** (before→after), **Strongest drop**
+   (at a site), and a per-tool contribution line ("Tree cluster ×2 → −0.80 °C
+   at site · fades to 0 over 100 m"), plus the honest physics line: "Local
+   effect: cools 12 of 400 map tiles (≈3 %). The area average barely moves —
+   a tree cools its block, not the whole city (Lee & Kim 2022)."
+5. **The change is actually visible.** Placing the first element (tap or auto)
+   switches the map to the "After design" view automatically, so the cooled
+   tiles are visible immediately instead of only in numbers.
+
+New/updated: `MockHeatProvider` (backend), `uhiFactors.ts` (+`suggestPlacements`,
+`designContributions`, `MIN_SUGGEST_TEMP_F`, `affectedCells`/`maxDropC`,
+hospital factor, `Placement.reason`), `DesignStudioScreen.tsx`, +12 vitest
+cases (47 total).
+
+### Removed — heatwave banner in the Design Studio (user request)
+The in-studio heatwave alert banner was hiding map information, and the user
+asked for it to be removed completely. Live heat is still surfaced on the map
+itself, in the PMV "feels" chip, and in the Home screen's alert banner. The
+research function (`heatwaveStatus`) and its tests are untouched.
+
+### Removed — the empty "Tools" folder from the Database screen (user request)
+Its three sub-folders (Architecture / Agriculture / First Aid) were empty
+placeholders. The folder card, the `tools` view, and `ToolsScreen.tsx` are
+gone. (Supersedes the earlier "keep Planner and Tools" note for Tools.) Also
+removed the dead `getNearbyPOIs()` client from `api.ts` (no callers; the
+backend guard test predicted its removal and was retired with it).
+
+### Fixed — Design Studio now follows the light/dark theme
+The studio was dark-only (Esri Dark Gray basemap + dark chrome) even in light
+mode. It now follows the app theme: CARTO Positron light basemap in light
+mode, Esri Dark Gray in dark mode (live swap, layers rebuilt on style load),
+with every overlay element (top bar, impact card, chips, tool buttons, bottom
+sheet) given light/dark pairs.
+
+## [Unreleased] (previous: contrast + overlay fixes)
+
 ### Fixed — white-on-white text left behind in the Knowledge Set after the theme flip
 The theme-toggle fix replaced 544 `slate-900/800/300` container classes with
 light/dark pairs, but it could not touch `text-white`: headings and labels that

@@ -130,27 +130,9 @@ def test_train_matches_TrainingResult(client):
     assert_has(r.json(), "TrainingResult")
 
 
-def test_pois_endpoint_does_not_exist_yet():
-    """Documents a known gap.
-
-    `api.ts` declares `getNearbyPOIs()` against `/api/analysis/pois`, but no such
-    route exists (404). Nothing calls it today, so it is latent rather than
-    broken. If the route is added, delete this test and add a real contract test.
-    """
-    text = TS_API.read_text(encoding="utf-8")
-    assert "getNearbyPOIs" in text, (
-        "getNearbyPOIs was removed from api.ts — this test can go too."
-    )
-
-    from app.main import app
-    # Read the generated OpenAPI schema rather than walking app.routes: since
-    # FastAPI 0.141 `include_router` stores _IncludedRouter objects, so route.path
-    # no longer exists and the old `getattr(r, "path", None)` comprehension
-    # yielded {None} — making this guard silently vacuous.
-    paths = set(app.openapi()["paths"])
-    assert "/api/analysis/pois" not in paths, (
-        "Route added! Delete this test and add a real contract test for it."
-    )
+# (The former test_pois_endpoint_does_not_exist_yet went away with it: the dead
+#  getNearbyPOIs() client was removed from api.ts, which the test itself
+#  predicted: "getNearbyPOIs was removed from api.ts — this test can go too.")
 
 
 # ── Planner ──────────────────────────────────────────────────────────────────

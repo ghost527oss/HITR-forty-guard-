@@ -6,7 +6,6 @@ export type View =
   | "map"
   | "assistant"
   | "planner"
-  | "tools"
   | "settings"
   | "database"
   | "architectural_designs"
