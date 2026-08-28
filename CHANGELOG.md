@@ -5,6 +5,35 @@ All notable changes to this project are documented here. Format inspired by
 
 ## [Unreleased]
 
+### Redesigned — the planner popup is now a neumorphic region screen
+When you pick a spot on the map and open the City Planner, the "Start a
+design" popup is now an elegant soft-UI (neumorphic) screen that follows the
+app theme — and its carved-in map shows **only the chosen region**:
+
+- The preview map fits exactly the scope's square, panning is **clamped to
+  it** (you can zoom in freely, with soft − / + / fit buttons, but you can
+  never see outside the square) — "show that area, nothing else".
+- The region follows the chosen level of change — the user's "big square vs
+  small square": **spot ≈ 450 m, block ≈ 900 m, district ≈ 1.5 km,
+  city ≈ 6.5 km, farm ≈ 1.1 km**. Picking a bigger scope animates the view
+  out to the bigger square.
+- The heat grid renders inside the preview, so you see what you're planning
+  (mock paints instantly; free).
+- Soft-UI styling throughout: monochrome surface, dual light/dark shadows,
+  raised elements that press *inset*, rounded 28 px card, no hard borders —
+  in both light and dark theme.
+- The Design Studio now launches **fit to the same square**, clamped to it
+  (a little padding so edge placements stay reachable), and its heat grid
+  spans the scope's region instead of a fixed 1.5 km. A soft **Fit** button
+  next to the back button re-frames the region at any time.
+- Shared plumbing extracted: `lib/basemaps.ts` (theme basemaps,
+  `squareBounds`, `toDegPoly`) and `lib/useDarkTheme.ts` (theme observer),
+  used by both the studio and the new pop screen.
+
+Verified: tsc clean, vitest 47/47, build ok, backend 171 passed + 1 xfailed.
+
+## [Unreleased] (previous: planner factor-driven + removals)
+
 ### Fixed — the planner is now factor-driven, local, and explainable (the big one)
 The user's standing ask: the planner had to understand *the factors that affect
 a neighbourhood's temperature* (the three research papers) and use them to

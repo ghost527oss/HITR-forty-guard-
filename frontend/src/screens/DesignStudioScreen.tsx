@@ -1,11 +1,14 @@
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { dropletSvg, treesSvg } from "../lib/mapIcons";
 import { loadRealHeatGrid } from "../lib/realHeat";
+import { useDarkTheme } from "../lib/useDarkTheme";
+import { BASEMAP_DARK, BASEMAP_LIGHT, squareBounds, toDegPoly } from "../lib/basemaps";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
   Building2,
   ChevronLeft,
+  Crosshair,
   Droplets,
   Layers,
   Leaf,
@@ -41,7 +44,7 @@ import {
   type PlacementKind,
 } from "../planner/uhiFactors";
 import type { PlannerScope } from "../components/PlannerStartModal";
-import { SCOPES } from "../components/PlannerStartModal";
+import { SCOPES, SCOPE_SPANS } from "../components/PlannerStartModal";
 
 interface DesignStudioScreenProps {
   lat: number;
@@ -51,69 +54,6 @@ interface DesignStudioScreenProps {
   onBack: () => void;
 }
 
-// Basemaps (both free, no key). The studio follows the app theme: Esri Dark
-// Gray in dark mode, CARTO Positron (light) in light mode — it used to be
-// dark-only, which clashed with the rest of the light-themed app.
-const STUDIO_STYLE_DARK: maplibregl.StyleSpecification = {
-  version: 8,
-  sources: {
-    "studio-base": {
-      type: "raster",
-      tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"],
-      tileSize: 256,
-      maxzoom: 16,
-      attribution: "Esri, HERE, Garmin, FAO, NOAA, USGS",
-    },
-    "studio-labels": {
-      type: "raster",
-      tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}"],
-      tileSize: 256,
-      maxzoom: 16,
-      attribution: "",
-    },
-  },
-  layers: [
-    { id: "studio-base", type: "raster", source: "studio-base" },
-    { id: "studio-labels", type: "raster", source: "studio-labels" },
-  ],
-};
-const STUDIO_STYLE_LIGHT: maplibregl.StyleSpecification = {
-  version: 8,
-  sources: {
-    "studio-base": {
-      type: "raster",
-      tiles: ["https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"],
-      tileSize: 256,
-      maxzoom: 19,
-      attribution: "© OpenStreetMap contributors © CARTO",
-    },
-    "studio-labels": {
-      type: "raster",
-      tiles: ["https://basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}.png"],
-      tileSize: 256,
-      maxzoom: 19,
-      attribution: "",
-    },
-  },
-  layers: [
-    { id: "studio-base", type: "raster", source: "studio-base" },
-    { id: "studio-labels", type: "raster", source: "studio-labels" },
-  ],
-};
-
-/** Follows the app's light/dark theme (the `dark` class on <html>, set by Settings). */
-function useDarkTheme(): boolean {
-  return useSyncExternalStore(
-    (onStoreChange) => {
-      const obs = new MutationObserver(onStoreChange);
-      obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
-      return () => obs.disconnect();
-    },
-    () => document.documentElement.classList.contains("dark"),
-  );
-}
-
-const GRID_SPAN = 0.014;
 const GRID_STEPS = 20;
 
 const TOOL_ORDER: PlacementKind[] = ["tree_cluster", "water_station", "cool_roof", "garden"];
@@ -129,22 +69,15 @@ interface LayerState {
   after: boolean;
 }
 
-function toDegPoly(lat: number, lng: number, radiusM: number): number[][] {
-  const dLat = radiusM / 111320;
-  const dLng = radiusM / (111320 * Math.max(Math.cos((lat * Math.PI) / 180), 0.2));
-  return [
-    [lng - dLng, lat - dLat],
-    [lng + dLng, lat - dLat],
-    [lng + dLng, lat + dLat],
-    [lng - dLng, lat + dLat],
-    [lng - dLng, lat - dLat],
-  ];
-}
+
 
 export default function DesignStudioScreen(props: DesignStudioScreenProps) {
   const { lat, lng, scope, locationName, onBack } = props;
   const scopeMeta = SCOPES.find((s) => s.id === scope) ?? SCOPES[0];
   const dark = useDarkTheme();
+  // The region the studio works in = the scope's square (same one the pop
+  // screen previewed): small scope → small region, big scope → big region.
+  const span = SCOPE_SPANS[scope] ?? 0.014;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -195,7 +128,7 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
 
     // Phase 1 — the mock paints instantly. It is one provider call per cell
     // (400 here), which is only acceptable because it is synthetic and free.
-    getHeatGrid(lat, lng, GRID_SPAN, GRID_STEPS)
+    getHeatGrid(lat, lng, span, GRID_STEPS)
       .then((r) => {
         if (cancelled || realArrived) return;
         setProvider(r.provider);
@@ -208,7 +141,7 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
     // Phase 2 — ONE real FortyGuard task for the whole area, swapped in when it
     // lands. The task takes seconds to minutes, so arriving late is fine; the
     // studio is usable on the mock in the meantime.
-    loadRealHeatGrid(lat, lng, GRID_SPAN)
+    loadRealHeatGrid(lat, lng, span)
       .then((pts) => {
         if (cancelled || pts.length === 0) return;
         realArrived = true;
@@ -235,7 +168,7 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
     return () => {
       cancelled = true;
     };
-  }, [lat, lng]);
+  }, [lat, lng, span]);
 
   // ── Map interactions (fresh closure via ref, attached once) ────────────────
   const clickRef = useRef<(lat: number, lng: number) => void>(() => {});
@@ -332,19 +265,25 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
   // ── Map init (once) ────────────────────────────────────────────────────────
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
+    const bounds = squareBounds(lat, lng, span);
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: dark ? STUDIO_STYLE_DARK : STUDIO_STYLE_LIGHT,
+      style: dark ? BASEMAP_DARK : BASEMAP_LIGHT,
       center: [lng, lat],
       zoom: 15.5,
       // Esri's Canvas "World_Dark_Gray" tile service stops at z16. Without a
       // matching cap the user can zoom past it and the basemap silently goes
       // blank behind the heat layer.
       maxZoom: 16,
+      // Clamp the working view to the chosen region (a little padding so
+      // edge placements stay reachable) — the studio shows that area, not the
+      // whole world.
+      maxBounds: squareBounds(lat, lng, span * 1.35),
       attributionControl: { compact: true },
     });
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
     map.on("click", (e) => clickRef.current(e.lngLat.lat, e.lngLat.lng));
+    map.on("load", () => map.fitBounds(bounds, { padding: 8, duration: 0 }));
     // Every style (re)load — including a theme swap — ends here, and the data
     // layers are rebuilt on top of the new basemap.
     map.on("style.load", () => renderLayersRef.current());
@@ -361,7 +300,7 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
     const map = mapRef.current;
     if (!map || dark === styleDarkRef.current) return;
     styleDarkRef.current = dark;
-    map.setStyle(dark ? STUDIO_STYLE_DARK : STUDIO_STYLE_LIGHT);
+    map.setStyle(dark ? BASEMAP_DARK : BASEMAP_LIGHT);
   }, [dark]);
 
   // ── Layer rendering (rebuild on data/layer/placement change) ───────────────
@@ -390,7 +329,7 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
     // Heat tiles (live grid, or simulated "after design")
     const shown = layers.after && design ? design.cells : cells;
     if (shown && shown.length && layers.heat) {
-      const halfM = ((GRID_SPAN / GRID_STEPS) * 111320) / 2;
+      const halfM = ((span / GRID_STEPS) * 111320) / 2;
       const features = shown.map((c) => ({
         type: "Feature" as const,
         geometry: { type: "Polygon" as const, coordinates: [toDegPoly(c.lat, c.lng, halfM)] },
@@ -570,7 +509,7 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
         },
       });
     }
-  }, [cells, design, layers, sim, autoStations, placements]);
+  }, [cells, design, layers, sim, autoStations, placements, span]);
   renderLayersRef.current = renderLayers;
 
   useEffect(() => {
@@ -708,6 +647,17 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
             aria-label="Back"
           >
             <ChevronLeft size={18} />
+          </button>
+          <button
+            onClick={() => {
+              const m = mapRef.current;
+              if (m) m.fitBounds(squareBounds(lat, lng, span), { padding: 8, duration: 600 });
+            }}
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80 text-slate-900 ring-1 ring-slate-900/10 dark:bg-slate-900/80 dark:text-white dark:ring-white/15"
+            aria-label="Fit region"
+            title="Fit the chosen region"
+          >
+            <Crosshair size={15} />
           </button>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
