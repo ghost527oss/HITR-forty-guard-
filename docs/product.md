@@ -44,8 +44,16 @@ analysis and a **ranked intervention plan** (see `docs/algorithm.md`).
 - Any city; a pipeline to add city data (OSM + FortyGuard) without per-city hardcoding.
 
 ## Non-goals (for now)
-- Rebuilding cities from scratch (explicitly excluded by team).
-- AI generating autonomous city plans (explicitly excluded).
+- **Inventing numbers, coordinates or physical claims.** Every figure comes from the engine or a cited
+  study. This applies to the AI too: it may compose, compare and explain plans, never fabricate them.
+- **Presenting a simulated °C reduction as a measured one.** Every estimate is literature-calibrated,
+  distance-decayed and capped (−3.5 °C total across all interventions), and the UI says so.
+- **Presenting mock temperature data as real** when no FortyGuard key is configured. Readings carry a
+  `source` field and the UI badges it.
+
+> **Changed 2026-08-28:** "Rebuilding cities from scratch" is no longer excluded. The change-level
+> scale now runs from *observe* to *full rebuild*; the requirement is that each level states plainly
+> how much of the city it touches and that every claim stays traceable to the engine.
 
 ## Database feature hub (unreleased navigation update)
 

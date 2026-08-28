@@ -1,12 +1,14 @@
 {
   "name": "hitr-frontend",
   "private": true,
-  "version": "0.7.2",
+  "version": "0.8.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "lucide-react": "0.546.0",
@@ -23,6 +25,7 @@
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",
     "typescript": "^5.6.3",
-    "vite": "^5.4.11"
+    "vite": "^5.4.11",
+    "vitest": "^2.1.9"
   }
 }

@@ -12,6 +12,7 @@ import DatabaseScreen from "./screens/DatabaseScreen";
 import HeatSurfaceScreen from "./screens/HeatSurfaceScreen";
 import CitySimulationScreen from "./screens/CitySimulationScreen";
 import TrainingScreen from "./screens/TrainingScreen";
+import { Crosshair, X } from "lucide-react";
 import DesignStudioScreen from "./screens/DesignStudioScreen";
 import PlannerStartModal, { type PlannerScope } from "./components/PlannerStartModal";
 import AlertBanner from "./components/AlertBanner";
@@ -25,6 +26,7 @@ import {
   type Plan,
 } from "./api";
 import { loadHeatGrid } from "./components/MapView";
+import { loadRealHeatGrid } from "./lib/realHeat";
 import type { View } from "./nav";
 
 export type Units = "imperial" | "metric";
@@ -56,6 +58,8 @@ export default function App() {
   const [land, setLand] = useState<LandInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [heatData, setHeatData] = useState<HeatCell[] | null>(null);
+  // Which provider produced `heatData`. Drives the map's source badge.
+  const [heatSource, setHeatSource] = useState<"mock" | "fortyguard">("mock");
   const [units, setUnits] = useState<Units>("imperial");
   const [webSearchEnabled, setWebSearchEnabled] = useState(() => localStorage.getItem("hitr.google-search") === "true");
   const [changeLevel, setChangeLevel] = useState<ChangeLevel>(1);
@@ -86,16 +90,36 @@ export default function App() {
     return () => { cancelled = true; };
   }, [center.lat, center.lng]);
 
-  // Load a heat grid around the current center.
+  // Heat grid, two phases.
+  //
+  // 1. The mock paints instantly so the map is never empty. It costs nothing.
+  // 2. Real FortyGuard tiles replace it if (and only if) a key is configured.
+  //    That task takes seconds to minutes, so showing it late is strictly
+  //    better than blocking the whole screen on it.
+  //
+  // Phase 1 runs one provider call per cell (576 for 24x24); phase 2 is a
+  // single task for the entire area.
   useEffect(() => {
     let cancelled = false;
-    loadHeatGrid(center.lat, center.lng)
-      .then((pts) => {
-        if (!cancelled) setHeatData(pts);
-      })
-      .catch((err) => {
-        if (!cancelled) setStatus(`Couldn't load heat map: ${err.message}`);
-      });
+    let realArrived = false;
+    setHeatSource("mock");
+
+    loadHeatGrid(center.lat, center.lng).then((pts) => {
+      if (!cancelled && !realArrived) setHeatData(pts);
+    }).catch(() => {
+      // Swallowed on purpose: the real path below may still succeed, and an
+      // empty overlay is a worse outcome than a stale one.
+    });
+
+    loadRealHeatGrid(center.lat, center.lng).then((pts) => {
+      if (cancelled || pts.length === 0) return;
+      realArrived = true;
+      setHeatData(pts);
+      setHeatSource("fortyguard");
+    }).catch(() => {
+      // No key configured, or the task failed. The mock simply stays on screen.
+    });
+
     return () => { cancelled = true; };
   }, [center]);
 
@@ -184,7 +208,7 @@ export default function App() {
             onClick={() => setStatus(null)}
             className="ml-2 font-bold text-amber-700 hover:text-amber-900"
             aria-label="Dismiss"
-          >✕</button>
+          ><X className="h-4 w-4" aria-hidden="true" /></button>
         </div>
       )}
 
@@ -208,6 +232,7 @@ export default function App() {
             title={title}
             onSearch={handleSearch}
             onPick={handlePick}
+            onClearPick={() => setPicked(null)}
             picked={picked}
             reading={reading}
             land={land}
@@ -215,6 +240,7 @@ export default function App() {
             units={units}
             onToggleUnits={toggleUnits}
             heatData={heatData}
+            heatSource={heatSource}
             onViewSurface={() => setView("heat_surface")}
             onAssistant={() => setView("assistant")}
             onSOS={() => setView("emergency")}
@@ -289,7 +315,7 @@ export default function App() {
         )}
 
         {view === "tools" && <ToolsScreen />}
-        {view === "emergency" && <EmergencyScreen onBack={() => setView("tools")} />}
+        {view === "emergency" && <EmergencyScreen onBack={() => setView("map")} />}
 
         {view === "settings" && (
           <SettingsScreen
@@ -329,8 +355,8 @@ export default function App() {
       {/* Floating pill: planner location-pick mode on the map */}
       {plannerPicking && view === "map" && (
         <div className="absolute inset-x-4 bottom-16 z-40 flex items-center justify-between gap-3 rounded-2xl bg-slate-900/95 px-4 py-3 shadow-2xl ring-1 ring-white/15">
-          <p className="text-xs font-medium text-white">
-            <span className="mr-1">🎯</span> Tap the map to place your project…
+          <p className="flex items-center text-xs font-medium text-white">
+            <Crosshair className="mr-1.5 h-4 w-4 shrink-0" aria-hidden="true" /> Tap the map to place your project…
           </p>
           <button
             onClick={() => {

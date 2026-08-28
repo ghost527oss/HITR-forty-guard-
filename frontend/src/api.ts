@@ -106,28 +106,44 @@ export interface Intervention {
   key: string;
 }
 
+/** How much of the city a plan touches. Every level states this plainly. */
+export interface PlanScale {
+  level: number;
+  label: string;
+  /** Plain-language description of what is physically affected. */
+  touches: string;
+  /** True from level 3 up — street grid / zoning / utilities are altered. */
+  changes_city: boolean;
+  note: string;
+}
+
 export interface Plan {
   lat: number;
   lng: number;
   change_level: number;
   change_label: string;
+  scale: PlanScale;
   land: LandInfo;
   temp_f: number;
   temp_c: number;
   risk: string;
   pattern: string;
   pattern_label: string;
+  /** 0–100% — where this spot sits on the local heat range. */
+  heat_severity_pct: string;
   interventions: Intervention[];
+  /** Present at level 0, where there are no interventions to list. */
+  note?: string | null;
 }
 
 // Point 5: 5 change levels (0=observe, 1=light, 2=medium, 3=re-plan, 4=rebuild)
 export type ChangeLevel = 0 | 1 | 2 | 3 | 4;
 export const CHANGE_LEVELS: { value: ChangeLevel; label: string; desc: string }[] = [
-  { value: 0, label: "None", desc: "Just observe current conditions. No interventions." },
+  { value: 0, label: "Observe", desc: "Report current conditions only. No physical change." },
   { value: 1, label: "Light", desc: "Add trees, shade & water. City looks the same." },
   { value: 2, label: "Medium", desc: "Plus building retrofit & orientation guidance." },
   { value: 3, label: "Re-plan", desc: "Redesign block layout, solar, water features." },
-  { value: 4, label: "Rebuild", desc: "Full redevelopment: new streets, grid, & zoning." },
+  { value: 4, label: "Rebuild", desc: "Full masterplan: streets, zoning, utilities & green network redesigned." },
 ];
 
 // Point 3: California cities for quick-select
@@ -355,4 +371,76 @@ export function getHeatGrid(
   return get<HeatGridResponse>(
     `/api/heat/grid?lat=${lat}&lng=${lng}&span_deg=${spanDeg}&steps=${steps}`,
   );
+}
+
+// ── Real FortyGuard heat (layer B/C) ─────────────────────────────────────────
+//
+// The vendor API is async and area-based: submit one task for a bounding box,
+// then poll until it completes. One task serves the whole area, where the mock
+// path above costs one call per cell (576 for a 24x24 grid).
+//
+// Both endpoints are additive — /api/heat/grid still works — so the app runs on
+// the mock whenever no key is configured and upgrades itself the moment one is.
+
+export interface Bounds {
+  west: number;
+  south: number;
+  east: number;
+  north: number;
+}
+
+export interface HeatAreaResponse {
+  status: "processing" | "ready" | "failed";
+  activity_id?: string;
+  poll_url?: string;
+  count: number;
+  points: HeatCell[];
+  stats?: Record<string, number | null>;
+  /** Undocumented by the vendor; reported so we can learn the real field name. */
+  tile_property_keys?: string[];
+  error?: string;
+}
+
+/** Thrown when the backend has no FORTYGUARD_API_KEY — caller should use the mock. */
+export class RealHeatUnavailable extends Error {
+  constructor(message = "FORTYGUARD_API_KEY is not configured") {
+    super(message);
+    this.name = "RealHeatUnavailable";
+  }
+}
+
+export async function submitHeatArea(b: Bounds, granularity = 80): Promise<HeatAreaResponse> {
+  const q = new URLSearchParams({
+    west: String(b.west),
+    south: String(b.south),
+    east: String(b.east),
+    north: String(b.north),
+    granularity: String(granularity),
+  });
+  const res = await fetch(`/api/heat/area?${q.toString()}`);
+  // 503 is the backend telling us there is no key. Not an error to surface —
+  // it means "use the mock", which is exactly what the caller does with it.
+  if (res.status === 503) throw new RealHeatUnavailable();
+  if (!res.ok) throw new Error(`GET /api/heat/area -> ${res.status}`);
+  return res.json() as Promise<HeatAreaResponse>;
+}
+
+export function getHeatJob(activityId: string): Promise<HeatAreaResponse> {
+  return get<HeatAreaResponse>(`/api/heat/job/${encodeURIComponent(activityId)}`);
+}
+
+/** Is a real FortyGuard key configured? Drives the "real data" indicator. */
+export interface FortyGuardStatus {
+  configured: boolean;
+  api_key: string;
+  api_key_length: number;
+  base_url: string;
+  plan: string;
+  granularity_options: number[];
+  coverage: string;
+  live_check?: unknown;
+}
+
+export function getFortyGuardStatus(): Promise<FortyGuardStatus> {
+  return get<FortyGuardStatus>("/api/fortyguard/selfcheck");
 }

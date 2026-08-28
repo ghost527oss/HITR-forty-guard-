@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { Units } from "../App";
+import { Moon, Sun, TriangleAlert } from "lucide-react";
 
 interface SettingsScreenProps {
   location: string;
@@ -119,7 +120,10 @@ export default function SettingsScreen({ location, onSearch, units, onToggleUnit
                   theme === t ? "bg-heat-600 text-white" : "bg-gray-100 text-gray-600"
                 }`}
               >
-                {t === "light" ? "☀️ Light" : "🌙 Dark"}
+                <span className="flex items-center justify-center gap-1.5">
+                  {t === "light" ? <Sun className="h-4 w-4" aria-hidden="true" /> : <Moon className="h-4 w-4" aria-hidden="true" />}
+                  {t === "light" ? "Light" : "Dark"}
+                </span>
               </button>
             ))}
           </div>
@@ -156,7 +160,10 @@ export default function SettingsScreen({ location, onSearch, units, onToggleUnit
         <section>
           <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Emergency</h3>
           <div className="rounded-2xl bg-red-50 p-3">
-            <div className="font-semibold text-red-700">🚨 911 — Emergency</div>
+            <div className="flex items-center gap-2 font-semibold text-red-700">
+              <TriangleAlert className="h-4 w-4" aria-hidden="true" />
+              911 — Emergency
+            </div>
             <div className="text-xs text-red-600">Police · Fire · Ambulance (US)</div>
           </div>
         </section>

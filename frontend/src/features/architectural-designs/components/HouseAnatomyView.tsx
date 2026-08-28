@@ -146,7 +146,7 @@ export const HouseAnatomyView: React.FC<HouseAnatomyViewProps> = ({
   return (
     <div className="space-y-6">
       {/* View Header */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-lg">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center space-x-2 text-cyan-400 font-bold text-xs uppercase tracking-wider mb-1">
@@ -156,7 +156,7 @@ export const HouseAnatomyView: React.FC<HouseAnatomyViewProps> = ({
             <h2 className="text-2xl font-extrabold text-white tracking-tight">
               Thermal Flow & Structural Hotspots
             </h2>
-            <p className="text-sm text-slate-400 mt-1 max-w-2xl">
+            <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1 max-w-2xl">
               Explore how heat penetrates and accumulates across key residential building zones, and discover proven architectural interventions to dissipate it.
             </p>
           </div>
@@ -175,7 +175,7 @@ export const HouseAnatomyView: React.FC<HouseAnatomyViewProps> = ({
       {/* Main Grid: Interactive Cutaway Model + Zone Info Sidebar */}
       <div className="grid lg:grid-cols-12 gap-6">
         {/* Left: Visual Interactive Thermal Cutaway House Diagram (7 cols) */}
-        <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg relative flex flex-col justify-between overflow-hidden min-h-[460px]">
+        <div className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-lg relative flex flex-col justify-between overflow-hidden min-h-[460px]">
           {/* Ambient Glows */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
@@ -186,11 +186,11 @@ export const HouseAnatomyView: React.FC<HouseAnatomyViewProps> = ({
               <Sun className="w-4 h-4 text-amber-400 animate-pulse" />
               <span>Solar Zenith Peak (12:00 – 15:00)</span>
             </div>
-            <span className="text-[11px] font-mono text-slate-400">Click any hotspot node below</span>
+            <span className="text-[11px] font-mono text-slate-500 dark:text-slate-400 dark:text-slate-400">Click any hotspot node below</span>
           </div>
 
           {/* Architectural Cutaway Schematic Canvas */}
-          <div className="relative w-full h-[320px] sm:h-[360px] bg-slate-950/80 border border-slate-800 rounded-xl p-4 flex items-center justify-center overflow-hidden">
+          <div className="relative w-full h-[320px] sm:h-[360px] bg-white/90 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex items-center justify-center overflow-hidden">
             {/* SVG House Outline & Airflow Paths */}
             <svg
               className="absolute inset-0 w-full h-full opacity-60 pointer-events-none"
@@ -261,14 +261,14 @@ export const HouseAnatomyView: React.FC<HouseAnatomyViewProps> = ({
                   className={`absolute -translate-x-1/2 -translate-y-1/2 group z-20 flex items-center space-x-1.5 px-3 py-1.5 rounded-full border transition-all duration-200 ${
                     isSelected
                       ? 'bg-cyan-500 text-slate-950 font-extrabold border-white shadow-xl shadow-cyan-500/50 scale-110'
-                      : 'bg-slate-900/90 text-slate-200 hover:text-white border-slate-700 hover:border-cyan-400 shadow-md hover:scale-105'
+                      : 'bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-200 hover:text-white border-slate-300 dark:border-slate-700 hover:border-cyan-400 shadow-md hover:scale-105'
                   }`}
                 >
                   <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-slate-950' : 'text-cyan-400'}`} />
                   <span className="text-xs tracking-tight whitespace-nowrap">{zone.name.split(' ')[0]}</span>
                   <span
                     className={`w-4 h-4 rounded-full text-[10px] flex items-center justify-center font-mono ${
-                      isSelected ? 'bg-slate-950 text-cyan-300' : 'bg-slate-800 text-slate-300'
+                      isSelected ? 'bg-white dark:bg-slate-950 text-cyan-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                     }`}
                   >
                     {zone.designCount}
@@ -287,8 +287,8 @@ export const HouseAnatomyView: React.FC<HouseAnatomyViewProps> = ({
                 onClick={() => setSelectedZone(zone)}
                 className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all border ${
                   selectedZone.id === zone.id
-                    ? 'bg-slate-800 border-cyan-500/50 text-cyan-300'
-                    : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-slate-200'
+                    ? 'bg-slate-100 dark:bg-slate-800 border-cyan-500/50 text-cyan-300'
+                    : 'bg-white/90 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200'
                 }`}
               >
                 {zone.name}
@@ -298,14 +298,14 @@ export const HouseAnatomyView: React.FC<HouseAnatomyViewProps> = ({
         </div>
 
         {/* Right: Selected Zone Thermal Analysis & Blueprint Recommendations (5 cols) */}
-        <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg flex flex-col justify-between space-y-6">
+        <div className="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-lg flex flex-col justify-between space-y-6">
           <div className="space-y-4">
             {/* Zone Title & Badge */}
             <div className="flex items-center justify-between gap-2">
               <span className="px-2.5 py-1 rounded-md bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 text-xs font-bold font-mono">
                 {selectedZone.houseZone}
               </span>
-              <span className="text-xs text-slate-400 font-medium">
+              <span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium">
                 {selectedZone.designCount} Curated Techniques
               </span>
             </div>
@@ -338,7 +338,7 @@ export const HouseAnatomyView: React.FC<HouseAnatomyViewProps> = ({
 
             {/* Top Recommended Designs in this Zone */}
             <div>
-              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+              <h4 className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-2">
                 Top Architectural Blueprints for {selectedZone.name}
               </h4>
               <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
@@ -346,23 +346,23 @@ export const HouseAnatomyView: React.FC<HouseAnatomyViewProps> = ({
                   <div
                     key={design.id}
                     onClick={() => onSelectDesign(design)}
-                    className="group/item flex items-center justify-between p-2.5 rounded-xl bg-slate-950/80 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 cursor-pointer transition-all"
+                    className="group/item flex items-center justify-between p-2.5 rounded-xl bg-white/90 dark:bg-slate-950/80 hover:bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 cursor-pointer transition-all"
                   >
                     <div className="flex items-center space-x-2.5 truncate pr-2">
-                      <span className="w-6 h-6 rounded-md bg-slate-800 text-cyan-400 font-mono font-bold text-[11px] flex items-center justify-center shrink-0">
+                      <span className="w-6 h-6 rounded-md bg-slate-100 dark:bg-slate-800 text-cyan-400 font-mono font-bold text-[11px] flex items-center justify-center shrink-0">
                         #{design.id}
                       </span>
                       <div className="truncate">
-                        <h5 className="text-xs font-bold text-slate-200 group-hover/item:text-cyan-300 truncate">
+                        <h5 className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover/item:text-cyan-300 truncate">
                           {design.name}
                         </h5>
-                        <p className="text-[11px] text-slate-400 truncate">
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-400 truncate">
                           {design.tempDropEstimate.split('/')[0]} • {design.costLevel}
                         </p>
                       </div>
                     </div>
 
-                    <ArrowRight className="w-3.5 h-3.5 text-slate-500 group-hover/item:text-cyan-400 shrink-0" />
+                    <ArrowRight className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 group-hover/item:text-cyan-400 shrink-0" />
                   </div>
                 ))}
               </div>
@@ -373,7 +373,7 @@ export const HouseAnatomyView: React.FC<HouseAnatomyViewProps> = ({
           <button
             id="browse-zone-catalogue-btn"
             onClick={() => onFilterZone(selectedZone.houseZone)}
-            className="w-full py-2.5 px-4 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 transition-colors flex items-center justify-center space-x-2"
+            className="w-full py-2.5 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold border border-slate-300 dark:border-slate-700 transition-colors flex items-center justify-center space-x-2"
           >
             <span>Filter Catalogue by {selectedZone.houseZone}</span>
             <ArrowRight className="w-4 h-4 text-cyan-400" />

@@ -3,6 +3,363 @@
 All notable changes to this project are documented here. Format inspired by
 [Keep a Changelog](https://keepachangelog.com/). Versioning: `v0.x` for pre-release planning/build.
 
+## [Unreleased]
+
+### Fixed — the theme toggle now works, and the Knowledge Set follows it
+
+Two separate bugs were producing the mismatch.
+
+**The toggle was inert.** `SettingsScreen` was doing everything right: it wrote a `.dark` class
+onto `<html>` and persisted the choice to localStorage. But `tailwind.config.js` never declared
+`darkMode`, so Tailwind defaulted to `media` — it keyed off the OS preference and ignored the
+class completely. One line fixed it.
+
+**The Knowledge Set was hardcoded dark.** 544 `slate-900`/`slate-800`/`slate-300` classes across
+11 files ignored the theme entirely, so the screen was permanently dark no matter what the
+setting said. Replaced with light/dark pairs (`bg-white dark:bg-slate-950`), applied by a script
+so the transformation is uniform rather than 544 hand edits.
+
+While mapping, some classes turned out to be **not real Tailwind shades** — `slate-750` and
+`slate-850` do not exist, so those elements were rendering with no colour at all. They now map to
+valid shades.
+
+Verified by building and grepping the output: 40 `.dark` rules generated, zero invalid shades
+remaining.
+
+---
+
+### Added — layer C: the frontend now uses real heat when a key exists
+Layer B exposed the endpoints; nothing called them. Wired the two biggest consumers.
+
+**Two-phase loading.** The mock paints instantly, then real tiles replace them if (and
+only if) a FortyGuard key is configured. Blocking a screen on a task that takes seconds
+to minutes would be worse than showing synthetic data first, so the mock is the first
+paint and the real grid is an upgrade rather than a prerequisite.
+
+| Screen | Mock path | Real path |
+|---|---|---|
+| Map | 576 provider calls (24×24) | 1 task for the whole area |
+| Design Studio | 400 provider calls | 1 task for the whole area |
+
+**`frontend/src/lib/realHeat.ts`** — `boundsAround()` and `loadRealHeatGrid()`. Kept as a
+plain `.ts` module rather than inside `MapView.tsx` so it is testable without dragging
+maplibre-gl into a node environment. `submit`/`fetchJob`/`sleep` are all injectable.
+
+It throws `RealHeatUnavailable` (a distinct error class) when the backend answers 503, so
+callers can fall back to the mock without treating "no key" as a failure. A task the vendor
+reports as Failed, or one that never finishes, is a plain error that leaves the mock on screen.
+
+**`api.ts`** — added `submitHeatArea()`, `getHeatJob()`, `getFortyGuardStatus()`, plus
+`Bounds` / `HeatAreaResponse` / `FortyGuardStatus` types.
+
+**Source is now visible.** The map's bottom bar distinguishes the spot reading from the
+overlay: `spot: mock · overlay: mock` vs `overlay: FortyGuard` in green. The Design Studio
+header does the same. Previously there was no way to tell whether what you were looking at
+was real.
+
+**4 tests** in `src/lib/realHeat.test.ts`, all injected — no network, no timers, no key. The
+most important asserts that loading a real grid costs **exactly one** area request, which is
+the entire point of layers B and C.
+
+Verified live with no key configured: `/api/fortyguard/selfcheck` reports
+`configured: false` without leaking anything, and `/api/heat/area` answers 503 with a message
+pointing at the mock endpoint — which is what triggers the fallback.
+
+---
+
+### Added — layer B: the FortyGuard heatmap service
+The vendor API is async and area-based (submit → `activity_id` → poll). Nothing bridged that to a
+page load that wants raster data now, so real data was unreachable and the app ran on the mock.
+
+**`backend/app/services/heatmap_service.py`** — `submit()` starts one task for a bounding box and
+returns immediately; `poll()` proxies `GET /v1/status` and, once Completed, returns the parsed tiles
+as the same `points` shape `/api/heat/grid` produces, so the frontend needs no new wire format.
+
+    Before   1,600 provider calls to open the Design Studio (one per cell)
+    After          1 FortyGuard task per view, cached by (bbox, date, granularity)
+
+**`poll()` is deliberately stateless.** It needs only the activity_id, never in-process memory.
+This app deploys to Vercel, where each request may land on a different function instance, so a job
+store held in a module global would be lost between submit and first poll and would never resolve.
+The in-memory cache is therefore strictly an optimisation: losing it costs one duplicate request,
+never a broken page.
+
+Converts FortyGuard's °C tiles to °F (the app speaks °F), skips null tile values rather than
+painting them as 0 °F, and reports `tile_property_keys` from each response — the vendor docs never
+show a tile's `properties`, so this is how the real temperature field name gets learned from a live
+run instead of guessed.
+
+**`backend/app/routers/fortyguard.py`** — three endpoints:
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/heat/area` | Submit a task for a bounding box; answers 202 + `poll_url`. `?wait_s` polls inline. |
+| `GET /api/heat/job/{activity_id}` | Poll one task. Stateless. |
+| `GET /api/fortyguard/selfcheck` | Is the key configured, and does it work? `?live=1` submits one real task. |
+
+Vendor errors map to meaningful status codes: validation → 400 (the vendor does not bill these),
+401 invalid key, 403 plan lacks the endpoint, 429 rate limited, 504 poll timeout, 502 otherwise.
+
+`selfcheck` never echoes the key — it reports only whether it is set and its length, which is
+enough to tell a missing key from a wrong one. This replaces asking anyone to paste a key anywhere.
+
+**`backend/tests/test_heatmap_service.py`** — 34 tests, all against a fake client, so the service is
+proven without a key and without network access. They cover the C→F conversion, cache hit/miss/
+expiry, stateless polling, null-tile skipping, the not-billed note on Failed tasks, and that
+selfcheck never leaks the key.
+
+### Fixed — a FastAPI upgrade silently broke every test that inspects routes
+FastAPI 0.141 / Starlette 1.6 changed `include_router` to store `_IncludedRouter` objects instead of
+flattening routes, so `route.path` no longer exists and `{getattr(r, "path", None) for r in
+app.routes}` returns `{None}`.
+
+That made the `/api/analysis/pois` guard in `test_contract.py` **vacuous** — it was written to fail
+loudly when that route appears, and after the upgrade it could never fail. Switched it (and the new
+route test) to read `app.openapi()["paths"]`, which reflects what is actually served and is stable
+across versions.
+
+### Fixed — the contract test caught real api.ts drift
+Adding `note?: string | null` to `Plan` broke `test_plan_matches_Plan_at_every_level` at levels 1–4:
+the backend only sends `note` at level 0, where there are no interventions. Marked it optional in
+the test. This is the contract test doing its job.
+
+### Changed — Home screen
+Removed the "Heat Assistant" and "Tools" quick actions, leaving Heat Map and "How much to change".
+
+---
+
+### Changed — Phase 1b: the planner now explains itself in the UI
+The backend has returned `scale`, `pattern_label` and `heat_severity_pct` since v0.8.0, but
+**none of them reached the screen** — `Plan` in `api.ts` didn't declare them. A plan rendered as
+a bare list of actions with no indication of what it did or how big it was.
+
+- **`api.ts`**: added `PlanScale` and the missing `scale`, `heat_severity_pct` and optional `note`
+  fields to `Plan`.
+- **`PlannerScreen.tsx`**: added a summary card at the top of every plan showing the **scale**
+  (label + "touches …"), an amber hard-hat treatment when `changes_city` is true (levels 3–4)
+  versus an eye icon when it is observation/retrofit, the scale's own explanatory note, and a
+  three-column diagnosis strip: detected pattern, temperature, heat severity.
+- Interventions now show **where** they apply (previously the `where` field was computed by the
+  backend and thrown away by the UI), and the list is introduced with an "N actions, highest
+  impact first" header so a 12-item masterplan reads as deliberate rather than as noise.
+
+**Fixed — levels 0 and 4 rendered a blank description.** `PlannerScreen` kept its own
+`LEVEL_DESC` map that duplicated `CHANGE_LEVELS` but only had entries for 1, 2 and 3, so the
+header description was empty at both ends of the range. Deleted the duplicate; the screen now
+reads `CHANGE_LEVELS[].desc` directly. Level 0 is also labelled **"Observe"** rather than "None",
+matching what the backend returns, and level 4's description now mentions the full masterplan.
+`PlanSheet` picks up all of this automatically.
+
+**Level 0 no longer looks broken.** It legitimately returns zero interventions, which rendered as
+an empty screen. There is now an explicit "No interventions proposed" empty state that surfaces
+the plan's `note`.
+
+### Changed — the map makes area vs. spot explicit
+Plans, heat surface and simulation all act on the **picked spot**, while search changes the
+**area** being viewed. Nothing distinguished the two, which is the likely root of "location
+selection is confusing".
+
+The map's single hint line is now a two-state chip: before picking it reads "Tap the map to
+choose a spot · Hold Shift + drag for an area"; after picking it shows the spot's coordinates
+with a **Clear** action. Added `onClearPick` to `MapScreen`.
+
+### Fixed — Emergency screen stranded the user
+`EmergencyScreen`'s Back button returned to **Tools**, but Tools has no emergency entry and its
+First Aid folder is empty, so SOS → Emergency → Back left no way forward. Back now returns to
+the **Map**, which is where the SOS button lives.
+
+---
+
+### Changed — Phase 1a: emoji replaced with lucide icons across the UI
+Thirty-five emoji were doing the work of icons in app chrome. Emoji render at inconsistent sizes
+and weights across platforms and OSes — on a projected screen during judging that reads as
+unfinished. All user-facing emoji are now `lucide-react` components (already a dependency, so no
+bundle cost).
+
+| Where | Before | After |
+|---|---|---|
+| Bottom nav | 🏠 🗺️ 🤖 🗂️ ⚙️ | `Home` `Map` `Bot` `Database` `Settings` |
+| Home quick actions | 🗺️ 🤖 🌳 🧰 📍 | `Map` `Bot` `Trees` `Wrench` `MapPin` |
+| Database folders | 🏛️ 🌳 🧰 | `Landmark` `Trees` `Wrench` |
+| Tools folders | 🏛️ 🌾 🩹 | `Landmark` `Wheat` `Bandage` |
+| Assistant intent labels | 🆘 🩹 🏠 🗺️ 📚 | `Siren` `Bandage` `Home` `Map` `BookOpen` |
+| Map FAB | 🌳 🤖 🆘 🗂️ ·`×`/`+` | `Trees` `Bot` `Siren` `Database` ·`X`/`Plus` |
+| Settings | ☀️ 🌙 🚨 | `Sun` `Moon` `TriangleAlert` |
+| Close buttons | ✕ | `X` |
+| Back buttons (×4 screens) | ← | `ArrowLeft` |
+| Design Studio | 🔥 · 🚰 💧 🌳 | `Flame` · inline `droplet`/`trees` SVG |
+| AI advisor badges | 🚨 🔥 💡 💧 ⚡ 🛡️ | stripped — the cards already render an icon beside them |
+
+Icon props changed type from `icon: string` to `icon: LucideIcon` in `nav.ts`,
+`HomeScreen`, `DatabaseScreen` and `ToolsScreen`.
+
+Improvements that came along with the swap:
+- Assistant replies now carry their matched intent as a separate field and render it as an
+  **intent badge** above the answer, instead of being prefixed into the message text. Users can
+  see *why* they got an answer.
+- `⇧ Shift` on the map hint is now a styled `<kbd>` element rather than a bare glyph.
+- FAB toggle gained `aria-expanded` and a state-appropriate `aria-label`; close buttons gained
+  `aria-label`.
+
+Left as-is deliberately: `→` and `↓` in comments and in before→after temperature readouts
+(they're meaning "leads to", not decoration), and the box-drawing `─` in comment banners.
+
+Map popups needed special handling: MapLibre popups take an HTML **string**, so React components
+can't render inside them. Added `frontend/src/lib/mapIcons.ts` holding the real lucide v0.546.0
+path data for `droplet` and `trees` as static SVG, so the popups match the rest of the app.
+
+### Fixed — the retired principle survived in one more place
+`docs/CODEBASE_UNDERSTANDING_2026-08-28.md` still listed "Never rebuild a city from scratch" as
+principle #1. Replaced with the **honesty of scale** wording used everywhere else. The Phase 0
+sweep had missed this file; `AGENT_HANDOFF.md` was checked and was already clean.
+
+---
+
+## [Unreleased] — FortyGuard API client, built against the real contract
+
+### Added — the real FortyGuard client
+The vendor documentation at `https://docs-api.fortyguard.com/docs/` was read and the contract
+captured in **`docs/fortyguard-api.md`**. The existing `fortyguard_client.py` was written against a
+guessed endpoint; **every one of those guesses was wrong**:
+
+| | Guessed | Actual |
+|---|---|---|
+| Auth header | `Authorization: Bearer` | **`api-key: <key>`** |
+| Temperature endpoint | `POST /v1/heat-intelligence` | **`POST /v1/heatmap`** (area-based) |
+| Call shape | synchronous, per lat/lng | **async: submit → `activity_id` → poll `/v1/status/{id}`** |
+| Response | a single number | **GeoJSON tile polygons + aggregate statistics** |
+| Units | °F | **°C** (`tcm`); hours for `exceedance`/`persistence` |
+
+`/v1/heat_intelligence` is real but is a **Premium-only PDF report**, not a temperature lookup.
+
+Rewrote `backend/app/services/fortyguard_client.py` against the verified contract:
+`submit_heatmap()`, `submit_env_params()`, `submit_heat_intelligence()`, `get_status()`,
+`wait_for_result()`, `heatmap() -> HeatmapResult`, plus `bbox_polygon()`, `polygon_area_m2()` and
+`ring_bbox()` helpers.
+
+Added `backend/tests/test_fortyguard_client.py` — **58 tests** that run against an injected fake
+transport, so the client is fully proven **without an API key and without touching the network**.
+
+### Fixed
+- **404 from `/v1/status` was mishandled.** The vendor docs warn an activity can be briefly 404
+  immediately after submission. The client raised `TransportError` instead of treating it as
+  "not ready yet", because the 404 body carries no JSON and blew up before the status check. Added
+  `FortyGuardNotFoundError`, raised before any body parsing, and normalised to `Processing` in
+  `get_status()`.
+
+### Why the client deliberately has no `get_temperature(lat, lng)`
+`HeatProvider.get_temperature()` is synchronous and per-point; the real API is neither. The map view
+calls the provider **576 times** per load and the Design Studio **1,600 times**. Against a metered
+async API that is 576–1,600 billed tasks per page view. Refusing to offer a per-point synchronous
+method makes that mistake impossible rather than merely discouraged; a test asserts its absence.
+
+The flip side is good news: `/v1/heatmap` returns the **whole** grid from one request, so the correct
+call volume is **1 per view**, not 1,600. Real data is cheaper than the mock — it just needs a
+`(bbox, date, granularity)` cache and a job-status surface in the UI. Both are still to do.
+
+Also relevant: `granularity` must be 60/80/100 m, and **80 m is a near-perfect match** for the grid
+we already fake (~78 m per cell). `map_data` returns GeoJSON polygons, which is exactly what
+`renderHeatTiles.ts` already draws. And coverage is **US-only**, which vindicates the California-only
+demo scope.
+
+### Environmental Parameters closes the humidity gap
+`POST /v1/env_params` returns `relative_humidity_percent`, `heat_index_celsius` and
+`apparent_temperature_celsius`. That is the real humidity source `uhiFactors.ts` has been faking
+(audit #14). There is **no wind parameter** — wind still comes from Open-Meteo.
+
+---
+
+## [v0.8.0] — 2026-08-28 — Phase 0: truth, tests, and a plan that explains itself
+
+### Changed — the "never rebuild a city" principle is retired
+The rule was removed from all 7 places that stated it as active policy: `PLAN.md` (principle #1),
+`README.md`, `docs/product.md` (Non-goals), `docs/algorithm.md` (design-intent header + "what stays
+fixed"), `docs/judging.md` (Innovation differentiator), and the `backend/app/services/planner.py`
+module docstring. The three historical `CHANGELOG.md` lines that mention it are left intact — history
+is not rewritten.
+
+**Replacement principle:** *interventions come first, and the scale of change is the user's choice.*
+The engine defaults to improving the existing city, and can also propose a full masterplan when asked.
+The non-negotiable that replaces it is **honesty of scale** — every level must state plainly how much
+of the city it touches.
+
+`docs/judging.md` gained a replacement Innovation differentiator: **one change spectrum, not one
+answer** (observe → trees → retrofit → re-plan → masterplan), which is a stronger story than "we only
+do small things."
+
+### Fixed — `POST /api/ai/ask` returned HTTP 500 for every emergency question
+`backend/app/services/knowledge.py` had lost the `def get_emergency_contacts(city):` line, leaving its
+docstring and body orphaned *inside* `get_health_condition()` after that function's `return`.
+`assistant._reply_emergency()` raised `AttributeError` → 500. It survived undetected because the live
+`CentralAssistantScreen` never calls the backend.
+
+Restored the function, and made city matching tolerant of both shapes it can encounter: bundled seed
+rows carry a plain `city` name (or null for national numbers) while `db/schema.sql` rows use `city_id`.
+National numbers (911, 211) now always survive an unmatched city filter.
+
+Verified: `"emergency"`, `"call 911"`, `"hospital"`, `"ambulance"`, `"helpline"` → **200** (was 500).
+
+### Fixed — change levels 0 and 4 returned HTTP 422 while the UI offered them
+`frontend/src/api.ts` has shipped five change levels since v0.5.0, but `routers/planner.py` declared
+`Query(1, ge=1, le=3)`. Picking "None" or "Rebuild" produced a user-visible
+`Couldn't generate plan: GET … -> 422`.
+
+- `routers/planner.py` → `Query(1, ge=0, le=4)`; `LEVEL_LABELS` extended to all five.
+- `planner._candidates_for()` — **level 0 (observe) now returns an empty list by definition**, and
+  **level 4 (rebuild) adds five masterplan interventions**: green network, street-grid reorientation,
+  rezoning, district cooling, and night wind corridors. Each is explicitly labelled a vision-layer
+  proposal.
+- Masterplan keys are asserted to appear **only** at level 4.
+
+### Added — a plan that explains itself
+Directly addresses the feedback that users could not tell how a change occurred or what the logic was.
+
+- **New `scale` block** on every `/api/planner/plan` response: `label`, `touches`, `changes_city`
+  (boolean) and a plain-language `note`. Level 4 now says it touches *"the whole area — streets,
+  zoning, utilities"* and marks `changes_city: true`; level 1 says *"surface treatments only"* and
+  marks it `false`. A rebuild can no longer be implied to be a small change.
+- **`pattern` + `pattern_label` + `heat_severity_pct`** are now returned on a plan. Previously the
+  TypeScript `Plan` interface declared `pattern`/`pattern_label`/`temp_c` but the backend sent none of
+  them — a silently broken contract. Extracted `_pattern_for(kind, h)` out of `analyze_pattern()` so
+  `build_plan()` can attach the same classification.
+- Level 0 returns an explicit `note` explaining that no interventions were generated on purpose.
+
+### Added — test suite (80 backend + 31 frontend, was zero)
+
+**`backend/tests/` — pytest**
+- `test_contract.py` — **parses `frontend/src/api.ts` and asserts every live response carries the
+  fields the TypeScript interface declares.** This makes `api.ts` the single source of truth and kills
+  the whole defect class: it would have caught the `points`/`cells` mismatch that broke the heat
+  overlay, the missing `Plan` fields, and the `/api/analysis/pois` 404.
+- `test_assistant.py` — regression tests for the emergency 500, intent routing across all five
+  intents, and honest miss-handling (a first-aid miss must not return heat-stroke guidance).
+- `test_planner.py` — all five levels return 200, level 0 produces nothing, masterplan leaks are
+  impossible, the `scale` block is always present and honest, ranks are contiguous.
+- `test_heat.py` — risk-threshold boundaries, provider determinism, heat-surface determinism and
+  invariants. Includes an `xfail(strict=True)` documenting the known divergence between
+  `heat_surface._RISK_TABLE` and `heat_provider.RISK_THRESHOLDS` below 80 °F.
+
+**`frontend/src/planner/uhiFactors.test.ts` — vitest (31 tests)**
+The research engine was the most valuable untested code in the repo. Covers PMV convergence across
+temperature × clothing × wind (the case that diverges without the 0.25 damping factor), PPD bounds and
+symmetry, the official heatwave definitions, per-kind and total cooling caps, distance decay,
+water-station spacing, and colour-ramp clamping.
+
+**`.github/workflows/ci.yml`** — runs backend pytest + frontend type-check/vitest/build on every push
+and PR, so the branch shows green checks.
+
+### Notes
+- `pytest` added to `backend/requirements.txt`; `vitest` added to `frontend` devDependencies.
+  Neither is deployed — the root `requirements.txt` used by Vercel is unchanged.
+- Deliberately **not** touched yet: the `heat_surface` per-cell `build_provider()` construction, the
+  bundle size warning, the dark-mode toggle (inert — Tailwind has no `darkMode: 'class'`), and the
+  empty Tools folders.
+
+### Verification
+- `backend`: **80 passed, 1 xfailed** (`pytest`)
+- `frontend`: **31 passed** (`vitest run`), `tsc --noEmit` clean, `npm run build` succeeds
+- Live: `/api/planner/plan` L0–L4 → 200 with 0/4/6/7/12 interventions and a correct `scale` block
+
 ## [v0.7.2] — 2026-08-27
 ### Added — One-project Vercel deployment (frontend + backend together)
 - **`api/index.py`** — serverless entrypoint exposing the FastAPI app (ASGI export +

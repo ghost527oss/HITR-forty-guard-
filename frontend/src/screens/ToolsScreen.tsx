@@ -1,31 +1,39 @@
 import { useState } from "react";
+import {
+  ArrowLeft,
+  Bandage,
+  ChevronRight,
+  Landmark,
+  Wheat,
+  type LucideIcon,
+} from "lucide-react";
 
 // Tool folders shown as image + text cards (like a file/folder browser).
 // To add real images: set the `image` field to a URL (Supabase Storage, a
 // public image, or a file in /public). To add new folders, add an entry below.
-const TOOL_FOLDERS = [
+const TOOL_FOLDERS: { id: string; label: string; icon: LucideIcon; image: string; desc: string }[] = [
   {
     id: "architecture",
     label: "Architecture",
-    emoji: "🏛️",
+    icon: Landmark,
     image: "",
     desc: "Cool house & building designs, explained simply",
   },
   {
     id: "farming",
     label: "Farming",
-    emoji: "🌾",
+    icon: Wheat,
     image: "",
     desc: "Shelter-belts, crop rows & keeping farms cool",
   },
   {
     id: "first-aid",
     label: "First Aid",
-    emoji: "🩹",
+    icon: Bandage,
     image: "",
     desc: "Heat stroke, exhaustion, dehydration & more",
   },
-] as const;
+];
 
 // Placeholder entries inside a folder (empty for now — add via code later).
 const FOLDER_CONTENT: Record<string, string[]> = {
@@ -43,8 +51,12 @@ export default function ToolsScreen() {
     return (
       <div className="flex h-full flex-col bg-white pt-12">
         <div className="flex items-center gap-2 border-b border-gray-200 px-4 py-3">
-          <button onClick={() => setOpen(null)} className="text-heat-600 font-semibold">
-            ‹ Back
+          <button
+            onClick={() => setOpen(null)}
+            className="flex items-center gap-1 font-semibold text-heat-600"
+          >
+            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            Back
           </button>
           <h2 className="font-semibold text-gray-800">{folder.label}</h2>
         </div>
@@ -74,15 +86,19 @@ export default function ToolsScreen() {
             onClick={() => setOpen(f.id)}
             className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 p-3 text-left hover:bg-gray-50"
           >
-            {/* Image slot — use f.image when you add a URL; emoji is the placeholder */}
-            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-xl bg-gray-100 text-3xl">
-              {f.image ? <img src={f.image} alt={f.label} className="h-full w-full object-cover" /> : f.emoji}
+            {/* Image slot — use f.image when you add a URL; the icon is the placeholder */}
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-heat-50 text-heat-600">
+              {f.image ? (
+                <img src={f.image} alt={f.label} className="h-full w-full object-cover" />
+              ) : (
+                <f.icon className="h-7 w-7" aria-hidden="true" />
+              )}
             </div>
             <div className="flex-1">
               <div className="text-sm font-semibold text-gray-800">{f.label}</div>
               <div className="text-xs text-gray-500">{f.desc}</div>
             </div>
-            <span className="text-gray-400">›</span>
+            <ChevronRight className="h-4 w-4 shrink-0 text-gray-400" aria-hidden="true" />
           </button>
         ))}
         <p className="pt-2 text-center text-[11px] text-gray-400">

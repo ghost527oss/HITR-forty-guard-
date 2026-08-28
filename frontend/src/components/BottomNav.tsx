@@ -20,7 +20,11 @@ export default function BottomNav({ active, onNavigate }: BottomNavProps) {
                 isActive ? "text-heat-600" : "text-gray-500"
               }`}
             >
-              <span className="text-lg leading-none">{item.icon}</span>
+              <item.icon
+                className="h-5 w-5 leading-none"
+                strokeWidth={isActive ? 2.5 : 2}
+                aria-hidden="true"
+              />
               <span>{item.label}</span>
             </button>
           );

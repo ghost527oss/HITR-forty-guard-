@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { dropletSvg, treesSvg } from "../lib/mapIcons";
+import { loadRealHeatGrid } from "../lib/realHeat";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
   Building2,
   ChevronLeft,
   Droplets,
+  Flame,
   Layers,
   Leaf,
   RotateCcw,
@@ -143,17 +146,35 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
   // ── Data load ──────────────────────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
+    let realArrived = false;
     setCells(null);
     setSim(null);
     setWeather(null);
+
+    // Phase 1 — the mock paints instantly. It is one provider call per cell
+    // (400 here), which is only acceptable because it is synthetic and free.
     getHeatGrid(lat, lng, GRID_SPAN, GRID_STEPS)
       .then((r) => {
-        if (cancelled) return;
+        if (cancelled || realArrived) return;
         setProvider(r.provider);
         setCells(r.cells ?? r.points ?? []);
       })
       .catch(() => {
         if (!cancelled) setProvider("offline");
+      });
+
+    // Phase 2 — ONE real FortyGuard task for the whole area, swapped in when it
+    // lands. The task takes seconds to minutes, so arriving late is fine; the
+    // studio is usable on the mock in the meantime.
+    loadRealHeatGrid(lat, lng, GRID_SPAN)
+      .then((pts) => {
+        if (cancelled || pts.length === 0) return;
+        realArrived = true;
+        setProvider("fortyguard");
+        setCells(pts);
+      })
+      .catch(() => {
+        // No key configured, or the task failed — the mock stays on screen.
       });
     getCitySimulation3D(lat, lng, 200)
       .then((s) => {
@@ -196,7 +217,7 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
         new maplibregl.Popup({ closeButton: false })
           .setLngLat([clickLng, clickLat])
           .setHTML(
-            `<div style="font:12px system-ui;color:#0f172a;max-width:230px"><b>🚰 Water station spot</b><br/>` +
+            `<div style="font:12px system-ui;color:#0f172a;max-width:230px"><b>${dropletSvg()}Water station spot</b><br/>` +
               `${Math.round(station.tempF)}°F zone<br/><span style="color:#475569">${station.reason}</span></div>`,
           )
           .addTo(map);
@@ -210,7 +231,7 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
           .setLngLat([clickLng, clickLat])
           .setHTML(
             `<div style="font:12px system-ui;color:#0f172a;max-width:230px"><b>` +
-              `${sugg.type === "water_point" ? "💧 Suggested water station" : "🌳 Suggested tree point"}</b><br/>` +
+              `${sugg.type === "water_point" ? dropletSvg() + "Suggested water station" : treesSvg() + "Suggested tree point"}</b><br/>` +
               `targets ${Math.round(sugg.target_temp_f)}°F · −${sugg.projected_reduction.toFixed(1)}°F projected<br/>` +
               `<span style="color:#475569">${sugg.reason}</span></div>`,
           )
@@ -255,6 +276,10 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
       style: STUDIO_STYLE,
       center: [lng, lat],
       zoom: 15.5,
+      // Esri's Canvas "World_Dark_Gray" tile service stops at z16. Without a
+      // matching cap the user can zoom past it and the basemap silently goes
+      // blank behind the heat layer.
+      maxZoom: 16,
       attributionControl: { compact: true },
     });
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
@@ -593,7 +618,14 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
               </span>
             </div>
             <p className="truncate text-[11px] text-slate-400">
-              {locationName} · heat: {provider === "mock" ? "mock model (FortyGuard slot)" : provider}
+              {locationName} · heat:{" "}
+              {provider === "fortyguard" ? (
+                <span className="font-medium text-emerald-300">FortyGuard</span>
+              ) : provider === "mock" ? (
+                "mock model (FortyGuard slot)"
+              ) : (
+                provider
+              )}
             </p>
           </div>
         </div>
@@ -605,7 +637,8 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
                 : "bg-amber-500/20 text-amber-100 ring-amber-400/40"
             }`}
           >
-            🔥 {hw.level === "alert" ? "HEATWAVE ALERT" : "Heat watch"} — {hw.reason}. Above 33 °C, design
+            <Flame className="mr-1.5 inline h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            {hw.level === "alert" ? "HEATWAVE ALERT" : "Heat watch"} — {hw.reason}. Above 33 °C, design
             alone stops working: prioritize shade, water & refuges (Ancona 2016).
           </div>
         )}

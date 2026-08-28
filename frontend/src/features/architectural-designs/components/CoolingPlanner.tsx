@@ -80,7 +80,7 @@ export const CoolingPlanner: React.FC<CoolingPlannerProps> = ({
   return (
     <div className="space-y-6">
       {/* Planner Header */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-lg">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center space-x-2 text-amber-400 font-bold text-xs uppercase tracking-wider mb-1">
@@ -90,7 +90,7 @@ export const CoolingPlanner: React.FC<CoolingPlannerProps> = ({
             <h2 className="text-2xl font-extrabold text-white tracking-tight">
               Residential Cooling Strategy Planner
             </h2>
-            <p className="text-sm text-slate-400 mt-1 max-w-2xl">
+            <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1 max-w-2xl">
               Assemble a staged, multi-tiered thermal masterplan customized to your building archetype, local microclimate, and retrofit budget.
             </p>
           </div>
@@ -109,7 +109,7 @@ export const CoolingPlanner: React.FC<CoolingPlannerProps> = ({
               <button
                 id="clear-plan-btn"
                 onClick={onClearSaved}
-                className="p-2.5 rounded-xl bg-slate-800 hover:bg-rose-900/30 text-slate-400 hover:text-rose-300 border border-slate-700 transition-colors"
+                className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-900/30 text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:text-rose-300 border border-slate-300 dark:border-slate-700 transition-colors"
                 title="Clear current plan"
               >
                 <Trash2 className="w-4 h-4" />
@@ -120,16 +120,16 @@ export const CoolingPlanner: React.FC<CoolingPlannerProps> = ({
       </div>
 
       {/* Building & Climate Profile Configurator */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-5 rounded-2xl">
         <div>
-          <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1.5">
             Regional Climate Zone
           </label>
           <select
             id="planner-climate-select"
             value={climate}
             onChange={(e) => setClimate(e.target.value)}
-            className="w-full py-2 px-3 bg-slate-950 border border-slate-750 rounded-xl text-xs font-semibold text-slate-200 focus:outline-none"
+            className="w-full py-2 px-3 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none"
           >
             <option value="Hot-Arid">Hot-Arid / Desert (Arizona, Middle East, Mediterranean)</option>
             <option value="Hot-Humid">Hot-Humid / Subtropical (Florida, Southeast Asia, Gulf)</option>
@@ -139,14 +139,14 @@ export const CoolingPlanner: React.FC<CoolingPlannerProps> = ({
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1.5">
             Building Archetype
           </label>
           <select
             id="planner-house-type-select"
             value={houseType}
             onChange={(e) => setHouseType(e.target.value)}
-            className="w-full py-2 px-3 bg-slate-950 border border-slate-750 rounded-xl text-xs font-semibold text-slate-200 focus:outline-none"
+            className="w-full py-2 px-3 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none"
           >
             <option value="Existing Retrofit">Existing Single-Family Home (Retrofit)</option>
             <option value="New Construction">New Sustainable Build (Ground-Up)</option>
@@ -156,14 +156,14 @@ export const CoolingPlanner: React.FC<CoolingPlannerProps> = ({
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1.5">
             Primary Heat Vulnerability
           </label>
           <select
             id="planner-issue-select"
             value={primaryIssue}
             onChange={(e) => setPrimaryIssue(e.target.value)}
-            className="w-full py-2 px-3 bg-slate-950 border border-slate-750 rounded-xl text-xs font-semibold text-slate-200 focus:outline-none"
+            className="w-full py-2 px-3 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none"
           >
             <option value="Hot Second Floor & Attic Heat">Superheated 2nd Floor & Attic Radiation</option>
             <option value="West Facing Window Glare">Blistering Afternoon West/South Window Sun</option>
@@ -173,14 +173,14 @@ export const CoolingPlanner: React.FC<CoolingPlannerProps> = ({
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+          <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1.5">
             Investment Budget Target
           </label>
           <select
             id="planner-budget-select"
             value={budgetTier}
             onChange={(e) => setBudgetTier(e.target.value)}
-            className="w-full py-2 px-3 bg-slate-950 border border-slate-750 rounded-xl text-xs font-semibold text-slate-200 focus:outline-none"
+            className="w-full py-2 px-3 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none"
           >
             <option value="Low ($0 – $500)">Low / DIY Focused ($0 – $500)</option>
             <option value="Moderate ($500 – $3,000)">Moderate Retrofits ($500 – $3,000)</option>
@@ -191,14 +191,14 @@ export const CoolingPlanner: React.FC<CoolingPlannerProps> = ({
       </div>
 
       {/* Plan Performance Dashboard */}
-      <div className="grid sm:grid-cols-3 gap-4 bg-slate-900/90 border border-slate-800 p-6 rounded-2xl shadow-lg">
+      <div className="grid sm:grid-cols-3 gap-4 bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl shadow-lg">
         {/* Metric 1: Selected Techniques */}
         <div className="flex items-center space-x-3.5">
           <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center font-bold text-xl">
             {savedDesigns.length}
           </div>
           <div>
-            <span className="text-xs text-slate-400 uppercase font-semibold">Active Blueprint Portfolio</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase font-semibold">Active Blueprint Portfolio</span>
             <h4 className="text-base font-extrabold text-white">
               {savedDesigns.length} Selected Techniques
             </h4>
@@ -211,7 +211,7 @@ export const CoolingPlanner: React.FC<CoolingPlannerProps> = ({
             <ThermometerSnowflake className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs text-slate-400 uppercase font-semibold">Simulated Combined Cooling</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase font-semibold">Simulated Combined Cooling</span>
             <h4 className="text-base font-extrabold text-emerald-300">
               {savedDesigns.length > 0
                 ? `${realisticDropMin}°C – ${realisticDropMax}°C Indoor Drop`
@@ -226,7 +226,7 @@ export const CoolingPlanner: React.FC<CoolingPlannerProps> = ({
             <DollarSign className="w-6 h-6" />
           </div>
           <div>
-            <span className="text-xs text-slate-400 uppercase font-semibold">Estimated AC Load Offset</span>
+            <span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase font-semibold">Estimated AC Load Offset</span>
             <h4 className="text-base font-extrabold text-amber-300">
               {savedDesigns.length > 0
                 ? `${Math.min(85, savedDesigns.length * 14)}% Peak Grid Shaving`
@@ -238,10 +238,10 @@ export const CoolingPlanner: React.FC<CoolingPlannerProps> = ({
 
       {/* Staged Multi-Phase Strategy List */}
       {savedDesigns.length === 0 ? (
-        <div className="bg-slate-900 border border-dashed border-slate-700 rounded-2xl p-10 text-center space-y-3">
-          <Bookmark className="w-10 h-10 text-slate-500 mx-auto" />
+        <div className="bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-10 text-center space-y-3">
+          <Bookmark className="w-10 h-10 text-slate-500 dark:text-slate-400 mx-auto" />
           <h3 className="text-lg font-bold text-white">Your Custom Cooling Plan is Empty</h3>
-          <p className="text-xs sm:text-sm text-slate-400 max-w-md mx-auto">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 max-w-md mx-auto">
             Browse the 100 Architectural Designs catalogue or click &quot;Auto-Recommend 6-Pack&quot; above to assemble your customized multi-phase cooling roadmap.
           </p>
           <button
@@ -256,8 +256,8 @@ export const CoolingPlanner: React.FC<CoolingPlannerProps> = ({
         <div className="space-y-6">
           {/* Phase 1: Immediate & Low-Cost DIY */}
           {phase1Designs.length > 0 && (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                 <div className="flex items-center space-x-2">
                   <span className="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 text-xs font-bold flex items-center justify-center">
                     1
@@ -266,7 +266,7 @@ export const CoolingPlanner: React.FC<CoolingPlannerProps> = ({
                     Phase 1: Immediate Low-Cost & DIY Quick Wins ($0 – $500)
                   </h3>
                 </div>
-                <span className="text-xs text-slate-400 font-semibold">{phase1Designs.length} Techniques</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 font-semibold">{phase1Designs.length} Techniques</span>
               </div>
 
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -284,8 +284,8 @@ export const CoolingPlanner: React.FC<CoolingPlannerProps> = ({
 
           {/* Phase 2: Moderate Architectural Retrofits */}
           {phase2Designs.length > 0 && (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                 <div className="flex items-center space-x-2">
                   <span className="w-6 h-6 rounded-full bg-amber-500/20 text-amber-400 text-xs font-bold flex items-center justify-center">
                     2
@@ -294,7 +294,7 @@ export const CoolingPlanner: React.FC<CoolingPlannerProps> = ({
                     Phase 2: Moderate Architectural Retrofits ($500 – $3,000)
                   </h3>
                 </div>
-                <span className="text-xs text-slate-400 font-semibold">{phase2Designs.length} Techniques</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 font-semibold">{phase2Designs.length} Techniques</span>
               </div>
 
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -312,8 +312,8 @@ export const CoolingPlanner: React.FC<CoolingPlannerProps> = ({
 
           {/* Phase 3: Major Structural Upgrades */}
           {phase3Designs.length > 0 && (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                 <div className="flex items-center space-x-2">
                   <span className="w-6 h-6 rounded-full bg-rose-500/20 text-rose-400 text-xs font-bold flex items-center justify-center">
                     3
@@ -322,7 +322,7 @@ export const CoolingPlanner: React.FC<CoolingPlannerProps> = ({
                     Phase 3: Deep Architectural & Structural Upgrades ($3,000+)
                   </h3>
                 </div>
-                <span className="text-xs text-slate-400 font-semibold">{phase3Designs.length} Techniques</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 font-semibold">{phase3Designs.length} Techniques</span>
               </div>
 
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -350,17 +350,17 @@ const PlanItemCard: React.FC<{
   onRemove: () => void;
 }> = ({ design, onSelect, onRemove }) => {
   return (
-    <div className="bg-slate-950/80 border border-slate-800 hover:border-slate-700 rounded-xl p-3.5 flex flex-col justify-between space-y-3">
+    <div className="bg-white/90 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 rounded-xl p-3.5 flex flex-col justify-between space-y-3">
       <div>
         <div className="flex items-center justify-between gap-1 mb-1.5">
-          <span className="text-[11px] font-mono font-bold text-cyan-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+          <span className="text-[11px] font-mono font-bold text-cyan-400 bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
             #{design.id}
           </span>
-          <span className="text-[10px] text-slate-400 truncate">{design.houseZone}</span>
+          <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-400 truncate">{design.houseZone}</span>
         </div>
         <h4
           onClick={onSelect}
-          className="text-xs font-bold text-slate-200 hover:text-cyan-300 cursor-pointer line-clamp-2"
+          className="text-xs font-bold text-slate-800 dark:text-slate-200 hover:text-cyan-300 cursor-pointer line-clamp-2"
         >
           {design.name}
         </h4>
@@ -369,16 +369,16 @@ const PlanItemCard: React.FC<{
         </p>
       </div>
 
-      <div className="flex items-center justify-between pt-2 border-t border-slate-850 text-xs">
+      <div className="flex items-center justify-between pt-2 border-t border-slate-300 dark:border-slate-200 dark:border-slate-800 text-xs">
         <button
           onClick={onSelect}
-          className="text-[11px] font-semibold text-slate-400 hover:text-cyan-300 transition-colors"
+          className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:text-cyan-300 transition-colors"
         >
           View Blueprint
         </button>
         <button
           onClick={onRemove}
-          className="text-[11px] text-slate-500 hover:text-rose-400 transition-colors"
+          className="text-[11px] text-slate-500 dark:text-slate-400 hover:text-rose-400 transition-colors"
         >
           Remove
         </button>

@@ -1,0 +1,73 @@
+# GitHub Actions workflow — NOT ACTIVE
+
+This is the CI config, parked here because the GitHub App connected to this
+repo does not have the `workflows` permission, so any push that creates or
+modifies `.github/workflows/*.yml` is rejected by GitHub.
+
+## To activate
+
+1. Reconnect GitHub in Arena with the `workflows` scope (or add a PAT that has it).
+2. Move this file back:
+
+   mkdir -p .github/workflows
+   git mv docs/ci-workflow.yml .github/workflows/ci.yml
+   # then delete this header block, keeping only the YAML below
+   git commit -m 'Restore CI workflow' && git push
+
+## What it runs
+
+- backend: Python 3.11, pip install -r requirements.txt, pytest
+- frontend: Node 20, npm ci, tsc --noEmit, npm run test, npm run build
+
+---
+
+name: CI
+
+# Runs the same three checks that define "green" for this project:
+# backend pytest · frontend type-check + vitest · production build.
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend (pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Run tests
+        run: pytest
+
+  frontend:
+    name: Frontend (type-check, tests, build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Type-check
+        run: ./node_modules/.bin/tsc --noEmit
+      - name: Run tests
+        run: npm run test
+      - name: Production build
+        run: npm run build

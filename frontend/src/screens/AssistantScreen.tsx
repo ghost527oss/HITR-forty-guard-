@@ -1,18 +1,40 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  Bandage,
+  BookOpen,
+  Home,
+  Map as MapIcon,
+  Siren,
+  type LucideIcon,
+} from "lucide-react";
+import {
   askAssistant,
   getKnowledgeStats,
   type AssistantReply,
   type KnowledgeStats,
 } from "../api";
 
-const INTENT_HINT: Record<string, string> = {
-  emergency: "🆘 Emergency & helplines",
-  first_aid: "🩹 First aid",
-  buildings: "🏠 Building designs",
-  plan: "🗺️ Planning",
-  encyclopedia: "📚 Knowledge",
+const INTENT_META: Record<string, { label: string; icon: LucideIcon }> = {
+  emergency: { label: "Emergency & helplines", icon: Siren },
+  first_aid: { label: "First aid", icon: Bandage },
+  buildings: { label: "Building designs", icon: Home },
+  plan: { label: "Planning", icon: MapIcon },
+  encyclopedia: { label: "Knowledge", icon: BookOpen },
 };
+
+// Labels the answer with the intent the router matched, so a user can see at a
+// glance *why* they got this answer. Returns null for unknown intents.
+function IntentBadge({ intent }: { intent?: string }) {
+  const meta = intent ? INTENT_META[intent] : undefined;
+  if (!meta) return null;
+  const { icon: Icon, label } = meta;
+  return (
+    <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide opacity-60">
+      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+      {label}
+    </span>
+  );
+}
 
 const SUGGESTIONS = [
   "What should I do for heat stroke?",
@@ -25,7 +47,7 @@ const SUGGESTIONS = [
 
 // Full-screen grounded chat assistant.
 export default function AssistantScreen() {
-  const [messages, setMessages] = useState<{ role: "user" | "ai"; text: string }[]>([]);
+  const [messages, setMessages] = useState<{ role: "user" | "ai"; text: string; intent?: string }[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [stats, setStats] = useState<KnowledgeStats | null>(null);
@@ -47,8 +69,7 @@ export default function AssistantScreen() {
     setBusy(true);
     try {
       const r: AssistantReply = await askAssistant(q);
-      const hint = INTENT_HINT[r.intent] ?? "";
-      setMessages((m) => [...m, { role: "ai", text: `${hint ? hint + "\n\n" : ""}${r.answer}` }]);
+      setMessages((m) => [...m, { role: "ai", text: r.answer, intent: r.intent }]);
     } catch {
       setMessages((m) => [...m, { role: "ai", text: "Sorry, I couldn't reach the assistant right now." }]);
     } finally {
@@ -98,6 +119,7 @@ export default function AssistantScreen() {
                 : "mr-auto max-w-[85%] bg-gray-100 text-gray-800"
             }`}
           >
+            <IntentBadge intent={m.intent} />
             {m.text}
           </div>
         ))}

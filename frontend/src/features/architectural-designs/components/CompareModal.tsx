@@ -39,13 +39,13 @@ export const CompareModal: React.FC<CompareModalProps> = ({
   if (comparingIds.length === 0) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-white/90 dark:bg-slate-950/80 backdrop-blur-sm overflow-y-auto">
       <div
         id="compare-modal"
-        className="relative w-full max-w-6xl bg-slate-900 border border-slate-750 rounded-2xl shadow-2xl overflow-hidden my-8 text-slate-100 flex flex-col max-h-[88vh]"
+        className="relative w-full max-w-6xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-2xl shadow-2xl overflow-hidden my-8 text-slate-900 dark:text-slate-100 flex flex-col max-h-[88vh]"
       >
         {/* Modal Header */}
-        <div className="flex items-center justify-between p-5 border-b border-slate-800 bg-slate-900/90 shrink-0">
+        <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 shrink-0">
           <div className="flex items-center space-x-2">
             <GitCompare className="w-5 h-5 text-cyan-400" />
             <h2 className="text-lg font-bold text-white">
@@ -56,7 +56,7 @@ export const CompareModal: React.FC<CompareModalProps> = ({
           <button
             id="close-compare-modal-btn"
             onClick={onClose}
-            className="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -73,7 +73,7 @@ export const CompareModal: React.FC<CompareModalProps> = ({
             {designs.map((design) => (
               <div
                 key={design.id}
-                className="bg-slate-950/90 border border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-4"
+                className="bg-white/90 dark:bg-slate-950/90 border border-slate-200 dark:border-slate-800 rounded-xl p-4 flex flex-col justify-between space-y-4"
               >
                 {/* Header Card info */}
                 <div className="space-y-2">
@@ -83,7 +83,7 @@ export const CompareModal: React.FC<CompareModalProps> = ({
                     </span>
                     <button
                       onClick={() => onRemoveFromCompare(design.id)}
-                      className="text-slate-500 hover:text-rose-400 p-1"
+                      className="text-slate-500 dark:text-slate-400 hover:text-rose-400 p-1"
                       title="Remove from comparison"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -100,7 +100,7 @@ export const CompareModal: React.FC<CompareModalProps> = ({
                     {design.name}
                   </h3>
 
-                  <span className="inline-block text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300">
+                  <span className="inline-block text-[11px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
                     {design.category}
                   </span>
                 </div>
@@ -108,8 +108,8 @@ export const CompareModal: React.FC<CompareModalProps> = ({
                 {/* Key Metrics Comparison Grid */}
                 <div className="space-y-3 text-xs">
                   {/* Temp Drop */}
-                  <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-semibold block mb-0.5">
+                  <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase font-semibold block mb-0.5">
                       Temperature Drop
                     </span>
                     <div className="text-cyan-300 font-bold flex items-center gap-1">
@@ -119,8 +119,8 @@ export const CompareModal: React.FC<CompareModalProps> = ({
                   </div>
 
                   {/* Budget & Cost */}
-                  <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-semibold block mb-0.5">
+                  <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase font-semibold block mb-0.5">
                       Budget & Range
                     </span>
                     <div className="text-amber-300 font-bold flex items-center gap-1">
@@ -130,22 +130,22 @@ export const CompareModal: React.FC<CompareModalProps> = ({
                   </div>
 
                   {/* Construction Difficulty */}
-                  <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-semibold block mb-0.5">
+                  <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase font-semibold block mb-0.5">
                       Difficulty & Feasibility
                     </span>
-                    <div className="text-slate-200 font-semibold flex items-center gap-1">
-                      <Wrench className="w-3.5 h-3.5 text-slate-400" />
+                    <div className="text-slate-800 dark:text-slate-200 font-semibold flex items-center gap-1">
+                      <Wrench className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 dark:text-slate-400" />
                       <span>{design.difficulty} • {design.diyFeasibility}</span>
                     </div>
                   </div>
 
                   {/* Architectural Principle */}
-                  <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800">
-                    <span className="text-[10px] text-slate-400 uppercase font-semibold block mb-1">
+                  <div className="bg-white dark:bg-slate-900 p-2.5 rounded-lg border border-slate-200 dark:border-slate-800">
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase font-semibold block mb-1">
                       Thermal Physics Mechanism
                     </span>
-                    <p className="text-[11px] text-slate-300 leading-relaxed font-mono">
+                    <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-mono">
                       {design.architecturalPrinciple}
                     </p>
                   </div>
@@ -177,7 +177,7 @@ export const CompareModal: React.FC<CompareModalProps> = ({
                     onClose();
                     onSelectDesign(design);
                   }}
-                  className="w-full py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-cyan-300 border border-slate-700 transition-colors"
+                  className="w-full py-2 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-semibold text-cyan-300 border border-slate-300 dark:border-slate-700 transition-colors"
                 >
                   Inspect Full Blueprint
                 </button>

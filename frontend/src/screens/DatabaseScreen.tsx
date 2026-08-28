@@ -5,23 +5,25 @@ interface DatabaseScreenProps {
 }
 
 interface FolderCardProps {
-  icon: string;
+  icon: LucideIcon;
   title: string;
   description: string;
   action?: () => void;
   status?: string;
 }
 
-function FolderCard({ icon, title, description, action, status }: FolderCardProps) {
+function FolderCard({ icon: Icon, title, description, action, status }: FolderCardProps) {
   const body = (
     <>
-      <span className="text-3xl" aria-hidden="true">{icon}</span>
+      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-heat-50 text-heat-600">
+        <Icon className="h-6 w-6" aria-hidden="true" />
+      </span>
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-semibold text-gray-900">{title}</span>
         <span className="mt-1 block text-xs leading-5 text-gray-600">{description}</span>
         {status && <span className="mt-2 block text-[11px] font-medium text-heat-700">{status}</span>}
       </span>
-      {action && <span className="text-gray-400" aria-hidden="true">›</span>}
+      {action && <ChevronRight className="h-4 w-4 shrink-0 text-gray-400" aria-hidden="true" />}
     </>
   );
 
@@ -31,6 +33,8 @@ function FolderCard({ icon, title, description, action, status }: FolderCardProp
     <div className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 bg-gray-50 p-4">{body}</div>
   );
 }
+
+import { ChevronRight, Landmark, Trees, Wrench, type LucideIcon } from "lucide-react";
 
 // Feature hub for the compact five-item navigation. Existing Planner and Tools
 // are kept intact and opened through this screen instead of the bottom bar.
@@ -42,9 +46,9 @@ export default function DatabaseScreen({ onOpenArchitecturalDesigns, onOpenPlann
         <h1 className="mt-1 text-2xl font-bold text-gray-900">Database</h1>
         <p className="mt-2 text-sm leading-6 text-gray-600">Browse HITR knowledge and planning tools without removing the live map workflow.</p>
         <div className="mt-6 space-y-3">
-          <FolderCard icon="🏛️" title="Knowledge Set" description="Browse the 100-method cooling design library, comparison tools, house anatomy and offline advisor." action={onOpenArchitecturalDesigns} />
-          <FolderCard icon="🌳" title="City Planner" description="Create a location-specific heat intervention plan using the selected map point." action={onOpenPlanner} />
-          <FolderCard icon="🧰" title="Tools" description="Open HITR's supporting analysis and reference tools." action={onOpenTools} />
+          <FolderCard icon={Landmark} title="Knowledge Set" description="Browse the 100-method cooling design library, comparison tools, house anatomy and offline advisor." action={onOpenArchitecturalDesigns} />
+          <FolderCard icon={Trees} title="City Planner" description="Create a location-specific heat intervention plan using the selected map point." action={onOpenPlanner} />
+          <FolderCard icon={Wrench} title="Tools" description="Open HITR's supporting analysis and reference tools." action={onOpenTools} />
         </div>
       </div>
     </section>

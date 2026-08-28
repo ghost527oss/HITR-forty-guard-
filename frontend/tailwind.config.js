@@ -1,5 +1,8 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  // SettingsScreen toggles a `.dark` class on <html>. Without this,
+  // Tailwind defaults to `media` (OS preference) and ignores it entirely.
+  darkMode: "class",
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
   theme: {
     extend: {

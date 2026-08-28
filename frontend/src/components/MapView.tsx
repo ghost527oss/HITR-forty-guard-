@@ -3,6 +3,9 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { HeatCell } from "../api";
 import { getHeatGrid } from "../api";
+import { boundsAround, loadRealHeatGrid } from "../lib/realHeat";
+
+export { boundsAround, loadRealHeatGrid };
 
 // Minimal free style using OpenStreetMap raster tiles (no API key needed).
 const style: maplibregl.StyleSpecification = {
@@ -301,7 +304,11 @@ function estimateSpan(cells: HeatCell[]): { lat: number; lng: number } {
 
 // Helper used by App to load a heat grid around the current map center.
 // Backend returns `points` (not `cells`) — tolerate both shapes.
-export async function loadHeatGrid(lat: number, lng: number): Promise<HeatCell[]> {
-  const res = await getHeatGrid(lat, lng, 0.04, 24);
+//
+// This is the MOCK path: one provider call per cell (576 for a 24x24 grid).
+// It is free because the data is synthetic. For real FortyGuard data use
+// loadRealHeatGrid, which costs one task for the whole area.
+export async function loadHeatGrid(lat: number, lng: number, spanDeg = 0.04): Promise<HeatCell[]> {
+  const res = await getHeatGrid(lat, lng, spanDeg, 24);
   return res.cells ?? res.points ?? [];
 }
