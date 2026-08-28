@@ -26,6 +26,7 @@ import {
   type Plan,
 } from "./api";
 import { loadHeatGrid } from "./components/MapView";
+import { loadRealHeatGrid } from "./lib/realHeat";
 import type { View } from "./nav";
 
 export type Units = "imperial" | "metric";
@@ -57,6 +58,8 @@ export default function App() {
   const [land, setLand] = useState<LandInfo | null>(null);
   const [loading, setLoading] = useState(false);
   const [heatData, setHeatData] = useState<HeatCell[] | null>(null);
+  // Which provider produced `heatData`. Drives the map's source badge.
+  const [heatSource, setHeatSource] = useState<"mock" | "fortyguard">("mock");
   const [units, setUnits] = useState<Units>("imperial");
   const [webSearchEnabled, setWebSearchEnabled] = useState(() => localStorage.getItem("hitr.google-search") === "true");
   const [changeLevel, setChangeLevel] = useState<ChangeLevel>(1);
@@ -87,16 +90,36 @@ export default function App() {
     return () => { cancelled = true; };
   }, [center.lat, center.lng]);
 
-  // Load a heat grid around the current center.
+  // Heat grid, two phases.
+  //
+  // 1. The mock paints instantly so the map is never empty. It costs nothing.
+  // 2. Real FortyGuard tiles replace it if (and only if) a key is configured.
+  //    That task takes seconds to minutes, so showing it late is strictly
+  //    better than blocking the whole screen on it.
+  //
+  // Phase 1 runs one provider call per cell (576 for 24x24); phase 2 is a
+  // single task for the entire area.
   useEffect(() => {
     let cancelled = false;
-    loadHeatGrid(center.lat, center.lng)
-      .then((pts) => {
-        if (!cancelled) setHeatData(pts);
-      })
-      .catch((err) => {
-        if (!cancelled) setStatus(`Couldn't load heat map: ${err.message}`);
-      });
+    let realArrived = false;
+    setHeatSource("mock");
+
+    loadHeatGrid(center.lat, center.lng).then((pts) => {
+      if (!cancelled && !realArrived) setHeatData(pts);
+    }).catch(() => {
+      // Swallowed on purpose: the real path below may still succeed, and an
+      // empty overlay is a worse outcome than a stale one.
+    });
+
+    loadRealHeatGrid(center.lat, center.lng).then((pts) => {
+      if (cancelled || pts.length === 0) return;
+      realArrived = true;
+      setHeatData(pts);
+      setHeatSource("fortyguard");
+    }).catch(() => {
+      // No key configured, or the task failed. The mock simply stays on screen.
+    });
+
     return () => { cancelled = true; };
   }, [center]);
 
@@ -217,6 +240,7 @@ export default function App() {
             units={units}
             onToggleUnits={toggleUnits}
             heatData={heatData}
+            heatSource={heatSource}
             onViewSurface={() => setView("heat_surface")}
             onAssistant={() => setView("assistant")}
             onSOS={() => setView("emergency")}

@@ -5,6 +5,45 @@ All notable changes to this project are documented here. Format inspired by
 
 ## [Unreleased]
 
+### Added — layer C: the frontend now uses real heat when a key exists
+Layer B exposed the endpoints; nothing called them. Wired the two biggest consumers.
+
+**Two-phase loading.** The mock paints instantly, then real tiles replace them if (and
+only if) a FortyGuard key is configured. Blocking a screen on a task that takes seconds
+to minutes would be worse than showing synthetic data first, so the mock is the first
+paint and the real grid is an upgrade rather than a prerequisite.
+
+| Screen | Mock path | Real path |
+|---|---|---|
+| Map | 576 provider calls (24×24) | 1 task for the whole area |
+| Design Studio | 400 provider calls | 1 task for the whole area |
+
+**`frontend/src/lib/realHeat.ts`** — `boundsAround()` and `loadRealHeatGrid()`. Kept as a
+plain `.ts` module rather than inside `MapView.tsx` so it is testable without dragging
+maplibre-gl into a node environment. `submit`/`fetchJob`/`sleep` are all injectable.
+
+It throws `RealHeatUnavailable` (a distinct error class) when the backend answers 503, so
+callers can fall back to the mock without treating "no key" as a failure. A task the vendor
+reports as Failed, or one that never finishes, is a plain error that leaves the mock on screen.
+
+**`api.ts`** — added `submitHeatArea()`, `getHeatJob()`, `getFortyGuardStatus()`, plus
+`Bounds` / `HeatAreaResponse` / `FortyGuardStatus` types.
+
+**Source is now visible.** The map's bottom bar distinguishes the spot reading from the
+overlay: `spot: mock · overlay: mock` vs `overlay: FortyGuard` in green. The Design Studio
+header does the same. Previously there was no way to tell whether what you were looking at
+was real.
+
+**4 tests** in `src/lib/realHeat.test.ts`, all injected — no network, no timers, no key. The
+most important asserts that loading a real grid costs **exactly one** area request, which is
+the entire point of layers B and C.
+
+Verified live with no key configured: `/api/fortyguard/selfcheck` reports
+`configured: false` without leaking anything, and `/api/heat/area` answers 503 with a message
+pointing at the mock endpoint — which is what triggers the fallback.
+
+---
+
 ### Added — layer B: the FortyGuard heatmap service
 The vendor API is async and area-based (submit → `activity_id` → poll). Nothing bridged that to a
 page load that wants raster data now, so real data was unreachable and the app ran on the mock.

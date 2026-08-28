@@ -13,8 +13,11 @@
 **Demo scope:** California only, US-style emergency numbers. Default city Los Angeles (34.0522, -118.2437).
 
 **Repo:** `https://github.com/ghost527oss/HITR-forty-guard-`
-**Branch always:** `arena/01a037bb-hitr-forty-guard` (don't switch)
-**Constraints:** user is on phone 95% of time, $0 budget, no API keys yet, occasional laptop only.
+**Branch always:** `arena/01a046c2-hitr-forty-guard` (don't switch — the session is tracked by it)
+**Constraints:** user is on phone 95% of time, $0 budget, occasional laptop only.
+**Keys:** the user HAS a FortyGuard API key and has already deployed to Vercel. It goes in
+`FORTYGUARD_API_KEY` (backend env / Vercel Environment Variables). Never in the frontend, never
+in a commit. See Part 18.
 
 ---
 
@@ -459,3 +462,70 @@ This phase does **not** implement real FortyGuard calls, planner text parsing, p
 ### Medical-triage priority fix
 
 `CentralAssistantScreen` has a `medicalResponse()` guard before `queryOfflineAiEngine()`. It matches broad symptom/health terms and resolves a protocol through `getMedicalTriage`; if no exact match is found, it defaults to the safer heat-exhaustion protocol rather than architectural content. Keep medical text clearly labelled as safety guidance and preserve 911 escalation. Do not remove the guard when extending building/planner abilities.
+
+---
+
+## Part 18 — FortyGuard integration (layers A/B/C)
+
+_Added 2026-08-28. This supersedes anything earlier in this file that describes the FortyGuard
+API — all earlier descriptions were guesses and were **wrong**._
+
+### The verified contract
+
+Read from `https://docs-api.fortyguard.com/docs/`. Full notes in `docs/fortyguard-api.md`.
+
+| | |
+|---|---|
+| Base URL | `https://api.fortyguard.com/v1` |
+| Auth header | **`api-key: <key>`** — NOT `Authorization: Bearer` |
+| Pattern | **Async**: `POST` a task → `activity_id` → `GET /v1/status/{id}` → poll until Completed |
+| Result | `data.result` of the *status* response |
+
+| Endpoint | Path | Plan | Gives |
+|---|---|---|---|
+| Create Heatmap | `POST /v1/heatmap` | Basic+ | GeoJSON tile polygons + stats |
+| Environmental Parameters | `POST /v1/env_params` | Basic+ (3 params) | humidity, heat index, AQI |
+| Heat Intelligence | `POST /v1/heat_intelligence` | **Premium** | PDF via temporary link |
+| Check Status | `GET /v1/status/{id}` | Basic+ | poll |
+
+What every earlier guess got wrong: the header, the temperature endpoint (`/v1/heatmap`, not
+`/v1/heat-intelligence`, which is a Premium PDF report), the call shape (async + area-based, not
+sync per-point), the response (GeoJSON + stats, not a number) and the units (**°C**, not °F).
+
+Other facts that shape the code: `granularity` must be 60/80/100 m; coverage is **US-only**;
+Basic caps heatmaps at 10 mi²; credits are deducted only on success, and Failed/validation
+errors are free.
+
+### What is built
+
+- **`backend/app/services/fortyguard_client.py`** — the verified client. 58 tests.
+  Deliberately has **no** `get_temperature(lat, lng)`: the map used to call the provider 576
+  times per load, which against a metered async API would be 576 billed tasks per page view.
+  A test asserts the method's absence.
+- **`backend/app/services/heatmap_service.py`** — layer B. `submit()` starts one task per
+  bounding box; `poll()` proxies the status endpoint. Converts °C → °F, skips null tiles,
+  reports `tile_property_keys`.
+- **`backend/app/routers/fortyguard.py`** — `GET /api/heat/area` (202 + poll_url),
+  `GET /api/heat/job/{id}`, `GET /api/fortyguard/selfcheck`.
+- **`frontend/src/lib/realHeat.ts`** — layer C client. Two-phase: mock paints instantly,
+  real tiles swap in when the task lands.
+
+### Two design decisions worth keeping
+
+1. **`poll()` is stateless.** It needs only the activity_id, never in-process memory. On Vercel
+   the submit and the polls can land on different function instances, so a module-global job
+   store would vanish between them and the job would never resolve. The in-memory cache is
+   strictly an optimisation — losing it costs one duplicate request, never a broken page.
+2. **`RealHeatUnavailable` is a distinct error class.** "No key configured" is not a failure;
+   it means "use the mock". Callers catch it and fall back silently.
+
+### Still open
+
+- The vendor docs never show a tile's `properties`, so the key holding each tile's temperature
+  is unconfirmed. `_extract_temperature_c()` guesses across ten candidates. **Run
+  `/api/fortyguard/selfcheck?live=1` with the real key, poll the returned URL, and the
+  `tile_property_keys` field will tell you the real name.** Then delete the guesswork.
+- Wind is not available from FortyGuard — it still comes from Open-Meteo.
+- CI lives at `docs/ci-workflow.yml`, parked because the GitHub App lacks the `workflows`
+  scope. Restore it once that permission is granted.
+- Cache is per-process. A shared store (Vercel KV) would make it durable.

@@ -372,3 +372,75 @@ export function getHeatGrid(
     `/api/heat/grid?lat=${lat}&lng=${lng}&span_deg=${spanDeg}&steps=${steps}`,
   );
 }
+
+// ── Real FortyGuard heat (layer B/C) ─────────────────────────────────────────
+//
+// The vendor API is async and area-based: submit one task for a bounding box,
+// then poll until it completes. One task serves the whole area, where the mock
+// path above costs one call per cell (576 for a 24x24 grid).
+//
+// Both endpoints are additive — /api/heat/grid still works — so the app runs on
+// the mock whenever no key is configured and upgrades itself the moment one is.
+
+export interface Bounds {
+  west: number;
+  south: number;
+  east: number;
+  north: number;
+}
+
+export interface HeatAreaResponse {
+  status: "processing" | "ready" | "failed";
+  activity_id?: string;
+  poll_url?: string;
+  count: number;
+  points: HeatCell[];
+  stats?: Record<string, number | null>;
+  /** Undocumented by the vendor; reported so we can learn the real field name. */
+  tile_property_keys?: string[];
+  error?: string;
+}
+
+/** Thrown when the backend has no FORTYGUARD_API_KEY — caller should use the mock. */
+export class RealHeatUnavailable extends Error {
+  constructor(message = "FORTYGUARD_API_KEY is not configured") {
+    super(message);
+    this.name = "RealHeatUnavailable";
+  }
+}
+
+export async function submitHeatArea(b: Bounds, granularity = 80): Promise<HeatAreaResponse> {
+  const q = new URLSearchParams({
+    west: String(b.west),
+    south: String(b.south),
+    east: String(b.east),
+    north: String(b.north),
+    granularity: String(granularity),
+  });
+  const res = await fetch(`/api/heat/area?${q.toString()}`);
+  // 503 is the backend telling us there is no key. Not an error to surface —
+  // it means "use the mock", which is exactly what the caller does with it.
+  if (res.status === 503) throw new RealHeatUnavailable();
+  if (!res.ok) throw new Error(`GET /api/heat/area -> ${res.status}`);
+  return res.json() as Promise<HeatAreaResponse>;
+}
+
+export function getHeatJob(activityId: string): Promise<HeatAreaResponse> {
+  return get<HeatAreaResponse>(`/api/heat/job/${encodeURIComponent(activityId)}`);
+}
+
+/** Is a real FortyGuard key configured? Drives the "real data" indicator. */
+export interface FortyGuardStatus {
+  configured: boolean;
+  api_key: string;
+  api_key_length: number;
+  base_url: string;
+  plan: string;
+  granularity_options: number[];
+  coverage: string;
+  live_check?: unknown;
+}
+
+export function getFortyGuardStatus(): Promise<FortyGuardStatus> {
+  return get<FortyGuardStatus>("/api/fortyguard/selfcheck");
+}

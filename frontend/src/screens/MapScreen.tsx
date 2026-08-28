@@ -28,6 +28,7 @@ interface MapScreenProps {
   onToggleUnits: () => void;
   heatData: HeatCell[] | null;
   onViewSurface?: () => void;
+  heatSource?: "mock" | "fortyguard";
   onAssistant?: () => void;
   onSOS?: () => void;
   onDatabase?: () => void;
@@ -40,7 +41,7 @@ interface MapScreenProps {
 export default function MapScreen(props: MapScreenProps) {
   const {
     center, zoom, title, onSearch, onPick, onClearPick, picked, reading,
-    land, loading, units, onToggleUnits, heatData, onViewSurface,
+    land, loading, units, onToggleUnits, heatData, heatSource, onViewSurface,
     onAssistant, onSOS, onDatabase, onGeneratePlan, planLoading,
   } = props;
   const [planSheetOpen, setPlanSheetOpen] = useState(false);
@@ -73,6 +74,7 @@ export default function MapScreen(props: MapScreenProps) {
         loading={loading}
         units={units}
         onViewSurface={onViewSurface}
+        heatSource={heatSource}
       />
 
       {/* Two different things can be selected: the AREA you are looking at

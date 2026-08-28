@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { dropletSvg, treesSvg } from "../lib/mapIcons";
+import { loadRealHeatGrid } from "../lib/realHeat";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import {
@@ -145,17 +146,35 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
   // ── Data load ──────────────────────────────────────────────────────────────
   useEffect(() => {
     let cancelled = false;
+    let realArrived = false;
     setCells(null);
     setSim(null);
     setWeather(null);
+
+    // Phase 1 — the mock paints instantly. It is one provider call per cell
+    // (400 here), which is only acceptable because it is synthetic and free.
     getHeatGrid(lat, lng, GRID_SPAN, GRID_STEPS)
       .then((r) => {
-        if (cancelled) return;
+        if (cancelled || realArrived) return;
         setProvider(r.provider);
         setCells(r.cells ?? r.points ?? []);
       })
       .catch(() => {
         if (!cancelled) setProvider("offline");
+      });
+
+    // Phase 2 — ONE real FortyGuard task for the whole area, swapped in when it
+    // lands. The task takes seconds to minutes, so arriving late is fine; the
+    // studio is usable on the mock in the meantime.
+    loadRealHeatGrid(lat, lng, GRID_SPAN)
+      .then((pts) => {
+        if (cancelled || pts.length === 0) return;
+        realArrived = true;
+        setProvider("fortyguard");
+        setCells(pts);
+      })
+      .catch(() => {
+        // No key configured, or the task failed — the mock stays on screen.
       });
     getCitySimulation3D(lat, lng, 200)
       .then((s) => {
@@ -599,7 +618,14 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
               </span>
             </div>
             <p className="truncate text-[11px] text-slate-400">
-              {locationName} · heat: {provider === "mock" ? "mock model (FortyGuard slot)" : provider}
+              {locationName} · heat:{" "}
+              {provider === "fortyguard" ? (
+                <span className="font-medium text-emerald-300">FortyGuard</span>
+              ) : provider === "mock" ? (
+                "mock model (FortyGuard slot)"
+              ) : (
+                provider
+              )}
             </p>
           </div>
         </div>
