@@ -760,14 +760,22 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
       {/* Bottom sheet */}
       <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-white/95 via-white/80 to-transparent px-3 pb-4 pt-10 dark:from-slate-950/95 dark:via-slate-950/80">
         {tool && (
-          <div className="mb-2 flex items-center justify-center gap-2 rounded-full bg-heat-600/90 py-1.5 text-[11px] font-semibold text-white">
-            <Droplets size={12} /> Tap the map to place · {PLACEMENT_META[tool].label}
-            <button
-              onClick={() => setTool(null)}
-              className="rounded-full bg-white/20 px-2 py-0.5 text-[10px]"
-            >
-              done
-            </button>
+          <div className="mb-2">
+            <div className="flex items-center justify-center gap-2 rounded-full bg-heat-600/90 py-1.5 text-[11px] font-semibold text-white">
+              <Droplets size={12} /> Tap the map to place · {PLACEMENT_META[tool].label}
+              <button
+                onClick={() => setTool(null)}
+                className="rounded-full bg-white/20 px-2 py-0.5 text-[10px]"
+              >
+                done
+              </button>
+            </div>
+            {/* Each tool does a different, calibrated thing — say so up front
+                so the four options don't look interchangeable. */}
+            <p className="mt-1 px-2 text-center text-[9px] leading-3 text-slate-600 dark:text-slate-300">
+              {PLACEMENT_META[tool].note} — −{PLACEMENT_META[tool].centerDropC.toFixed(2)} °C at site,
+              fades to 0 over {PLACEMENT_META[tool].radiusM} m
+            </p>
           </div>
         )}
         <div className="mb-2 flex gap-1.5 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>

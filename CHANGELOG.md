@@ -5,6 +5,24 @@ All notable changes to this project are documented here. Format inspired by
 
 ## [Unreleased]
 
+### Fixed — the planner levels now visibly do different things
+Side-by-side check confirmed the user's report: Light, Medium and Re-plan all
+opened with the **same** actions — each level's signature items were appended
+at the bottom, so the five level buttons looked interchangeable. Now the
+signature action of each level is the headline of its plan:
+- **Light** → street-level: shade trees, shade structure, water station
+- **Medium** → *building orientation* + *reflective-roof retrofit* first
+- **Re-plan** → *block layout re-plan* first (then the retrofit items)
+- **Rebuild** → masterplan items (unchanged)
+Two-line surgical change in `_candidates_for()` (append → prepend); all 172
+backend checks still pass (masterplan-stays-at-L4 guard included).
+
+The Design Studio now also states each tool's calibrated effect the moment it
+is selected ("−0.80 °C at site, fades to 0 over 100 m · +10% canopy ≈
+−0.5…−0.8 °C, Toronto/Beijing (P2)"), so the four design tools no longer look
+interchangeable. Combined with the per-tool breakdown in the impact card (this same branch),
+every button now shows *what* it does differently.
+
 ### Redesigned — the planner popup is now a neumorphic region screen
 When you pick a spot on the map and open the City Planner, the "Start a
 design" popup is now an elegant soft-UI (neumorphic) screen that follows the

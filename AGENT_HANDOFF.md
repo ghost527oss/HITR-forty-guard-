@@ -420,7 +420,13 @@ Its useful future contents are: the 100 design data, categories, catalogue/filte
 
 ### Required working style
 
-1. Make small, isolated changes only; do not rewrite or delete main working features.
+1. **Analyse first, then modify (user rule, 2026-08-29):** before changing any
+   file, read and understand the relevant code and say what was found. Then
+   make the **smallest surgical edit** that fixes the issue. Do NOT delete and
+   rewrite lines that still work (e.g. dropping a `const` and re-creating it)
+   — users read diffs and distrust churn. Prefer in-place edits; extract to a
+   shared file only when the exact code is genuinely used in ≥2 places.
+2. Make small, isolated changes only; do not rewrite or delete main working features.
 2. Analyse relevant source first; test after each phase.
 3. If a test fails, repair only the failing scope, rerun it, and record it.
 4. Document new work in `CHANGELOG.md`, this handoff, and relevant product/architecture docs.

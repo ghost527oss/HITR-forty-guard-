@@ -256,17 +256,20 @@ def _candidates_for(kind: str, change_level: int) -> list[dict]:
         cands.insert(0, {"what": "Orient crop rows and inter-crop to reduce heat stress",
                          "impact": _IMPACTS["trees"], "cost": _COST["trees"], "key": "shelter_belt"})
 
-    # Level 2: building retrofit / orientation guidance.
+    # Level 2: building retrofit / orientation guidance. PREPENDED, not
+    # appended: at this level the retrofit IS the headline — the plan must
+    # visibly start with what this level adds (previously these items sat at
+    # the bottom, so Light/Medium/Re-plan looked identical).
     if change_level >= 2:
-        cands.append({"what": "Retrofit buildings with reflective / insulated roofs",
-                      "impact": _IMPACTS["roof"], "cost": _COST["roof"], "key": "roof"})
-        cands.append({"what": "Adjust building orientation & overhangs for shading + airflow",
-                      "impact": _IMPACTS["orientation"], "cost": _COST["orientation"], "key": "orientation"})
+        cands.insert(0, {"what": "Retrofit buildings with reflective / insulated roofs",
+                         "impact": _IMPACTS["roof"], "cost": _COST["roof"], "key": "roof"})
+        cands.insert(0, {"what": "Adjust building orientation & overhangs for shading + airflow",
+                         "impact": _IMPACTS["orientation"], "cost": _COST["orientation"], "key": "orientation"})
 
-    # Level 3: full re-plan.
+    # Level 3: full re-plan. PREPENDED: the re-plan is the headline at this level.
     if change_level >= 3:
-        cands.append({"what": "Re-plan the block layout to keep homes cool & services accessible",
-                      "impact": _IMPACTS["replan"], "cost": _COST["replan"], "key": "replan"})
+        cands.insert(0, {"what": "Re-plan the block layout to keep homes cool & services accessible",
+                         "impact": _IMPACTS["replan"], "cost": _COST["replan"], "key": "replan"})
 
     # Level 4: masterplan / rebuild. Prepended, because at this level these are
     # the headline items — and each is explicitly a vision-layer proposal.
