@@ -17,11 +17,15 @@ Track 01 (Resilient Cities & Infrastructure) + Track 06 (Agentic AI).
 
 One sentence: *a mobile-first web app that turns a live hyperlocal heat map into a ranked,
 location-specific plan of interventions — trees, shelter-belts, shade structures, water stations,
-building orientation — that cool an **existing** city without rebuilding it.*
+building orientation — scaled to however much change the user chooses to make, from
+observation only to a full masterplan.*
 
 Five non-negotiable principles (from `PLAN.md`, repeated throughout the docs):
 
-1. **Never rebuild a city from scratch.** Streets and houses stay. We plan *interventions*.
+1. **Honesty of scale.** Interventions come first, and how much of the city changes is the
+   user's choice (observe → light → medium → re-plan → masterplan). Every level states plainly
+   how much of the city it touches. *(This replaced the retired "never rebuild a city"
+   principle — see `CHANGELOG.md` v0.8.0.)*
 2. **Heat is one of several livability factors** — accessibility, equity and productivity also weigh.
 3. **The program does the analysis; the AI is a bounded, grounded assistant** — it never invents a city.
 4. **Works for any city the user picks** (demo scope is currently California).

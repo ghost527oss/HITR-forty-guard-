@@ -12,6 +12,7 @@ import DatabaseScreen from "./screens/DatabaseScreen";
 import HeatSurfaceScreen from "./screens/HeatSurfaceScreen";
 import CitySimulationScreen from "./screens/CitySimulationScreen";
 import TrainingScreen from "./screens/TrainingScreen";
+import { Crosshair, X } from "lucide-react";
 import DesignStudioScreen from "./screens/DesignStudioScreen";
 import PlannerStartModal, { type PlannerScope } from "./components/PlannerStartModal";
 import AlertBanner from "./components/AlertBanner";
@@ -184,7 +185,7 @@ export default function App() {
             onClick={() => setStatus(null)}
             className="ml-2 font-bold text-amber-700 hover:text-amber-900"
             aria-label="Dismiss"
-          >✕</button>
+          ><X className="h-4 w-4" aria-hidden="true" /></button>
         </div>
       )}
 
@@ -329,8 +330,8 @@ export default function App() {
       {/* Floating pill: planner location-pick mode on the map */}
       {plannerPicking && view === "map" && (
         <div className="absolute inset-x-4 bottom-16 z-40 flex items-center justify-between gap-3 rounded-2xl bg-slate-900/95 px-4 py-3 shadow-2xl ring-1 ring-white/15">
-          <p className="text-xs font-medium text-white">
-            <span className="mr-1">🎯</span> Tap the map to place your project…
+          <p className="flex items-center text-xs font-medium text-white">
+            <Crosshair className="mr-1.5 h-4 w-4 shrink-0" aria-hidden="true" /> Tap the map to place your project…
           </p>
           <button
             onClick={() => {

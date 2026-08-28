@@ -74,7 +74,7 @@ export default function MapScreen(props: MapScreenProps) {
       />
 
       <div className="pointer-events-none absolute left-1/2 top-3 z-20 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-[10px] font-medium text-white shadow">
-        Hold ⇧ Shift + drag to draw a box · Tap to select spot
+        Hold <kbd className="rounded bg-white/25 px-1 py-px font-sans">Shift</kbd> + drag to draw a box · Tap to select spot
       </div>
 
       <HeatMapFAB

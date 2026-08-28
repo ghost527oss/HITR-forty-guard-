@@ -3,6 +3,53 @@
 All notable changes to this project are documented here. Format inspired by
 [Keep a Changelog](https://keepachangelog.com/). Versioning: `v0.x` for pre-release planning/build.
 
+## [Unreleased]
+
+### Changed — Phase 1a: emoji replaced with lucide icons across the UI
+Thirty-five emoji were doing the work of icons in app chrome. Emoji render at inconsistent sizes
+and weights across platforms and OSes — on a projected screen during judging that reads as
+unfinished. All user-facing emoji are now `lucide-react` components (already a dependency, so no
+bundle cost).
+
+| Where | Before | After |
+|---|---|---|
+| Bottom nav | 🏠 🗺️ 🤖 🗂️ ⚙️ | `Home` `Map` `Bot` `Database` `Settings` |
+| Home quick actions | 🗺️ 🤖 🌳 🧰 📍 | `Map` `Bot` `Trees` `Wrench` `MapPin` |
+| Database folders | 🏛️ 🌳 🧰 | `Landmark` `Trees` `Wrench` |
+| Tools folders | 🏛️ 🌾 🩹 | `Landmark` `Wheat` `Bandage` |
+| Assistant intent labels | 🆘 🩹 🏠 🗺️ 📚 | `Siren` `Bandage` `Home` `Map` `BookOpen` |
+| Map FAB | 🌳 🤖 🆘 🗂️ ·`×`/`+` | `Trees` `Bot` `Siren` `Database` ·`X`/`Plus` |
+| Settings | ☀️ 🌙 🚨 | `Sun` `Moon` `TriangleAlert` |
+| Close buttons | ✕ | `X` |
+| Back buttons (×4 screens) | ← | `ArrowLeft` |
+| Design Studio | 🔥 · 🚰 💧 🌳 | `Flame` · inline `droplet`/`trees` SVG |
+| AI advisor badges | 🚨 🔥 💡 💧 ⚡ 🛡️ | stripped — the cards already render an icon beside them |
+
+Icon props changed type from `icon: string` to `icon: LucideIcon` in `nav.ts`,
+`HomeScreen`, `DatabaseScreen` and `ToolsScreen`.
+
+Improvements that came along with the swap:
+- Assistant replies now carry their matched intent as a separate field and render it as an
+  **intent badge** above the answer, instead of being prefixed into the message text. Users can
+  see *why* they got an answer.
+- `⇧ Shift` on the map hint is now a styled `<kbd>` element rather than a bare glyph.
+- FAB toggle gained `aria-expanded` and a state-appropriate `aria-label`; close buttons gained
+  `aria-label`.
+
+Left as-is deliberately: `→` and `↓` in comments and in before→after temperature readouts
+(they're meaning "leads to", not decoration), and the box-drawing `─` in comment banners.
+
+Map popups needed special handling: MapLibre popups take an HTML **string**, so React components
+can't render inside them. Added `frontend/src/lib/mapIcons.ts` holding the real lucide v0.546.0
+path data for `droplet` and `trees` as static SVG, so the popups match the rest of the app.
+
+### Fixed — the retired principle survived in one more place
+`docs/CODEBASE_UNDERSTANDING_2026-08-28.md` still listed "Never rebuild a city from scratch" as
+principle #1. Replaced with the **honesty of scale** wording used everywhere else. The Phase 0
+sweep had missed this file; `AGENT_HANDOFF.md` was checked and was already clean.
+
+---
+
 ## [Unreleased] — FortyGuard API client, built against the real contract
 
 ### Added — the real FortyGuard client
