@@ -8,9 +8,10 @@ orient buildings to cool homes, protect vulnerable people, and keep farmland pro
 FortyGuard's hyperlocal Temperature API.
 
 ## Principles
-- Plan **interventions on existing cities** — never rebuild from scratch.
+- Plan **interventions on existing cities** — and a full **masterplan** when you ask for one.
 - Heat is one of several **livability** factors (accessibility, equity, productivity).
-- The program does the real analysis; the AI is a bounded, grounded assistant.
+- The program does the real analysis; the AI composes, compares and explains it — it never invents a
+  number, a coordinate, or a physical claim.
 - Works for **any city**.
 - Everything is **versioned and documented**.
 

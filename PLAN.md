@@ -21,12 +21,19 @@ location-specific action plan**.
 ---
 
 ## Core principles (agreed with the team — non-negotiable)
-1. **We never rebuild a city from scratch.** Streets and houses stay as they are. We plan *interventions*
-   — trees, shelter-belts, water points, structure orientation — that improve the existing plan.
+1. **Interventions come first — the scale of change is the user's choice.** By default we plan
+   *interventions* on the existing city — trees, shelter-belts, water points, structure orientation —
+   that improve the plan that is already there. When a person explicitly asks for more, the same engine
+   can also propose a **masterplan / rebuild** (new street grid, zoning, district cooling, green
+   network). What we never do is present a big change as if it were a small one: every level states
+   plainly how much of the city it touches.
 2. **Heat is not the only factor.** Hospitals, schools, markets, and transport must stay **accessible**.
    The algorithm optimizes for *livability*, with heat as a major (but not the only) criterion.
-3. **The program does the heavy lifting.** AI assists a small, well-defined part of the workflow — it
-   never "imagines a city out of nothing."
+3. **The program does the heavy lifting; the AI composes, compares and explains.** The AI may read a
+   generated plan, narrate it in plain language, and propose alternative *variants* by re-weighting the
+   engine — but it may never invent a number, a coordinate, or a physical claim. Those come from the
+   engine and always carry a citation. (Restated 2026-08-28; previously "the AI never imagines a city
+   out of nothing.")
 4. **Multi-city (any-city).** The user picks the location; the app works for whatever city they choose,
    not a single locked demo city.
 5. **Versioned + documented.** Every change is committed, logged in `CHANGELOG.md`, and recoverable.

@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .config import settings
 from .routers import ai, analysis, cities, heat, planner
 
-app = FastAPI(title=settings.app_name, version="0.2.0")
+app = FastAPI(title=settings.app_name, version="0.8.0")
 
 # Allow the frontend dev server (Vite) to call the API.
 app.add_middleware(

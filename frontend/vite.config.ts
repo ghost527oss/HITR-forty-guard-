@@ -5,6 +5,11 @@ import react from "@vitejs/plugin-react";
 // talks to a hardcoded origin. Set VITE_API_TARGET or default to :8000.
 export default defineConfig({
   plugins: [react()],
+  test: {
+    // uhiFactors is pure TypeScript — no DOM needed, and jsdom would slow it down.
+    environment: "node",
+    include: ["src/**/*.test.ts"],
+  },
   server: {
     host: "0.0.0.0",
     port: 5173,

@@ -1,13 +1,21 @@
 # The Intervention-Planning Algorithm
 
-> **Design intent (agreed 2026-08-18):** We do NOT generate a city from scratch — that would mean
-> placing thousands of houses and is unrealistic and useless. Instead we take the **existing city plan**
-> (streets and buildings stay where they are) and compute the best **interventions** that improve it.
+> **Design intent (agreed 2026-08-18, restated 2026-08-28):** We do NOT *default* to generating a city
+> from scratch — that would mean placing thousands of houses, and it is rarely something a real city can
+> act on. We take the **existing city plan** (streets and buildings stay where they are) and compute the
+> best **interventions** that improve it. When a person explicitly asks for a bigger change, the same
+> engine can also propose a **masterplan** — new street grid, zoning, district cooling, green network.
+> The non-negotiable rule is honesty of scale: every level states plainly how much of the city it
+> touches, and every number stays traceable to the engine.
 
-## What stays fixed (the "given" city plan)
+## What stays fixed (the "given" city plan) — levels 0–3
 - Streets and road network (unchanged)
 - Existing buildings, houses, plots, and their locations (unchanged)
 - Existing utilities, parks, landmarks
+
+> At **level 4 (rebuild)** these stop being fixed and become the things being redesigned. Level 4 is
+> never offered as a quiet default — it is an explicit "masterplan the whole area" choice, and the UI
+> must say so.
 
 ## What the algorithm decides (the "interventions" we can place/adjust)
 - **Tree placement** — which spots get new trees / shade trees

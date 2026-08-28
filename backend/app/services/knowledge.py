@@ -137,15 +137,31 @@ def get_health_condition(query: str) -> list[dict]:
     ]
     return hits  # audit #11 fix: return empty list on miss (caller decides what to do)
 
-    """Emergency/helpline contacts, optionally filtered by city name."""
+
+def get_emergency_contacts(city: str | None = None) -> list[dict]:
+    """Emergency/helpline contacts, optionally filtered by city name.
+
+    Bug fix 2026-08-28: the `def` line for this function had been lost, leaving
+    its body orphaned *inside* `get_health_condition` after that function's
+    `return`. `assistant._reply_emergency` raised AttributeError and every
+    emergency-intent question returned HTTP 500.
+
+    City matching is deliberately tolerant: bundled seed rows use a plain
+    `city` name (or null for national numbers), while `db/schema.sql` rows use
+    `city_id`. Both shapes are accepted so the assistant works before and after
+    a Supabase project is connected.
+    """
     rows = _rows("emergency_contacts", seed.EMERGENCY_CONTACTS)
-    if city:
-        c = city.lower()
-        return [
-            e for e in rows
-            if not e.get("city") or c in str(e.get("city") or "").lower()
-        ] or rows
-    return rows
+    if not city:
+        return list(rows)
+    c = city.lower()
+    matched = [
+        e for e in rows
+        if c in _field(e, "city", "").lower() or c in _field(e, "label", "").lower()
+    ]
+    # National numbers (no city attached) always apply alongside city matches.
+    national = [e for e in rows if not _field(e, "city", "")]
+    return matched + national
 
 
 def _relevance(query: str, entry: dict) -> int:

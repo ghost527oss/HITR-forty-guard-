@@ -17,10 +17,17 @@ Official weights: Impact & Relevance (40%) · Technical Execution (35%) · Innov
 - Full version control + `CHANGELOG.md` + living docs (this repo).
 
 ## Innovation (15%) — our differentiators
-- Planning **interventions on existing cities**, not hypothetical cities — more realistic & useful.
+- **One change spectrum, not one answer** — *observe → plant trees → retrofit buildings → re-plan
+  blocks → masterplan the city*. The person chooses how much change they can actually deliver, the
+  engine adapts the whole recommendation to that choice, and each level states plainly how much of the
+  city it touches. Most tools only do the top or the bottom of this range.
 - Heat as one of several **livability** criteria (accessibility, equity, productivity).
 - Farm/productivity mode with shelter-belts & windbreak agronomy.
-- AI as a **bounded encyclopedia/navigator**, not an autonomous city-builder.
+- **AI that composes, compares and explains — never invents.** It narrates a plan and proposes
+  alternatives by re-weighting the engine, so every number keeps its citation. The honesty is the
+  feature: a judge can ask "where did −3.2 °C come from?" and get a real answer.
+- **Explainable simulation** — every °C change is attributable: you can see which placement produced
+  it, at what radius, with what cap.
 
 ## Communication (10%)
 - Clear docs, README, a short demo script, and a story: "from heat map → ranked action plan."

@@ -3,6 +3,151 @@
 All notable changes to this project are documented here. Format inspired by
 [Keep a Changelog](https://keepachangelog.com/). Versioning: `v0.x` for pre-release planning/build.
 
+## [Unreleased] — FortyGuard API client, built against the real contract
+
+### Added — the real FortyGuard client
+The vendor documentation at `https://docs-api.fortyguard.com/docs/` was read and the contract
+captured in **`docs/fortyguard-api.md`**. The existing `fortyguard_client.py` was written against a
+guessed endpoint; **every one of those guesses was wrong**:
+
+| | Guessed | Actual |
+|---|---|---|
+| Auth header | `Authorization: Bearer` | **`api-key: <key>`** |
+| Temperature endpoint | `POST /v1/heat-intelligence` | **`POST /v1/heatmap`** (area-based) |
+| Call shape | synchronous, per lat/lng | **async: submit → `activity_id` → poll `/v1/status/{id}`** |
+| Response | a single number | **GeoJSON tile polygons + aggregate statistics** |
+| Units | °F | **°C** (`tcm`); hours for `exceedance`/`persistence` |
+
+`/v1/heat_intelligence` is real but is a **Premium-only PDF report**, not a temperature lookup.
+
+Rewrote `backend/app/services/fortyguard_client.py` against the verified contract:
+`submit_heatmap()`, `submit_env_params()`, `submit_heat_intelligence()`, `get_status()`,
+`wait_for_result()`, `heatmap() -> HeatmapResult`, plus `bbox_polygon()`, `polygon_area_m2()` and
+`ring_bbox()` helpers.
+
+Added `backend/tests/test_fortyguard_client.py` — **58 tests** that run against an injected fake
+transport, so the client is fully proven **without an API key and without touching the network**.
+
+### Fixed
+- **404 from `/v1/status` was mishandled.** The vendor docs warn an activity can be briefly 404
+  immediately after submission. The client raised `TransportError` instead of treating it as
+  "not ready yet", because the 404 body carries no JSON and blew up before the status check. Added
+  `FortyGuardNotFoundError`, raised before any body parsing, and normalised to `Processing` in
+  `get_status()`.
+
+### Why the client deliberately has no `get_temperature(lat, lng)`
+`HeatProvider.get_temperature()` is synchronous and per-point; the real API is neither. The map view
+calls the provider **576 times** per load and the Design Studio **1,600 times**. Against a metered
+async API that is 576–1,600 billed tasks per page view. Refusing to offer a per-point synchronous
+method makes that mistake impossible rather than merely discouraged; a test asserts its absence.
+
+The flip side is good news: `/v1/heatmap` returns the **whole** grid from one request, so the correct
+call volume is **1 per view**, not 1,600. Real data is cheaper than the mock — it just needs a
+`(bbox, date, granularity)` cache and a job-status surface in the UI. Both are still to do.
+
+Also relevant: `granularity` must be 60/80/100 m, and **80 m is a near-perfect match** for the grid
+we already fake (~78 m per cell). `map_data` returns GeoJSON polygons, which is exactly what
+`renderHeatTiles.ts` already draws. And coverage is **US-only**, which vindicates the California-only
+demo scope.
+
+### Environmental Parameters closes the humidity gap
+`POST /v1/env_params` returns `relative_humidity_percent`, `heat_index_celsius` and
+`apparent_temperature_celsius`. That is the real humidity source `uhiFactors.ts` has been faking
+(audit #14). There is **no wind parameter** — wind still comes from Open-Meteo.
+
+---
+
+## [v0.8.0] — 2026-08-28 — Phase 0: truth, tests, and a plan that explains itself
+
+### Changed — the "never rebuild a city" principle is retired
+The rule was removed from all 7 places that stated it as active policy: `PLAN.md` (principle #1),
+`README.md`, `docs/product.md` (Non-goals), `docs/algorithm.md` (design-intent header + "what stays
+fixed"), `docs/judging.md` (Innovation differentiator), and the `backend/app/services/planner.py`
+module docstring. The three historical `CHANGELOG.md` lines that mention it are left intact — history
+is not rewritten.
+
+**Replacement principle:** *interventions come first, and the scale of change is the user's choice.*
+The engine defaults to improving the existing city, and can also propose a full masterplan when asked.
+The non-negotiable that replaces it is **honesty of scale** — every level must state plainly how much
+of the city it touches.
+
+`docs/judging.md` gained a replacement Innovation differentiator: **one change spectrum, not one
+answer** (observe → trees → retrofit → re-plan → masterplan), which is a stronger story than "we only
+do small things."
+
+### Fixed — `POST /api/ai/ask` returned HTTP 500 for every emergency question
+`backend/app/services/knowledge.py` had lost the `def get_emergency_contacts(city):` line, leaving its
+docstring and body orphaned *inside* `get_health_condition()` after that function's `return`.
+`assistant._reply_emergency()` raised `AttributeError` → 500. It survived undetected because the live
+`CentralAssistantScreen` never calls the backend.
+
+Restored the function, and made city matching tolerant of both shapes it can encounter: bundled seed
+rows carry a plain `city` name (or null for national numbers) while `db/schema.sql` rows use `city_id`.
+National numbers (911, 211) now always survive an unmatched city filter.
+
+Verified: `"emergency"`, `"call 911"`, `"hospital"`, `"ambulance"`, `"helpline"` → **200** (was 500).
+
+### Fixed — change levels 0 and 4 returned HTTP 422 while the UI offered them
+`frontend/src/api.ts` has shipped five change levels since v0.5.0, but `routers/planner.py` declared
+`Query(1, ge=1, le=3)`. Picking "None" or "Rebuild" produced a user-visible
+`Couldn't generate plan: GET … -> 422`.
+
+- `routers/planner.py` → `Query(1, ge=0, le=4)`; `LEVEL_LABELS` extended to all five.
+- `planner._candidates_for()` — **level 0 (observe) now returns an empty list by definition**, and
+  **level 4 (rebuild) adds five masterplan interventions**: green network, street-grid reorientation,
+  rezoning, district cooling, and night wind corridors. Each is explicitly labelled a vision-layer
+  proposal.
+- Masterplan keys are asserted to appear **only** at level 4.
+
+### Added — a plan that explains itself
+Directly addresses the feedback that users could not tell how a change occurred or what the logic was.
+
+- **New `scale` block** on every `/api/planner/plan` response: `label`, `touches`, `changes_city`
+  (boolean) and a plain-language `note`. Level 4 now says it touches *"the whole area — streets,
+  zoning, utilities"* and marks `changes_city: true`; level 1 says *"surface treatments only"* and
+  marks it `false`. A rebuild can no longer be implied to be a small change.
+- **`pattern` + `pattern_label` + `heat_severity_pct`** are now returned on a plan. Previously the
+  TypeScript `Plan` interface declared `pattern`/`pattern_label`/`temp_c` but the backend sent none of
+  them — a silently broken contract. Extracted `_pattern_for(kind, h)` out of `analyze_pattern()` so
+  `build_plan()` can attach the same classification.
+- Level 0 returns an explicit `note` explaining that no interventions were generated on purpose.
+
+### Added — test suite (80 backend + 31 frontend, was zero)
+
+**`backend/tests/` — pytest**
+- `test_contract.py` — **parses `frontend/src/api.ts` and asserts every live response carries the
+  fields the TypeScript interface declares.** This makes `api.ts` the single source of truth and kills
+  the whole defect class: it would have caught the `points`/`cells` mismatch that broke the heat
+  overlay, the missing `Plan` fields, and the `/api/analysis/pois` 404.
+- `test_assistant.py` — regression tests for the emergency 500, intent routing across all five
+  intents, and honest miss-handling (a first-aid miss must not return heat-stroke guidance).
+- `test_planner.py` — all five levels return 200, level 0 produces nothing, masterplan leaks are
+  impossible, the `scale` block is always present and honest, ranks are contiguous.
+- `test_heat.py` — risk-threshold boundaries, provider determinism, heat-surface determinism and
+  invariants. Includes an `xfail(strict=True)` documenting the known divergence between
+  `heat_surface._RISK_TABLE` and `heat_provider.RISK_THRESHOLDS` below 80 °F.
+
+**`frontend/src/planner/uhiFactors.test.ts` — vitest (31 tests)**
+The research engine was the most valuable untested code in the repo. Covers PMV convergence across
+temperature × clothing × wind (the case that diverges without the 0.25 damping factor), PPD bounds and
+symmetry, the official heatwave definitions, per-kind and total cooling caps, distance decay,
+water-station spacing, and colour-ramp clamping.
+
+**`.github/workflows/ci.yml`** — runs backend pytest + frontend type-check/vitest/build on every push
+and PR, so the branch shows green checks.
+
+### Notes
+- `pytest` added to `backend/requirements.txt`; `vitest` added to `frontend` devDependencies.
+  Neither is deployed — the root `requirements.txt` used by Vercel is unchanged.
+- Deliberately **not** touched yet: the `heat_surface` per-cell `build_provider()` construction, the
+  bundle size warning, the dark-mode toggle (inert — Tailwind has no `darkMode: 'class'`), and the
+  empty Tools folders.
+
+### Verification
+- `backend`: **80 passed, 1 xfailed** (`pytest`)
+- `frontend`: **31 passed** (`vitest run`), `tsc --noEmit` clean, `npm run build` succeeds
+- Live: `/api/planner/plan` L0–L4 → 200 with 0/4/6/7/12 interventions and a correct `scale` block
+
 ## [v0.7.2] — 2026-08-27
 ### Added — One-project Vercel deployment (frontend + backend together)
 - **`api/index.py`** — serverless entrypoint exposing the FastAPI app (ASGI export +
