@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Crosshair } from "lucide-react";
 import MapView, { type BoxBounds } from "../components/MapView";
 import TopBar from "../components/TopBar";
 import BottomBar from "../components/BottomBar";
@@ -18,6 +19,7 @@ interface MapScreenProps {
   title: string;
   onSearch: (q: string) => void;
   onPick: (lat: number, lng: number) => void;
+  onClearPick?: () => void;
   picked: { lat: number; lng: number } | null;
   reading: HeatReading | null;
   land: LandInfo | null;
@@ -37,7 +39,7 @@ interface MapScreenProps {
 // and shift+drag box-selection (Google Lens style).
 export default function MapScreen(props: MapScreenProps) {
   const {
-    center, zoom, title, onSearch, onPick, picked, reading,
+    center, zoom, title, onSearch, onPick, onClearPick, picked, reading,
     land, loading, units, onToggleUnits, heatData, onViewSurface,
     onAssistant, onSOS, onDatabase, onGeneratePlan, planLoading,
   } = props;
@@ -73,8 +75,32 @@ export default function MapScreen(props: MapScreenProps) {
         onViewSurface={onViewSurface}
       />
 
-      <div className="pointer-events-none absolute left-1/2 top-3 z-20 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-[10px] font-medium text-white shadow">
-        Hold <kbd className="rounded bg-white/25 px-1 py-px font-sans">Shift</kbd> + drag to draw a box · Tap to select spot
+      {/* Two different things can be selected: the AREA you are looking at
+          (set by search) and the SPOT you picked by tapping. Plans, heat
+          surface and simulation all act on the SPOT, so surfacing it here
+          answers "why won't my plan generate?" before it is asked. */}
+      <div className="pointer-events-none absolute inset-x-0 top-3 z-20 flex justify-center px-4">
+        {picked ? (
+          <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-slate-900/90 py-1.5 pl-3 pr-1.5 text-[10px] font-medium text-white shadow-lg ring-1 ring-white/15">
+            <Crosshair className="h-3.5 w-3.5 text-emerald-300" aria-hidden="true" />
+            <span>
+              Spot {picked.lat.toFixed(4)}, {picked.lng.toFixed(4)}
+            </span>
+            {onClearPick && (
+              <button
+                onClick={onClearPick}
+                className="rounded-full px-2 py-0.5 text-white/70 transition hover:bg-white/15 hover:text-white"
+              >
+                Clear
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="rounded-full bg-slate-900/90 px-3 py-1.5 text-[10px] font-medium text-white shadow-lg ring-1 ring-white/15">
+            Tap the map to choose a spot · Hold{" "}
+            <kbd className="rounded bg-white/25 px-1 py-px font-sans">Shift</kbd> + drag for an area
+          </div>
+        )}
       </div>
 
       <HeatMapFAB

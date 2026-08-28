@@ -5,6 +5,48 @@ All notable changes to this project are documented here. Format inspired by
 
 ## [Unreleased]
 
+### Changed — Phase 1b: the planner now explains itself in the UI
+The backend has returned `scale`, `pattern_label` and `heat_severity_pct` since v0.8.0, but
+**none of them reached the screen** — `Plan` in `api.ts` didn't declare them. A plan rendered as
+a bare list of actions with no indication of what it did or how big it was.
+
+- **`api.ts`**: added `PlanScale` and the missing `scale`, `heat_severity_pct` and optional `note`
+  fields to `Plan`.
+- **`PlannerScreen.tsx`**: added a summary card at the top of every plan showing the **scale**
+  (label + "touches …"), an amber hard-hat treatment when `changes_city` is true (levels 3–4)
+  versus an eye icon when it is observation/retrofit, the scale's own explanatory note, and a
+  three-column diagnosis strip: detected pattern, temperature, heat severity.
+- Interventions now show **where** they apply (previously the `where` field was computed by the
+  backend and thrown away by the UI), and the list is introduced with an "N actions, highest
+  impact first" header so a 12-item masterplan reads as deliberate rather than as noise.
+
+**Fixed — levels 0 and 4 rendered a blank description.** `PlannerScreen` kept its own
+`LEVEL_DESC` map that duplicated `CHANGE_LEVELS` but only had entries for 1, 2 and 3, so the
+header description was empty at both ends of the range. Deleted the duplicate; the screen now
+reads `CHANGE_LEVELS[].desc` directly. Level 0 is also labelled **"Observe"** rather than "None",
+matching what the backend returns, and level 4's description now mentions the full masterplan.
+`PlanSheet` picks up all of this automatically.
+
+**Level 0 no longer looks broken.** It legitimately returns zero interventions, which rendered as
+an empty screen. There is now an explicit "No interventions proposed" empty state that surfaces
+the plan's `note`.
+
+### Changed — the map makes area vs. spot explicit
+Plans, heat surface and simulation all act on the **picked spot**, while search changes the
+**area** being viewed. Nothing distinguished the two, which is the likely root of "location
+selection is confusing".
+
+The map's single hint line is now a two-state chip: before picking it reads "Tap the map to
+choose a spot · Hold Shift + drag for an area"; after picking it shows the spot's coordinates
+with a **Clear** action. Added `onClearPick` to `MapScreen`.
+
+### Fixed — Emergency screen stranded the user
+`EmergencyScreen`'s Back button returned to **Tools**, but Tools has no emergency entry and its
+First Aid folder is empty, so SOS → Emergency → Back left no way forward. Back now returns to
+the **Map**, which is where the SOS button lives.
+
+---
+
 ### Changed — Phase 1a: emoji replaced with lucide icons across the UI
 Thirty-five emoji were doing the work of icons in app chrome. Emoji render at inconsistent sizes
 and weights across platforms and OSes — on a projected screen during judging that reads as

@@ -209,6 +209,7 @@ export default function App() {
             title={title}
             onSearch={handleSearch}
             onPick={handlePick}
+            onClearPick={() => setPicked(null)}
             picked={picked}
             reading={reading}
             land={land}
@@ -290,7 +291,7 @@ export default function App() {
         )}
 
         {view === "tools" && <ToolsScreen />}
-        {view === "emergency" && <EmergencyScreen onBack={() => setView("tools")} />}
+        {view === "emergency" && <EmergencyScreen onBack={() => setView("map")} />}
 
         {view === "settings" && (
           <SettingsScreen
