@@ -51,17 +51,26 @@ interface DesignStudioScreenProps {
 const STUDIO_STYLE: maplibregl.StyleSpecification = {
   version: 8,
   sources: {
-    carto: {
+    "studio-base": {
       type: "raster",
-      tiles: ["a", "b", "c", "d"].map((s) => `https://${s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png`),
+      tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}"],
       tileSize: 256,
-      maxzoom: 19,
-      attribution: "© OpenStreetMap contributors © CARTO",
+      maxzoom: 16,
+      attribution: "Esri, HERE, Garmin, FAO, NOAA, USGS",
+    },
+    "studio-labels": {
+      type: "raster",
+      tiles: ["https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}"],
+      tileSize: 256,
+      maxzoom: 16,
+      attribution: "",
     },
   },
-  layers: [{ id: "base", type: "raster", source: "carto" }],
+  layers: [
+    { id: "studio-base", type: "raster", source: "studio-base" },
+    { id: "studio-labels", type: "raster", source: "studio-labels" },
+  ],
 };
-
 const GRID_SPAN = 0.014;
 const GRID_STEPS = 20;
 
