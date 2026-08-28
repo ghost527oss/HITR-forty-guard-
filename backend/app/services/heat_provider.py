@@ -64,15 +64,25 @@ class HeatReading:
 
 
 class MockHeatProvider:
-    """Deterministic sample temperatures — no API key needed (dev/demo)."""
+    """Deterministic sample temperatures — no API key needed (dev/demo).
+
+    The field is a *spatially coherent* pseudo-climate: two smooth wave
+    scales (district ≈ 1.1 km, street ≈ 0.27 km) plus fine jitter, so hot
+    zones form contiguous regions the way real UHI does — instead of the
+    old per-coordinate hash, which produced a checkerboard where every cell
+    was unrelated to its neighbours (and made auto-placement look random).
+    Still a pure function of (lat, lng): deterministic, $0, no key.
+    """
 
     source = "mock"
 
     def get_temperature(self, lat: float, lng: float) -> HeatReading:
         seed = _lat_lng_seed(lat, lng)
         base = 95.0  # hot summer baseline for a US city
-        variation = (seed - 0.5) * 20.0  # +/- 10 F
-        temp_f = base + variation
+        district = 6.0 * math.sin(580.0 * lat + 1.7) * math.cos(640.0 * lng + 0.6)
+        street = 4.0 * math.sin(2300.0 * lat + 4.1) * math.sin(2100.0 * lng + 2.3)
+        jitter = (seed - 0.5) * 4.0  # +/- 2 F fine grain
+        temp_f = base + district + street + jitter
         return HeatReading(lat, lng, temp_f, source=self.source)
 
 

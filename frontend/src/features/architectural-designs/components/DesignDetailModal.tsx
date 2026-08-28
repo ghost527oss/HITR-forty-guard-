@@ -71,7 +71,7 @@ export const DesignDetailModal: React.FC<DesignDetailModalProps> = ({
                 {design.houseZone}
               </span>
             </div>
-            <h2 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               {design.name}
             </h2>
           </div>
@@ -79,7 +79,7 @@ export const DesignDetailModal: React.FC<DesignDetailModalProps> = ({
           <button
             id="close-detail-modal-btn"
             onClick={onClose}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -259,7 +259,7 @@ export const DesignDetailModal: React.FC<DesignDetailModalProps> = ({
               className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-xs font-semibold transition-colors border ${
                 isComparing
                   ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-300'
-                  : 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-white'
+                  : 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <GitCompare className="w-3.5 h-3.5" />
@@ -272,7 +272,7 @@ export const DesignDetailModal: React.FC<DesignDetailModalProps> = ({
               className={`flex items-center space-x-2 px-3 py-2 rounded-xl text-xs font-semibold transition-colors border ${
                 isSaved
                   ? 'bg-amber-500/20 border-amber-500/40 text-amber-300'
-                  : 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-white'
+                  : 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <Bookmark className="w-3.5 h-3.5" />

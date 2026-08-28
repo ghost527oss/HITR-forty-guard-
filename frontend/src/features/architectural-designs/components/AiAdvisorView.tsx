@@ -182,12 +182,12 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
       <div className="relative overflow-hidden bg-gradient-to-r from-slate-100 dark:from-slate-900 via-slate-100 dark:via-slate-900 to-amber-950/30 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold uppercase tracking-wider">
-              <Cpu className="w-3.5 h-3.5 text-emerald-400" />
+            <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-bold uppercase tracking-wider">
+              <Cpu className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>100% Free & Offline Knowledge Engine • Zero API Cost</span>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
               <Sparkles className="w-6 h-6 text-amber-400" />
               Bioclimatic & Heat Medical Intelligence Studio
             </h1>
@@ -205,7 +205,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
                 studioMode === 'chat'
                   ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-lg shadow-amber-500/20'
-                  : 'bg-white/90 dark:bg-slate-950/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 hover:text-white'
+                  : 'bg-white/90 dark:bg-slate-950/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
@@ -218,7 +218,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
                 studioMode === 'planner'
                   ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-lg shadow-cyan-500/20'
-                  : 'bg-white/90 dark:bg-slate-950/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 hover:text-white'
+                  : 'bg-white/90 dark:bg-slate-950/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               <Compass className="w-3.5 h-3.5" />
@@ -291,7 +291,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
                       <Icon className="w-4 h-4 opacity-80" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-white">{card.title}</h4>
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white">{card.title}</h4>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
                         {card.prompt}
                       </p>
@@ -311,7 +311,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <div className="flex items-center space-x-2">
                 <Sparkles className="w-4 h-4 text-amber-400" />
-                <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                   Live Offline Intelligence Assistant
                 </h3>
               </div>
@@ -354,7 +354,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
                           }`}>
                             {msg.result.badge}
                           </span>
-                          <h4 className="text-sm sm:text-base font-extrabold text-white mt-1">
+                          <h4 className="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white mt-1">
                             {msg.result.title}
                           </h4>
                         </div>
@@ -437,7 +437,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
                                       {design.houseZone}
                                     </span>
                                   </div>
-                                  <div className="text-xs font-bold text-white hover:text-cyan-300 transition-colors line-clamp-1">
+                                  <div className="text-xs font-bold text-slate-900 dark:text-white hover:text-cyan-300 transition-colors line-clamp-1">
                                     {design.name}
                                   </div>
                                   <div className="text-[10px] text-emerald-400 font-semibold">
@@ -502,7 +502,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
           <div className="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
             <div className="flex items-center space-x-2">
               <Compass className="w-5 h-5 text-cyan-400" />
-              <h3 className="text-sm font-bold text-white uppercase tracking-wider">
+              <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                 Home Bioclimatic Parameters
               </h3>
             </div>
@@ -586,7 +586,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
                   <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30">
                     Offline Masterplan Generated
                   </span>
-                  <h3 className="text-lg sm:text-xl font-extrabold text-white mt-1">
+                  <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white mt-1">
                     {customPlan.title}
                   </h3>
                   <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 leading-relaxed">
@@ -669,7 +669,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
             ) : (
               <div className="py-24 text-center space-y-3">
                 <Compass className="w-12 h-12 text-cyan-400 mx-auto" />
-                <h4 className="text-base font-bold text-white">
+                <h4 className="text-base font-bold text-slate-900 dark:text-white">
                   Configure Your House Parameters
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 max-w-sm mx-auto">
@@ -698,7 +698,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
                   onClick={() => setActiveProtocol(proto)}
                   className={`w-full text-left p-3 rounded-2xl border transition-all cursor-pointer ${
                     activeProtocol.id === proto.id
-                      ? 'bg-rose-500/20 border-rose-500 text-white shadow-md'
+                      ? 'bg-rose-500/20 border-rose-500 text-rose-700 dark:text-white shadow-md'
                       : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:border-slate-700'
                   }`}
                 >
@@ -726,7 +726,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
                 <span className="text-[10px] font-bold text-rose-400 uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/30">
                   {activeProtocol.severity}
                 </span>
-                <h3 className="text-lg sm:text-xl font-extrabold text-white mt-1">
+                <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white mt-1">
                   {activeProtocol.condition}
                 </h3>
                 <p className="text-xs text-amber-400 font-mono mt-0.5">

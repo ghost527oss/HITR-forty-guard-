@@ -87,7 +87,7 @@ export const CoolingPlanner: React.FC<CoolingPlannerProps> = ({
               <SlidersHorizontal className="w-4 h-4" />
               <span>HITR Architectural Strategy Engine</span>
             </div>
-            <h2 className="text-2xl font-extrabold text-white tracking-tight">
+            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               Residential Cooling Strategy Planner
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1 max-w-2xl">
@@ -199,7 +199,7 @@ export const CoolingPlanner: React.FC<CoolingPlannerProps> = ({
           </div>
           <div>
             <span className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase font-semibold">Active Blueprint Portfolio</span>
-            <h4 className="text-base font-extrabold text-white">
+            <h4 className="text-base font-extrabold text-slate-900 dark:text-white">
               {savedDesigns.length} Selected Techniques
             </h4>
           </div>
@@ -240,7 +240,7 @@ export const CoolingPlanner: React.FC<CoolingPlannerProps> = ({
       {savedDesigns.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-10 text-center space-y-3">
           <Bookmark className="w-10 h-10 text-slate-500 dark:text-slate-400 mx-auto" />
-          <h3 className="text-lg font-bold text-white">Your Custom Cooling Plan is Empty</h3>
+          <h3 className="text-lg font-bold text-slate-900 dark:text-white">Your Custom Cooling Plan is Empty</h3>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 max-w-md mx-auto">
             Browse the 100 Architectural Designs catalogue or click &quot;Auto-Recommend 6-Pack&quot; above to assemble your customized multi-phase cooling roadmap.
           </p>

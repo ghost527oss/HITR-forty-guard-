@@ -56,8 +56,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <span className="font-extrabold text-base tracking-tight text-white flex items-center gap-1.5">
-                  HITR <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 font-semibold border border-cyan-500/30">100 COOLING DESIGNS</span>
+                <span className="font-extrabold text-base tracking-tight text-slate-900 dark:text-white flex items-center gap-1.5">
+                  HITR <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 font-semibold border border-cyan-500/30">100 COOLING DESIGNS</span>
                 </span>
               </div>
               <p className="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium leading-none hidden sm:block">
@@ -81,7 +81,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       ? 'bg-slate-100 dark:bg-slate-800 text-cyan-400 border border-slate-300 dark:border-slate-700 shadow-inner'
                       : item.highlight
                       ? 'text-amber-400 hover:bg-amber-500/10 border border-amber-500/20'
-                      : 'text-slate-700 dark:text-slate-300 hover:text-white hover:bg-slate-100/80 dark:bg-slate-800/60'
+                      : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/80 dark:bg-slate-800/60'
                   }`}
                 >
                   <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : item.highlight ? 'text-amber-400' : 'text-slate-500 dark:text-slate-400 dark:text-slate-400'}`} />
@@ -131,7 +131,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               id="mobile-menu-toggle"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:text-white hover:bg-slate-100 dark:bg-slate-800"
+              className="md:hidden p-2 rounded-lg text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:bg-slate-800"
               aria-label="Toggle Menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}

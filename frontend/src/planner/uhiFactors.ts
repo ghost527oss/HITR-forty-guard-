@@ -52,6 +52,10 @@ export const HEATWAVE = {
 /** P1: above this outdoor temperature, geometry has no comfortable solutions. */
 export const DESIGN_FAILS_ABOVE_C = 33;
 
+/** Below this the weather is at most "moderate" risk — the factor model
+ *  proposes no active cooling (no trees/water planted for comfortable air). */
+export const MIN_SUGGEST_TEMP_F = 95;
+
 // ── Geometry physics (P1) ────────────────────────────────────────────────────
 
 /** Oke's canyon law (P1 eq. 3): urban−rural heat jump from street H/w ratio. */
@@ -222,6 +226,8 @@ export interface Placement {
   kind: PlacementKind;
   lat: number;
   lng: number;
+  /** Present when the placement came from a factor-driven suggestion. */
+  reason?: string;
 }
 
 interface KindSpec {
@@ -312,6 +318,10 @@ export interface DesignSummary {
   maxBeforeF: number;
   maxAfterF: number;
   avgDropC: number;
+  /** How many cells the design actually cools (>0.05 °C) — the effect is local. */
+  affectedCells: number;
+  /** Strongest cooling at a single point, °C. */
+  maxDropC: number;
   cells: HeatCell[];
 }
 
@@ -321,8 +331,12 @@ export function simulateDesign(cells: HeatCell[], placements: Placement[]): Desi
   let sumA = 0;
   let maxB = -Infinity;
   let maxA = -Infinity;
+  let affectedCells = 0;
+  let maxDropC = 0;
   const out: HeatCell[] = cells.map((c) => {
     const dropC = cellDropC(c, placements);
+    if (dropC > 0.05) affectedCells++;
+    if (dropC > maxDropC) maxDropC = dropC;
     const afterF = c.temp_f - dropC * 1.8;
     sumB += c.temp_f;
     sumA += afterF;
@@ -335,15 +349,17 @@ export function simulateDesign(cells: HeatCell[], placements: Placement[]): Desi
       color: tempColorF(afterF),
     };
   });
-  return {
-    avgBeforeF: cells.length ? sumB / cells.length : 0,
-    avgAfterF: cells.length ? sumA / cells.length : 0,
-    maxBeforeF: cells.length ? maxB : 0,
-    maxAfterF: cells.length ? maxA : 0,
-    avgDropC: cells.length ? ((sumB - sumA) / cells.length) / 1.8 : 0,
-    cells: out,
-  };
-}
+    return {
+      avgBeforeF: cells.length ? sumB / cells.length : 0,
+      avgAfterF: cells.length ? sumA / cells.length : 0,
+      maxBeforeF: cells.length ? maxB : 0,
+      maxAfterF: cells.length ? maxA : 0,
+      avgDropC: cells.length ? ((sumB - sumA) / cells.length) / 1.8 : 0,
+      affectedCells,
+      maxDropC,
+      cells: out,
+    };
+  }
 
 // ── Water-station placement (papers: hottest spots first, spacing, refuges) ──
 
@@ -362,10 +378,11 @@ export interface StationSuggestion {
 export function suggestWaterStations(
   cells: HeatCell[],
   existing: LatLng[],
-  opts?: { count?: number; minSpacingM?: number },
+  opts?: { count?: number; minSpacingM?: number; hospitals?: LatLng[] },
 ): StationSuggestion[] {
   const count = opts?.count ?? 5;
   const minSpacing = opts?.minSpacingM ?? 120;
+  const hospitals = opts?.hospitals ?? [];
   const sorted = [...cells].sort((a, b) => b.temp_f - a.temp_f);
   if (!sorted.length) return [];
   const mean = sorted.reduce((s, c) => s + c.temp_f, 0) / sorted.length;
@@ -373,16 +390,155 @@ export function suggestWaterStations(
   const out: StationSuggestion[] = [];
   for (const c of sorted) {
     if (out.length >= count) break;
+    if (c.temp_f < MIN_SUGGEST_TEMP_F) break; // comfortable weather: no active cooling
     if (c.temp_f < mean + 1.5 && out.length >= 2) break; // cooler area: stop early
     const far = taken.every((t) => metersBetween(t, c) >= minSpacing);
     if (!far) continue;
     taken.push(c);
+    let hospitalNote = "";
+    for (const h of hospitals) {
+      const hd = metersBetween(c, h);
+      if (hd < 150) {
+        hospitalNote = ` · ${Math.round(hd)} m from hospital — refuge for vulnerable people (P2)`;
+        break;
+      }
+    }
     out.push({
       lat: c.lat,
       lng: c.lng,
       tempF: c.temp_f,
-      reason: `${Math.round(c.temp_f)}°F hotspot · ≥${minSpacing} m from other water · Lee & Kim 2022: vulnerable people need easy-access cool refuges`,
+      reason: `${Math.round(c.temp_f)}°F hotspot · ≥${minSpacing} m from other water${hospitalNote}`,
     });
   }
   return out;
+}
+
+// ── Factor-driven smart placement (the "why here" engine) ───────────────────
+
+/** Spatial context the factor model reads. Mirrors CitySimulation3D's fields. */
+export interface PlacementContext {
+  vegetation: LatLng[];
+  buildings: { lat: number; lng: number; height_m: number }[];
+  hospitals?: LatLng[];
+}
+
+export interface SmartPlacement extends Placement {
+  reason: string;
+}
+
+/**
+ * Where to put an intervention — decided by the papers' factors, not randomly:
+ *
+ * - TREE CLUSTER (P2 canopy effect, P1 canyon physics): hottest cells first,
+ *   but only where there is NO canopy within 60 m (diminishing returns — you
+ *   don't plant where trees already are), ≥80 m apart. Beside a tall building
+ *   the cell is a street canyon, so the tree is worth more there (Oke 1981).
+ * - COOL ROOF (P2: urban air −1.2…−2 K): must sit ON a building — hottest
+ *   cells with a building within 60 m, tallest roof wins.
+ * - COMMUNITY GARDEN (Seoul: ≈300 m² polygonal green ≈ −1 °C): hot cells on
+ *   OPEN ground — no building within 40 m, ≥100 m apart.
+ * - WATER STATION: hottest-first with spacing, bonus proximity to hospitals.
+ *
+ * Deterministic: hottest-first order, stable tie-break, no randomness.
+ */
+export function suggestPlacements(
+  cells: HeatCell[],
+  ctx: PlacementContext,
+  kind: PlacementKind,
+  opts?: { count?: number; existing?: Placement[] },
+): SmartPlacement[] {
+  if (kind === "water_station") {
+    const stations = suggestWaterStations(cells, (opts?.existing ?? []).map((p) => ({ lat: p.lat, lng: p.lng })), {
+      count: opts?.count ?? 5,
+      hospitals: ctx.hospitals,
+    });
+    return stations.map((s, i) => ({
+      id: `sugg-w${i}-${Math.round(s.lat * 1e4)}`,
+      kind: "water_station" as const,
+      lat: s.lat,
+      lng: s.lng,
+      reason: s.reason,
+    }));
+  }
+
+  const count = opts?.count ?? 5;
+  const existing = opts?.existing ?? [];
+  const sorted = [...cells].sort(
+    (a, b) => b.temp_f - a.temp_f || a.lat - b.lat || a.lng - b.lng,
+  );
+  if (!sorted.length) return [];
+  const mean = sorted.reduce((s, c) => s + c.temp_f, 0) / sorted.length;
+  const taken: LatLng[] = existing.map((p) => ({ lat: p.lat, lng: p.lng }));
+  const out: SmartPlacement[] = [];
+
+  const spacingM = kind === "tree_cluster" ? 80 : kind === "cool_roof" ? 60 : 100;
+
+  for (const c of sorted) {
+    if (out.length >= count) break;
+    if (c.temp_f < mean + 1.0 || c.temp_f < MIN_SUGGEST_TEMP_F) break; // only genuinely hot cells
+    const far = taken.every((t) => metersBetween(t, c) >= spacingM);
+    if (!far) continue;
+
+    let reason = "";
+    if (kind === "tree_cluster") {
+      const canopyGap =
+        ctx.vegetation.length === 0
+          ? "no recorded canopy nearby"
+          : Math.min(...ctx.vegetation.map((v) => metersBetween(c, v))) >= 60
+            ? "no canopy within 60 m"
+            : null;
+      if (!canopyGap) continue; // trees already here — diminishing returns
+      const tall = ctx.buildings.find((b) => b.height_m >= 15 && metersBetween(c, b) <= 80);
+      const canyon = tall
+        ? ` · beside ${Math.round(tall.height_m)} m building — canyon traps heat (Oke 1981)`
+        : "";
+      reason = `${Math.round(c.temp_f)}°F hotspot · ${canopyGap}${canyon} · +10% canopy ≈ −0.5…−0.8 °C (P2)`;
+    } else if (kind === "cool_roof") {
+      const roof = ctx.buildings
+        .filter((b) => metersBetween(c, b) <= 60)
+        .sort((a, b) => b.height_m - a.height_m)[0];
+      if (!roof) continue; // a cool roof has to sit on a building
+      reason = `cool roof on the ${Math.round(roof.height_m)} m building · ${Math.round(c.temp_f)}°F zone · urban air −1.2…−2 K (Lee & Kim 2022)`;
+    } else {
+      const blocked = ctx.buildings.some((b) => metersBetween(c, b) <= 40);
+      if (blocked) continue; // a garden needs open ground, not a rooftop
+      reason = `${Math.round(c.temp_f)}°F · open parcel (no building within 40 m) · ≈300 m² green ≈ −1 °C (Seoul, P2)`;
+    }
+
+    taken.push({ lat: c.lat, lng: c.lng });
+    out.push({
+      id: `sugg-${kind}-${out.length}-${Math.round(c.lat * 1e4)}`,
+      kind,
+      lat: c.lat,
+      lng: c.lng,
+      reason,
+    });
+  }
+  return out;
+}
+
+// ── What each tool in the design actually contributes ────────────────────────
+
+export interface KindContribution {
+  kind: PlacementKind;
+  count: number;
+  radiusM: number;
+  centerDropC: number;
+  note: string;
+}
+
+/** Per-kind roll-up of the current design, in tool order (only kinds present). */
+export function designContributions(
+  placements: Placement[],
+  order: PlacementKind[] = ["tree_cluster", "water_station", "cool_roof", "garden"],
+): KindContribution[] {
+  return order
+    .filter((k) => placements.some((p) => p.kind === k))
+    .map((k) => ({
+      kind: k,
+      count: placements.filter((p) => p.kind === k).length,
+      radiusM: PLACEMENT_META[k].radiusM,
+      centerDropC: PLACEMENT_META[k].centerDropC,
+      note: PLACEMENT_META[k].note,
+    }));
 }

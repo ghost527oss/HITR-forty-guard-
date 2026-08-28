@@ -153,7 +153,7 @@ export const HouseAnatomyView: React.FC<HouseAnatomyViewProps> = ({
               <Compass className="w-4 h-4" />
               <span>Interactive Bioclimatic House Anatomy</span>
             </div>
-            <h2 className="text-2xl font-extrabold text-white tracking-tight">
+            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               Thermal Flow & Structural Hotspots
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1 max-w-2xl">
@@ -261,7 +261,7 @@ export const HouseAnatomyView: React.FC<HouseAnatomyViewProps> = ({
                   className={`absolute -translate-x-1/2 -translate-y-1/2 group z-20 flex items-center space-x-1.5 px-3 py-1.5 rounded-full border transition-all duration-200 ${
                     isSelected
                       ? 'bg-cyan-500 text-slate-950 font-extrabold border-white shadow-xl shadow-cyan-500/50 scale-110'
-                      : 'bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-200 hover:text-white border-slate-300 dark:border-slate-700 hover:border-cyan-400 shadow-md hover:scale-105'
+                      : 'bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white border-slate-300 dark:border-slate-700 hover:border-cyan-400 shadow-md hover:scale-105'
                   }`}
                 >
                   <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-slate-950' : 'text-cyan-400'}`} />
@@ -310,7 +310,7 @@ export const HouseAnatomyView: React.FC<HouseAnatomyViewProps> = ({
               </span>
             </div>
 
-            <h3 className="text-xl font-bold text-white">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white">
               {selectedZone.name}
             </h3>
 

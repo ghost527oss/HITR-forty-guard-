@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   cellDropC,
+  designContributions,
   heatwaveStatus,
   metersBetween,
   PLACEMENT_META,
@@ -8,6 +9,7 @@ import {
   pmvLabel,
   ppdFromPmv,
   simulateDesign,
+  suggestPlacements,
   suggestWaterStations,
   tempColorF,
   TOTAL_DROP_CAP_C,
@@ -15,6 +17,7 @@ import {
   windVentilationScore,
   type Placement,
   type PlacementKind,
+  type PlacementContext,
 } from "./uhiFactors";
 import type { HeatCell } from "../api";
 
@@ -277,5 +280,106 @@ describe("tempColorF", () => {
   it("clamps extremes instead of returning an out-of-range colour", () => {
     expect(tempColorF(-50)).toBe(tempColorF(60));
     expect(tempColorF(500)).toBe(tempColorF(120));
+  });
+});
+
+describe("suggestPlacements — factor-driven placement (the 'why here' engine)", () => {
+  // Hot strip heading north, then a cool tail. A 24 m building beside the
+  // hottest cell; existing canopy 2 m from the second-hottest cell.
+  const hot = cell(110, 34.0522, -118.2437);
+  const second = cell(108, 34.0532, -118.2437); // ~110 m north
+  const third = cell(106, 34.0542, -118.2437); // ~220 m north
+  const fourth = cell(104, 34.0552, -118.2437); // ~330 m north
+  const cool = cell(88, 34.0622, -118.2437); // cool, far
+  const grid = [hot, second, third, fourth, cool];
+  const building = { lat: 34.05225, lng: -118.24365, height_m: 24 };
+  const canopyBySecond = { lat: 34.05322, lng: -118.24372 };
+
+  const bareCtx: PlacementContext = { vegetation: [], buildings: [], hospitals: [] };
+
+  it("targets the hottest cell first and cites the canyon factor", () => {
+    const picks = suggestPlacements(grid, { ...bareCtx, buildings: [building] }, "tree_cluster", { count: 5 });
+    expect(picks.length).toBeGreaterThan(0);
+    expect(picks[0].lat).toBe(hot.lat);
+    expect(picks[0].lng).toBe(hot.lng);
+    expect(picks[0].reason).toMatch(/canyon/);
+  });
+
+  it("skips a hot cell that already has canopy nearby (diminishing returns)", () => {
+    const picks = suggestPlacements(grid, { ...bareCtx, vegetation: [canopyBySecond] }, "tree_cluster", {
+      count: 5,
+    });
+    expect(picks.some((p) => p.lat === second.lat && p.lng === second.lng)).toBe(false);
+    expect(picks.some((p) => p.lat === hot.lat && p.lng === hot.lng)).toBe(true);
+  });
+
+  it("only places cool roofs where a building is actually nearby", () => {
+    const picks = suggestPlacements(grid, { ...bareCtx, buildings: [building] }, "cool_roof", { count: 5 });
+    expect(picks.length).toBe(1); // only the hottest cell has a roof within 60 m
+    expect(picks[0].reason).toMatch(/24 m building/);
+  });
+
+  it("keeps gardens off rooftops (open ground only)", () => {
+    const picks = suggestPlacements(grid, { ...bareCtx, buildings: [building] }, "garden", { count: 5 });
+    expect(picks.length).toBeGreaterThan(0);
+    for (const p of picks) {
+      expect(metersBetween(p, building)).toBeGreaterThan(40);
+    }
+  });
+
+  it("notes hospital proximity for water stations", () => {
+    const hospital = { lat: 34.05225, lng: -118.2438 };
+    const picks = suggestPlacements(grid, { ...bareCtx, hospitals: [hospital] }, "water_station", { count: 1 });
+    expect(picks.length).toBe(1);
+    expect(picks[0].reason).toMatch(/hospital/);
+  });
+
+  it("respects spacing against existing placements", () => {
+    const existing: Placement[] = [{ id: "x", kind: "tree_cluster", lat: hot.lat, lng: hot.lng }];
+    const picks = suggestPlacements(grid, bareCtx, "tree_cluster", { count: 5, existing });
+    for (const p of picks) {
+      expect(metersBetween(p, existing[0])).toBeGreaterThanOrEqual(80);
+    }
+  });
+
+  it("is deterministic — same input, same picks", () => {
+    const a = suggestPlacements(grid, { ...bareCtx, buildings: [building] }, "tree_cluster", { count: 5 });
+    const b = suggestPlacements(grid, { ...bareCtx, buildings: [building] }, "tree_cluster", { count: 5 });
+    expect(a).toEqual(b);
+  });
+
+  it("never invents a placement for a cold grid", () => {
+    const cold = [cell(80, 34.0522, -118.2437), cell(82, 34.0532, -118.2437)];
+    expect(suggestPlacements(cold, bareCtx, "tree_cluster", { count: 5 })).toEqual([]);
+  });
+});
+
+describe("designContributions", () => {
+  it("groups by kind in tool order with the paper meta", () => {
+    const ps = [placement("garden"), placement("tree_cluster"), placement("tree_cluster")];
+    const contribs = designContributions(ps);
+    expect(contribs.map((c) => c.kind)).toEqual(["tree_cluster", "garden"]);
+    expect(contribs[0].count).toBe(2);
+    expect(contribs[0].radiusM).toBe(PLACEMENT_META.tree_cluster.radiusM);
+    expect(contribs[0].centerDropC).toBe(PLACEMENT_META.tree_cluster.centerDropC);
+  });
+
+  it("omits kinds that were not placed", () => {
+    expect(designContributions([placement("garden")]).map((c) => c.kind)).toEqual(["garden"]);
+  });
+});
+
+describe("simulateDesign — affected-area reporting", () => {
+  it("counts only the cells actually cooled and reports the strongest drop", () => {
+    const cells = [cell(110), cell(110, ORIGIN.lat + 0.005, ORIGIN.lng), cell(110, ORIGIN.lat + 0.02, ORIGIN.lng)];
+    const result = simulateDesign(cells, [placement("tree_cluster")]);
+    expect(result.affectedCells).toBe(1); // only the cell inside the 100 m radius
+    expect(result.maxDropC).toBeCloseTo(PLACEMENT_META.tree_cluster.centerDropC, 6);
+  });
+
+  it("reports zero effect for an empty design", () => {
+    const result = simulateDesign([cell(110)], []);
+    expect(result.affectedCells).toBe(0);
+    expect(result.maxDropC).toBe(0);
   });
 });

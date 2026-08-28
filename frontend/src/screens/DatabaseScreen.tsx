@@ -1,7 +1,6 @@
 interface DatabaseScreenProps {
   onOpenArchitecturalDesigns: () => void;
   onOpenPlanner: () => void;
-  onOpenTools: () => void;
 }
 
 interface FolderCardProps {
@@ -34,11 +33,11 @@ function FolderCard({ icon: Icon, title, description, action, status }: FolderCa
   );
 }
 
-import { ChevronRight, Landmark, Trees, Wrench, type LucideIcon } from "lucide-react";
+import { ChevronRight, Landmark, Trees, type LucideIcon } from "lucide-react";
 
-// Feature hub for the compact five-item navigation. Existing Planner and Tools
-// are kept intact and opened through this screen instead of the bottom bar.
-export default function DatabaseScreen({ onOpenArchitecturalDesigns, onOpenPlanner, onOpenTools }: DatabaseScreenProps) {
+// Feature hub for the compact five-item navigation. (The "Tools" folder was
+// removed on request — its three sub-folders were empty placeholders.)
+export default function DatabaseScreen({ onOpenArchitecturalDesigns, onOpenPlanner }: DatabaseScreenProps) {
   return (
     <section className="h-full overflow-y-auto bg-gray-50 px-4 pb-24 pt-6">
       <div className="mx-auto max-w-lg">
@@ -48,7 +47,6 @@ export default function DatabaseScreen({ onOpenArchitecturalDesigns, onOpenPlann
         <div className="mt-6 space-y-3">
           <FolderCard icon={Landmark} title="Knowledge Set" description="Browse the 100-method cooling design library, comparison tools, house anatomy and offline advisor." action={onOpenArchitecturalDesigns} />
           <FolderCard icon={Trees} title="City Planner" description="Create a location-specific heat intervention plan using the selected map point." action={onOpenPlanner} />
-          <FolderCard icon={Wrench} title="Tools" description="Open HITR's supporting analysis and reference tools." action={onOpenTools} />
         </div>
       </div>
     </section>

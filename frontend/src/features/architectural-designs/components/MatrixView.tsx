@@ -58,7 +58,7 @@ export const MatrixView: React.FC<MatrixViewProps> = ({ onSelectDesign }) => {
               <ThermometerSnowflake className="w-4 h-4" />
               <span>Architectural Decision Matrix</span>
             </div>
-            <h2 className="text-2xl font-extrabold text-white tracking-tight">
+            <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
               Cost vs. Construction Difficulty Grid
             </h2>
             <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1 max-w-2xl">
@@ -161,7 +161,7 @@ export const MatrixView: React.FC<MatrixViewProps> = ({ onSelectDesign }) => {
 
       {/* Full 5x4 Architectural Grid Table */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-lg overflow-x-auto">
-        <h3 className="text-base font-bold text-white mb-4">
+        <h3 className="text-base font-bold text-slate-900 dark:text-white mb-4">
           Complete 100-Design Cross-Density Distribution
         </h3>
 
@@ -179,7 +179,7 @@ export const MatrixView: React.FC<MatrixViewProps> = ({ onSelectDesign }) => {
           {COST_LEVELS.map((cost) => (
             <div key={cost} className="grid grid-cols-5 gap-3 items-stretch">
               {/* Cost Label */}
-              <div className="flex items-center justify-between p-3 rounded-xl bg-white/90 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-xs font-bold text-amber-300">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-white/90 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-xs font-bold text-amber-700 dark:text-amber-300">
                 <span>{cost}</span>
               </div>
 

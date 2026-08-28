@@ -5,6 +5,170 @@ All notable changes to this project are documented here. Format inspired by
 
 ## [Unreleased]
 
+### Fixed — the planner levels now visibly do different things
+Side-by-side check confirmed the user's report: Light, Medium and Re-plan all
+opened with the **same** actions — each level's signature items were appended
+at the bottom, so the five level buttons looked interchangeable. Now the
+signature action of each level is the headline of its plan:
+- **Light** → street-level: shade trees, shade structure, water station
+- **Medium** → *building orientation* + *reflective-roof retrofit* first
+- **Re-plan** → *block layout re-plan* first (then the retrofit items)
+- **Rebuild** → masterplan items (unchanged)
+Two-line surgical change in `_candidates_for()` (append → prepend); all 172
+backend checks still pass (masterplan-stays-at-L4 guard included).
+
+The Design Studio now also states each tool's calibrated effect the moment it
+is selected ("−0.80 °C at site, fades to 0 over 100 m · +10% canopy ≈
+−0.5…−0.8 °C, Toronto/Beijing (P2)"), so the four design tools no longer look
+interchangeable. Combined with the per-tool breakdown in the impact card (this same branch),
+every button now shows *what* it does differently.
+
+### Redesigned — the planner popup is now a neumorphic region screen
+When you pick a spot on the map and open the City Planner, the "Start a
+design" popup is now an elegant soft-UI (neumorphic) screen that follows the
+app theme — and its carved-in map shows **only the chosen region**:
+
+- The preview map fits exactly the scope's square, panning is **clamped to
+  it** (you can zoom in freely, with soft − / + / fit buttons, but you can
+  never see outside the square) — "show that area, nothing else".
+- The region follows the chosen level of change — the user's "big square vs
+  small square": **spot ≈ 450 m, block ≈ 900 m, district ≈ 1.5 km,
+  city ≈ 6.5 km, farm ≈ 1.1 km**. Picking a bigger scope animates the view
+  out to the bigger square.
+- The heat grid renders inside the preview, so you see what you're planning
+  (mock paints instantly; free).
+- Soft-UI styling throughout: monochrome surface, dual light/dark shadows,
+  raised elements that press *inset*, rounded 28 px card, no hard borders —
+  in both light and dark theme.
+- The Design Studio now launches **fit to the same square**, clamped to it
+  (a little padding so edge placements stay reachable), and its heat grid
+  spans the scope's region instead of a fixed 1.5 km. A soft **Fit** button
+  next to the back button re-frames the region at any time.
+- Shared plumbing extracted: `lib/basemaps.ts` (theme basemaps,
+  `squareBounds`, `toDegPoly`) and `lib/useDarkTheme.ts` (theme observer),
+  used by both the studio and the new pop screen.
+
+Verified: tsc clean, vitest 47/47, build ok, backend 171 passed + 1 xfailed.
+
+## [Unreleased] (previous: planner factor-driven + removals)
+
+### Fixed — the planner is now factor-driven, local, and explainable (the big one)
+The user's standing ask: the planner had to understand *the factors that affect
+a neighbourhood's temperature* (the three research papers) and use them to
+decide **where** to put trees and water — and to explain **why** any
+temperature changes. Five defects, five fixes:
+
+1. **The mock heat grid was a checkerboard.** `MockHeatProvider` hashed each
+   coordinate independently, so every cell was unrelated to its neighbours
+   (adjacent cells differed by ~10 °F). Anything computed from the grid —
+   auto water stations, "hottest cell" suggestions — landed on random-looking
+   specks. The field is now a spatially coherent pseudo-climate: two smooth
+   wave scales (district ≈ 1.1 km, street ≈ 0.27 km) + fine jitter. Adjacent
+   cells now differ ~2.8 °F; hot zones form contiguous regions. Still a pure
+   function of (lat, lng) — deterministic, $0, no key. Tests pass unchanged
+   (bounds 80–110, determinism, conversion).
+2. **Auto-placement is now factor-driven, not random.** New `suggestPlacements()`
+   in `uhiFactors.ts` (the "Auto place ×5" button in the studio):
+   - tree clusters → hottest cells, but only where there is **no canopy within
+     60 m** (diminishing returns — never plant where trees already are), ≥80 m
+     apart, with a **canyon bonus** beside tall buildings (Oke 1981: narrow
+     street canyons trap heat);
+   - cool roofs → must sit **on a building** (hottest cells with a roof within
+     60 m, tallest wins; Lee & Kim 2022: urban air −1.2…−2 K);
+   - community gardens → hot cells on **open ground only** (no building within
+     40 m; Seoul: ≈300 m² polygonal green ≈ −1 °C);
+   - water stations → hottest-first + spacing, with a **hospital proximity**
+     note (Lee & Kim 2022: vulnerable people need easy-access cool refuges).
+   Deterministic (hottest-first, stable tie-break, no randomness), and nothing
+   is placed below 95 °F ("high" risk) — no invented interventions in
+   comfortable weather.
+3. **Every placement explains itself.** Tap any placed dot: it shows the kind,
+   the calibrated drop (e.g. "−0.80 °C at site · fades to 0 over 100 m") and
+   the factor reason ("104 °F hotspot · no canopy within 60 m · beside 24 m
+   building — canyon traps heat (Oke 1981)"). Smart placements carry their
+   reason; hand-placed ones show the paper note.
+4. **The impact card no longer implies city-wide change.** It used to say
+   "Avg temp 94 → 93.8 °F · avg −0.03 °C across map", which reads as *the
+   whole city cooled*. Now: **Peak temp** (before→after), **Strongest drop**
+   (at a site), and a per-tool contribution line ("Tree cluster ×2 → −0.80 °C
+   at site · fades to 0 over 100 m"), plus the honest physics line: "Local
+   effect: cools 12 of 400 map tiles (≈3 %). The area average barely moves —
+   a tree cools its block, not the whole city (Lee & Kim 2022)."
+5. **The change is actually visible.** Placing the first element (tap or auto)
+   switches the map to the "After design" view automatically, so the cooled
+   tiles are visible immediately instead of only in numbers.
+
+New/updated: `MockHeatProvider` (backend), `uhiFactors.ts` (+`suggestPlacements`,
+`designContributions`, `MIN_SUGGEST_TEMP_F`, `affectedCells`/`maxDropC`,
+hospital factor, `Placement.reason`), `DesignStudioScreen.tsx`, +12 vitest
+cases (47 total).
+
+### Removed — heatwave banner in the Design Studio (user request)
+The in-studio heatwave alert banner was hiding map information, and the user
+asked for it to be removed completely. Live heat is still surfaced on the map
+itself, in the PMV "feels" chip, and in the Home screen's alert banner. The
+research function (`heatwaveStatus`) and its tests are untouched.
+
+### Removed — the empty "Tools" folder from the Database screen (user request)
+Its three sub-folders (Architecture / Agriculture / First Aid) were empty
+placeholders. The folder card, the `tools` view, and `ToolsScreen.tsx` are
+gone. (Supersedes the earlier "keep Planner and Tools" note for Tools.) Also
+removed the dead `getNearbyPOIs()` client from `api.ts` (no callers; the
+backend guard test predicted its removal and was retired with it).
+
+### Fixed — Design Studio now follows the light/dark theme
+The studio was dark-only (Esri Dark Gray basemap + dark chrome) even in light
+mode. It now follows the app theme: CARTO Positron light basemap in light
+mode, Esri Dark Gray in dark mode (live swap, layers rebuilt on style load),
+with every overlay element (top bar, impact card, chips, tool buttons, bottom
+sheet) given light/dark pairs.
+
+## [Unreleased] (previous: contrast + overlay fixes)
+
+### Fixed — white-on-white text left behind in the Knowledge Set after the theme flip
+The theme-toggle fix replaced 544 `slate-900/800/300` container classes with
+light/dark pairs, but it could not touch `text-white`: headings and labels that
+were white-on-dark became **white-on-light** in light mode. The hero title
+"Bioclimatic Passive & Active Architectural Cooling Master Library" was
+unreachable (white on `from-slate-100`), and the same defect was hiding in
+every other tab view (AI & Medical Studio, Strategy Planner, House Anatomy,
+Matrix, Compare/Detail modals, Saved Projects drawer, Navbar brand,
+"no results" card).
+
+Uniform script pass, verified line-by-line:
+- 22 `text-white` headings on surfaces that are light in light mode →
+  `text-slate-900 dark:text-white`. White text on **solid colour** elements
+  (e.g. the `bg-rose-500` buttons) was left alone — it is correct in both themes.
+- 14 `hover:text-white` on light hover surfaces (white-on-white on hover) →
+  `hover:text-slate-900 dark:hover:text-white`.
+- Pale accent chips that were only readable on dark: hero badges and the four
+  stat numbers (`cyan-300/400`, `emerald-300/400`, `teal-400`, `amber-400`),
+  the Navbar "100 COOLING DESIGNS" pill, the Matrix cost label, and the active
+  medical-protocol chip (`bg-rose-500/20 text-white`) → 600/700-level shades in
+  light, 300/400-level in dark.
+
+Verified by building and grepping the output: new `dark:` rules present in the
+compiled CSS; only solid-colour `text-white` remains in the feature.
+
+### Fixed — Design Studio impact card covered the heatwave banner
+The impact card was absolutely positioned at `top: 4.6rem`, which is exactly
+where the heatwave banner grows to whenever a 3-day heatwave is detected — so
+the banner rendered *behind* the card and its alert text was cut off. The card
+now sits in normal flow inside the top-bar overlay, below the header and the
+banner, so it can never overlap them at any banner length. The overlay's
+gradient was extended (`via-slate-950/50`, `pb-10`) so the backdrop stays solid
+behind the card.
+
+### Fixed — the heat alert banner covered every screen's top bar
+`AlertBanner` (the orange ≥90 °F strip) is absolute over the top of the app.
+Whenever it showed, it sat on top of each screen's own header — the Map's
+search bar, the Design Studio's back button and title (visible in user
+screenshots: the studio title was half-hidden behind the orange strip). The
+content area (`<main>`) now starts 40px below the top of the app while the
+banner is visible, and returns to the top edge when it is not.
+
+## [Unreleased] (previous entries)
+
 ### Fixed — the theme toggle now works, and the Knowledge Set follows it
 
 Two separate bugs were producing the mismatch.

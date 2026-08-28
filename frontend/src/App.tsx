@@ -5,7 +5,6 @@ import MapScreen from "./screens/MapScreen";
 import CentralAssistantScreen from "./screens/CentralAssistantScreen";
 import ArchitecturalDesignsScreen from "./screens/ArchitecturalDesignsScreen";
 import PlannerScreen from "./screens/PlannerScreen";
-import ToolsScreen from "./screens/ToolsScreen";
 import SettingsScreen from "./screens/SettingsScreen";
 import EmergencyScreen from "./screens/EmergencyScreen";
 import DatabaseScreen from "./screens/DatabaseScreen";
@@ -198,6 +197,13 @@ export default function App() {
     []
   );
 
+  // The heat alert banner (AlertBanner) is absolute-positioned over the top of
+  // every screen. When it is showing (≥90 °F) it used to cover each screen's
+  // own top bar — the Map search bar, the Design Studio back button + title.
+  // Push the whole content area down by the banner's height (40px) so screens
+  // start below it instead of underneath it.
+  const heatAlertActive = (reading?.temp_f ?? 0) >= 90;
+
   return (
     <div className="relative h-full w-full overflow-hidden">
       <AlertBanner temperature={reading?.temp_f ?? null} location={title} />
@@ -212,7 +218,7 @@ export default function App() {
         </div>
       )}
 
-      <main className="absolute inset-0 bottom-12">
+      <main className={`absolute inset-x-0 bottom-12 ${heatAlertActive ? "top-10" : "top-0"}`}>
         {view === "home" && (
           <HomeScreen
             onNavigate={setView}
@@ -254,7 +260,6 @@ export default function App() {
           <DatabaseScreen
             onOpenArchitecturalDesigns={() => setView("architectural_designs")}
             onOpenPlanner={() => setPlannerModal(true)}
-            onOpenTools={() => setView("tools")}
           />
         )}
 
@@ -314,7 +319,6 @@ export default function App() {
           <TrainingScreen onBack={() => setView("settings")} />
         )}
 
-        {view === "tools" && <ToolsScreen />}
         {view === "emergency" && <EmergencyScreen onBack={() => setView("map")} />}
 
         {view === "settings" && (
