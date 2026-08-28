@@ -5,6 +5,67 @@ All notable changes to this project are documented here. Format inspired by
 
 ## [Unreleased]
 
+### Added — layer B: the FortyGuard heatmap service
+The vendor API is async and area-based (submit → `activity_id` → poll). Nothing bridged that to a
+page load that wants raster data now, so real data was unreachable and the app ran on the mock.
+
+**`backend/app/services/heatmap_service.py`** — `submit()` starts one task for a bounding box and
+returns immediately; `poll()` proxies `GET /v1/status` and, once Completed, returns the parsed tiles
+as the same `points` shape `/api/heat/grid` produces, so the frontend needs no new wire format.
+
+    Before   1,600 provider calls to open the Design Studio (one per cell)
+    After          1 FortyGuard task per view, cached by (bbox, date, granularity)
+
+**`poll()` is deliberately stateless.** It needs only the activity_id, never in-process memory.
+This app deploys to Vercel, where each request may land on a different function instance, so a job
+store held in a module global would be lost between submit and first poll and would never resolve.
+The in-memory cache is therefore strictly an optimisation: losing it costs one duplicate request,
+never a broken page.
+
+Converts FortyGuard's °C tiles to °F (the app speaks °F), skips null tile values rather than
+painting them as 0 °F, and reports `tile_property_keys` from each response — the vendor docs never
+show a tile's `properties`, so this is how the real temperature field name gets learned from a live
+run instead of guessed.
+
+**`backend/app/routers/fortyguard.py`** — three endpoints:
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/heat/area` | Submit a task for a bounding box; answers 202 + `poll_url`. `?wait_s` polls inline. |
+| `GET /api/heat/job/{activity_id}` | Poll one task. Stateless. |
+| `GET /api/fortyguard/selfcheck` | Is the key configured, and does it work? `?live=1` submits one real task. |
+
+Vendor errors map to meaningful status codes: validation → 400 (the vendor does not bill these),
+401 invalid key, 403 plan lacks the endpoint, 429 rate limited, 504 poll timeout, 502 otherwise.
+
+`selfcheck` never echoes the key — it reports only whether it is set and its length, which is
+enough to tell a missing key from a wrong one. This replaces asking anyone to paste a key anywhere.
+
+**`backend/tests/test_heatmap_service.py`** — 34 tests, all against a fake client, so the service is
+proven without a key and without network access. They cover the C→F conversion, cache hit/miss/
+expiry, stateless polling, null-tile skipping, the not-billed note on Failed tasks, and that
+selfcheck never leaks the key.
+
+### Fixed — a FastAPI upgrade silently broke every test that inspects routes
+FastAPI 0.141 / Starlette 1.6 changed `include_router` to store `_IncludedRouter` objects instead of
+flattening routes, so `route.path` no longer exists and `{getattr(r, "path", None) for r in
+app.routes}` returns `{None}`.
+
+That made the `/api/analysis/pois` guard in `test_contract.py` **vacuous** — it was written to fail
+loudly when that route appears, and after the upgrade it could never fail. Switched it (and the new
+route test) to read `app.openapi()["paths"]`, which reflects what is actually served and is stable
+across versions.
+
+### Fixed — the contract test caught real api.ts drift
+Adding `note?: string | null` to `Plan` broke `test_plan_matches_Plan_at_every_level` at levels 1–4:
+the backend only sends `note` at level 0, where there are no interventions. Marked it optional in
+the test. This is the contract test doing its job.
+
+### Changed — Home screen
+Removed the "Heat Assistant" and "Tools" quick actions, leaving Heat Map and "How much to change".
+
+---
+
 ### Changed — Phase 1b: the planner now explains itself in the UI
 The backend has returned `scale`, `pattern_label` and `heat_severity_pct` since v0.8.0, but
 **none of them reached the screen** — `Plan` in `api.ts` didn't declare them. A plan rendered as

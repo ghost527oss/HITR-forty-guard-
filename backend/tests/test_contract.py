@@ -143,7 +143,11 @@ def test_pois_endpoint_does_not_exist_yet():
     )
 
     from app.main import app
-    paths = {getattr(r, "path", None) for r in app.routes}
+    # Read the generated OpenAPI schema rather than walking app.routes: since
+    # FastAPI 0.141 `include_router` stores _IncludedRouter objects, so route.path
+    # no longer exists and the old `getattr(r, "path", None)` comprehension
+    # yielded {None} — making this guard silently vacuous.
+    paths = set(app.openapi()["paths"])
     assert "/api/analysis/pois" not in paths, (
         "Route added! Delete this test and add a real contract test for it."
     )
@@ -157,7 +161,8 @@ def test_plan_matches_Plan_at_every_level(client, level):
     r = client.get(f"/api/planner/plan?lat=34.0522&lng=-118.2437&change_level={level}")
     assert r.status_code == 200, f"change_level={level} -> {r.status_code}"
     body = r.json()
-    assert_has(body, "Plan")
+    # `note` is only sent at level 0, where there are no interventions to list.
+    assert_has(body, "Plan", optional={"note"})
     assert_has(body["land"], "LandInfo")
     for it in body["interventions"]:
         assert_has(it, "Intervention")

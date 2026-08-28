@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
-from .routers import ai, analysis, cities, heat, planner
+from .routers import ai, analysis, cities, fortyguard, heat, planner
 
 app = FastAPI(title=settings.app_name, version="0.8.0")
 
@@ -17,6 +17,9 @@ app.add_middleware(
 )
 
 app.include_router(heat.router)
+# Real FortyGuard path: async, area-based, serviced one task per view.
+app.include_router(fortyguard.heat_router)
+app.include_router(fortyguard.meta_router)
 app.include_router(analysis.router)
 app.include_router(planner.router)
 app.include_router(ai.router)

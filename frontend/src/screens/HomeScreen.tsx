@@ -1,4 +1,4 @@
-import { ChevronRight, MapPin, Bot, Trees, Wrench, Map as MapIcon, type LucideIcon } from "lucide-react";
+import { ChevronRight, MapPin, Trees, Map as MapIcon, type LucideIcon } from "lucide-react";
 import type { View } from "../nav";
 
 interface HomeScreenProps {
@@ -9,9 +9,7 @@ interface HomeScreenProps {
 
 const QUICK_ACTIONS: { view: View; label: string; icon: LucideIcon; desc: string }[] = [
   { view: "map", label: "Heat Map", icon: MapIcon, desc: "See live temperature across your city" },
-  { view: "assistant", label: "Heat Assistant", icon: Bot, desc: "First aid, emergency, buildings & heat answers" },
   { view: "planner", label: "How much to change", icon: Trees, desc: "Plan trees, shade & water by change level" },
-  { view: "tools", label: "Tools", icon: Wrench, desc: "Architecture, farming & first-aid guides" },
 ];
 
 // Landing screen shown first. Big, clean entry into the app.
