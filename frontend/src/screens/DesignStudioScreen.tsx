@@ -600,8 +600,10 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
         <canvas ref={canvasRef} className="pointer-events-none absolute inset-0 h-full w-full" />
       )}
 
-      {/* Top bar */}
-      <div className="absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-slate-950/90 to-transparent px-3 pb-8 pt-3">
+      {/* Top bar: header, heatwave banner and impact card stack in normal flow
+          inside this overlay, so the card always sits BELOW the banner instead
+          of covering it (the card used to be absolutely positioned at 4.6rem). */}
+      <div className="absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-slate-950/95 via-slate-950/50 to-transparent px-3 pb-10 pt-3">
         <div className="flex items-center gap-2">
           <button
             onClick={onBack}
@@ -642,11 +644,10 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
             alone stops working: prioritize shade, water & refuges (Ancona 2016).
           </div>
         )}
-      </div>
 
-      {/* Impact card */}
-      {design && (
-        <div className="absolute inset-x-3 top-[4.6rem] z-10 rounded-2xl bg-slate-900/85 p-3 ring-1 ring-white/10 backdrop-blur">
+        {/* Impact card — in normal flow below the header (and heatwave banner) */}
+        {design && (
+        <div className="mt-2 rounded-2xl bg-slate-900/85 p-3 ring-1 ring-white/10 backdrop-blur">
           <div className="flex items-center justify-between">
             <span className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-300">
               <Sparkles size={13} /> Your design impact
@@ -703,7 +704,8 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
             </p>
           )}
         </div>
-      )}
+        )}
+      </div>
 
       {/* Bottom sheet */}
       <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-slate-950/95 via-slate-950/80 to-transparent px-3 pb-4 pt-10">

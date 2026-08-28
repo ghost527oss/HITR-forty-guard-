@@ -84,7 +84,7 @@ Materials: ${d.materialsNeeded.join(', ')}
           <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white/90 dark:bg-slate-900/90">
             <div className="flex items-center space-x-2">
               <Bookmark className="w-5 h-5 text-amber-400" />
-              <h2 className="text-base font-bold text-white">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
                 My Cooling Strategy ({savedDesigns.length})
               </h2>
             </div>
@@ -92,7 +92,7 @@ Materials: ${d.materialsNeeded.join(', ')}
             <button
               id="close-saved-drawer-btn"
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:text-white hover:bg-slate-100 dark:bg-slate-800 transition-colors"
+              className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:bg-slate-800 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>

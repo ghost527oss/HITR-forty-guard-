@@ -5,6 +5,50 @@ All notable changes to this project are documented here. Format inspired by
 
 ## [Unreleased]
 
+### Fixed — white-on-white text left behind in the Knowledge Set after the theme flip
+The theme-toggle fix replaced 544 `slate-900/800/300` container classes with
+light/dark pairs, but it could not touch `text-white`: headings and labels that
+were white-on-dark became **white-on-light** in light mode. The hero title
+"Bioclimatic Passive & Active Architectural Cooling Master Library" was
+unreachable (white on `from-slate-100`), and the same defect was hiding in
+every other tab view (AI & Medical Studio, Strategy Planner, House Anatomy,
+Matrix, Compare/Detail modals, Saved Projects drawer, Navbar brand,
+"no results" card).
+
+Uniform script pass, verified line-by-line:
+- 22 `text-white` headings on surfaces that are light in light mode →
+  `text-slate-900 dark:text-white`. White text on **solid colour** elements
+  (e.g. the `bg-rose-500` buttons) was left alone — it is correct in both themes.
+- 14 `hover:text-white` on light hover surfaces (white-on-white on hover) →
+  `hover:text-slate-900 dark:hover:text-white`.
+- Pale accent chips that were only readable on dark: hero badges and the four
+  stat numbers (`cyan-300/400`, `emerald-300/400`, `teal-400`, `amber-400`),
+  the Navbar "100 COOLING DESIGNS" pill, the Matrix cost label, and the active
+  medical-protocol chip (`bg-rose-500/20 text-white`) → 600/700-level shades in
+  light, 300/400-level in dark.
+
+Verified by building and grepping the output: new `dark:` rules present in the
+compiled CSS; only solid-colour `text-white` remains in the feature.
+
+### Fixed — Design Studio impact card covered the heatwave banner
+The impact card was absolutely positioned at `top: 4.6rem`, which is exactly
+where the heatwave banner grows to whenever a 3-day heatwave is detected — so
+the banner rendered *behind* the card and its alert text was cut off. The card
+now sits in normal flow inside the top-bar overlay, below the header and the
+banner, so it can never overlap them at any banner length. The overlay's
+gradient was extended (`via-slate-950/50`, `pb-10`) so the backdrop stays solid
+behind the card.
+
+### Fixed — the heat alert banner covered every screen's top bar
+`AlertBanner` (the orange ≥90 °F strip) is absolute over the top of the app.
+Whenever it showed, it sat on top of each screen's own header — the Map's
+search bar, the Design Studio's back button and title (visible in user
+screenshots: the studio title was half-hidden behind the orange strip). The
+content area (`<main>`) now starts 40px below the top of the app while the
+banner is visible, and returns to the top edge when it is not.
+
+## [Unreleased] (previous entries)
+
 ### Fixed — the theme toggle now works, and the Knowledge Set follows it
 
 Two separate bugs were producing the mismatch.

@@ -237,12 +237,12 @@ export default function ArchitecturalDesigns() {
             <div className="absolute bottom-0 left-1/3 -mb-12 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
             <div className="relative z-10 space-y-4 max-w-3xl">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-300 text-xs font-bold uppercase tracking-wider">
-                <ThermometerSnowflake className="w-3.5 h-3.5 text-cyan-400" />
+              <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 text-xs font-bold uppercase tracking-wider">
+                <ThermometerSnowflake className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
                 <span>100 Architectural House Cooling Designs</span>
               </div>
 
-              <h1 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight leading-tight">
+              <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 dark:text-white tracking-tight leading-tight">
                 Bioclimatic Passive & Active Architectural Cooling Master Library
               </h1>
 
@@ -253,23 +253,23 @@ export default function ArchitecturalDesigns() {
               {/* Quick Stat Highlights */}
               <div className="pt-2 flex flex-wrap items-center gap-3 text-xs">
                 <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white/90 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
-                  <span className="font-extrabold text-cyan-400 font-mono">100</span>
+                  <span className="font-extrabold text-cyan-600 dark:text-cyan-400 font-mono">100</span>
                   <span>Total Designs</span>
                 </div>
                 <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white/90 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
-                  <span className="font-extrabold text-emerald-400 font-mono">
+                  <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
                     {quickStats.cheapOrFreeCount}
                   </span>
                   <span>Free / Low Cost</span>
                 </div>
                 <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white/90 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
-                  <span className="font-extrabold text-teal-400 font-mono">
+                  <span className="font-extrabold text-teal-600 dark:text-teal-400 font-mono">
                     {quickStats.naturalCount}
                   </span>
                   <span>100% Natural Passive</span>
                 </div>
                 <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white/90 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
-                  <span className="font-extrabold text-amber-400 font-mono">
+                  <span className="font-extrabold text-amber-600 dark:text-amber-400 font-mono">
                     {quickStats.diyFriendlyCount}
                   </span>
                   <span>DIY Friendly</span>
@@ -290,7 +290,7 @@ export default function ArchitecturalDesigns() {
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
                   filters.category === 'all'
                     ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-md shadow-cyan-500/20'
-                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 hover:text-white'
+                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 All 100 Designs
@@ -303,7 +303,7 @@ export default function ArchitecturalDesigns() {
                   className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
                     filters.category === cat.id
                       ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-md shadow-cyan-500/20 font-bold'
-                      : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 hover:text-white'
+                      : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   <span className="font-mono opacity-60 text-[10px] mr-1">{cat.range}</span>
@@ -338,7 +338,7 @@ export default function ArchitecturalDesigns() {
             ) : (
               <div className="bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-12 text-center space-y-3">
                 <ThermometerSnowflake className="w-10 h-10 text-slate-500 dark:text-slate-400 mx-auto" />
-                <h3 className="text-lg font-bold text-white">No Matching Cooling Designs Found</h3>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">No Matching Cooling Designs Found</h3>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 max-w-sm mx-auto">
                   Try clearing your search query or adjusting active filters to explore more of the 100 architectural techniques.
                 </p>
