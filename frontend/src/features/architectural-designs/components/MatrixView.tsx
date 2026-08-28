@@ -51,7 +51,7 @@ export const MatrixView: React.FC<MatrixViewProps> = ({ onSelectDesign }) => {
   return (
     <div className="space-y-6">
       {/* Matrix Header */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-lg">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center space-x-2 text-cyan-400 font-bold text-xs uppercase tracking-wider mb-1">
@@ -61,7 +61,7 @@ export const MatrixView: React.FC<MatrixViewProps> = ({ onSelectDesign }) => {
             <h2 className="text-2xl font-extrabold text-white tracking-tight">
               Cost vs. Construction Difficulty Grid
             </h2>
-            <p className="text-sm text-slate-400 mt-1 max-w-2xl">
+            <p className="text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1 max-w-2xl">
               Cross-reference all 100 cooling techniques across economic capital expenditure and physical construction complexity to identify optimal ROI interventions.
             </p>
           </div>
@@ -160,14 +160,14 @@ export const MatrixView: React.FC<MatrixViewProps> = ({ onSelectDesign }) => {
       </div>
 
       {/* Full 5x4 Architectural Grid Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg overflow-x-auto">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-lg overflow-x-auto">
         <h3 className="text-base font-bold text-white mb-4">
           Complete 100-Design Cross-Density Distribution
         </h3>
 
         <div className="min-w-[720px] space-y-4">
           {/* Header Row for Difficulties */}
-          <div className="grid grid-cols-5 gap-3 text-xs font-bold text-slate-400 uppercase tracking-wider text-center">
+          <div className="grid grid-cols-5 gap-3 text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider text-center">
             <div className="text-left font-mono">Cost Tier ↓ / Difficulty →</div>
             <div>Easy (DIY)</div>
             <div>Moderate (Handyman)</div>
@@ -179,7 +179,7 @@ export const MatrixView: React.FC<MatrixViewProps> = ({ onSelectDesign }) => {
           {COST_LEVELS.map((cost) => (
             <div key={cost} className="grid grid-cols-5 gap-3 items-stretch">
               {/* Cost Label */}
-              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-xs font-bold text-amber-300">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-white/90 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-xs font-bold text-amber-300">
                 <span>{cost}</span>
               </div>
 
@@ -192,9 +192,9 @@ export const MatrixView: React.FC<MatrixViewProps> = ({ onSelectDesign }) => {
                 return (
                   <div
                     key={`${cost}-${diff}`}
-                    className="min-h-[100px] p-2 rounded-xl bg-slate-950/40 border border-slate-850 hover:border-slate-700 flex flex-col justify-between"
+                    className="min-h-[100px] p-2 rounded-xl bg-white/90 dark:bg-slate-950/40 border border-slate-300 dark:border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 flex flex-col justify-between"
                   >
-                    <div className="flex items-center justify-between text-[11px] text-slate-500 font-mono mb-1">
+                    <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 font-mono mb-1">
                       <span>{cellDesigns.length} items</span>
                     </div>
 
@@ -203,7 +203,7 @@ export const MatrixView: React.FC<MatrixViewProps> = ({ onSelectDesign }) => {
                         <div
                           key={d.id}
                           onClick={() => onSelectDesign(d)}
-                          className="text-[11px] p-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-cyan-300 cursor-pointer border border-slate-800/80 truncate transition-colors"
+                          className="text-[11px] p-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:text-cyan-300 cursor-pointer border border-slate-200/80 dark:border-slate-800/80 truncate transition-colors"
                           title={d.name}
                         >
                           <span className="font-mono text-cyan-400 font-bold mr-1">#{d.id}</span>
@@ -211,7 +211,7 @@ export const MatrixView: React.FC<MatrixViewProps> = ({ onSelectDesign }) => {
                         </div>
                       ))}
                       {cellDesigns.length === 0 && (
-                        <span className="text-[11px] text-slate-600 italic block text-center py-4">
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 italic block text-center py-4">
                           None
                         </span>
                       )}

@@ -179,7 +179,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Studio Header Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-900 to-amber-950/30 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
+      <div className="relative overflow-hidden bg-gradient-to-r from-slate-100 dark:from-slate-900 via-slate-100 dark:via-slate-900 to-amber-950/30 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-bold uppercase tracking-wider">
@@ -192,7 +192,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
               Bioclimatic & Heat Medical Intelligence Studio
             </h1>
 
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
               Instant, comprehensive responses on <strong>heat wave medical emergency protocols</strong>, <strong>clinical first aid</strong>, and <strong>all 100 architectural cooling designs</strong>. Runs entirely on your device with 0 network calls.
             </p>
           </div>
@@ -205,7 +205,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
                 studioMode === 'chat'
                   ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-lg shadow-amber-500/20'
-                  : 'bg-slate-950/80 text-slate-300 border-slate-800 hover:border-slate-700 hover:text-white'
+                  : 'bg-white/90 dark:bg-slate-950/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 hover:text-white'
               }`}
             >
               <Sparkles className="w-3.5 h-3.5" />
@@ -218,7 +218,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
                 studioMode === 'planner'
                   ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-lg shadow-cyan-500/20'
-                  : 'bg-slate-950/80 text-slate-300 border-slate-800 hover:border-slate-700 hover:text-white'
+                  : 'bg-white/90 dark:bg-slate-950/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 hover:text-white'
               }`}
             >
               <Compass className="w-3.5 h-3.5" />
@@ -231,7 +231,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
               className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
                 studioMode === 'medical-protocols'
                   ? 'bg-rose-500 text-white border-rose-400 shadow-lg shadow-rose-500/20'
-                  : 'bg-slate-950/80 text-rose-300 border-rose-900/50 hover:border-rose-500/50'
+                  : 'bg-white/90 dark:bg-slate-950/80 text-rose-300 border-rose-900/50 hover:border-rose-500/50'
               }`}
             >
               <HeartPulse className="w-3.5 h-3.5 text-rose-400" />
@@ -247,7 +247,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
           <AlertTriangle className="w-5 h-5 text-rose-400 shrink-0 animate-pulse" />
           <div>
             <strong className="text-rose-300 font-bold">Medical Heat Emergency Quick Triage:</strong>
-            <span className="ml-1 text-slate-300">
+            <span className="ml-1 text-slate-700 dark:text-slate-300">
               Suspecting heat stroke (core temp &gt; 40°C, confusion, slurred speech)?
             </span>
           </div>
@@ -269,7 +269,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
           {/* Curated Prompt Gallery Cards */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 dark:text-slate-400 flex items-center gap-1.5">
                 <BookOpen className="w-4 h-4 text-amber-400" />
                 <span>Curated Knowledge Studio Prompts (Click to Ask)</span>
               </h3>
@@ -282,21 +282,21 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
                   <button
                     key={idx}
                     onClick={() => handleSendQuery(card.prompt)}
-                    className={`p-4 rounded-2xl bg-slate-900/90 border text-left transition-all hover:scale-[1.01] flex flex-col justify-between space-y-2 cursor-pointer ${card.color}`}
+                    className={`p-4 rounded-2xl bg-white/90 dark:bg-slate-900/90 border text-left transition-all hover:scale-[1.01] flex flex-col justify-between space-y-2 cursor-pointer ${card.color}`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-slate-950 border border-slate-800">
+                      <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
                         {card.category}
                       </span>
                       <Icon className="w-4 h-4 opacity-80" />
                     </div>
                     <div>
                       <h4 className="text-xs font-bold text-white">{card.title}</h4>
-                      <p className="text-[11px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed">
                         {card.prompt}
                       </p>
                     </div>
-                    <div className="text-[10px] font-semibold text-slate-400 flex items-center gap-1 pt-1">
+                    <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 flex items-center gap-1 pt-1">
                       <span>{card.badge}</span>
                       <ArrowRight className="w-3 h-3 ml-auto" />
                     </div>
@@ -307,8 +307,8 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
           </div>
 
           {/* Interactive Chat Stream */}
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xl space-y-5">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 sm:p-6 shadow-xl space-y-5">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
               <div className="flex items-center space-x-2">
                 <Sparkles className="w-4 h-4 text-amber-400" />
                 <h3 className="text-sm font-bold text-white uppercase tracking-wider">
@@ -330,20 +330,20 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
                     msg.sender === 'user' ? 'items-end' : 'items-start'
                   }`}
                 >
-                  <div className="text-[10px] text-slate-500 mb-1 px-1">{msg.timestamp}</div>
+                  <div className="text-[10px] text-slate-500 dark:text-slate-400 mb-1 px-1">{msg.timestamp}</div>
 
                   {msg.sender === 'user' ? (
                     <div className="max-w-2xl bg-amber-500/20 border border-amber-500/40 text-amber-100 rounded-2xl rounded-tr-sm p-4 text-xs sm:text-sm leading-relaxed shadow-sm">
                       {msg.text}
                     </div>
                   ) : msg.text ? (
-                    <div className="max-w-2xl bg-slate-950 border border-slate-800 text-slate-200 rounded-2xl rounded-tl-sm p-4 text-xs sm:text-sm leading-relaxed">
+                    <div className="max-w-2xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 rounded-2xl rounded-tl-sm p-4 text-xs sm:text-sm leading-relaxed">
                       {msg.text}
                     </div>
                   ) : msg.result ? (
-                    <div className="w-full max-w-3xl bg-slate-950 border border-slate-800 rounded-2xl rounded-tl-sm p-5 space-y-4 text-slate-200 shadow-md">
+                    <div className="w-full max-w-3xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl rounded-tl-sm p-5 space-y-4 text-slate-800 dark:text-slate-200 shadow-md">
                       {/* Header */}
-                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-850 pb-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-300 dark:border-slate-200 dark:border-slate-800 pb-3">
                         <div>
                           <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider ${
                             msg.result.category === 'medical-emergency'
@@ -361,7 +361,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
 
                         {msg.result.estimatedTempDrop && (
                           <div className="text-right">
-                            <span className="text-[10px] text-slate-400 block font-semibold">Estimated Impact</span>
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-400 block font-semibold">Estimated Impact</span>
                             <span className="text-xs font-bold text-emerald-400 font-mono">
                               {msg.result.estimatedTempDrop}
                             </span>
@@ -370,16 +370,16 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
                       </div>
 
                       {/* Summary */}
-                      <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                      <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
                         {msg.result.summary}
                       </p>
 
                       {/* Key Directives / Step by Step */}
-                      <div className="space-y-2 bg-slate-900/90 p-4 rounded-xl border border-slate-800">
+                      <div className="space-y-2 bg-white/90 dark:bg-slate-900/90 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
                         <h5 className="text-xs font-bold text-amber-300 uppercase tracking-wider">
                           Key Protocols & Architectural Directives:
                         </h5>
-                        <ul className="space-y-2 text-xs text-slate-200">
+                        <ul className="space-y-2 text-xs text-slate-800 dark:text-slate-200">
                           {msg.result.keyDirectives.map((action, i) => (
                             <li key={i} className="flex items-start gap-2 leading-relaxed">
                               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
@@ -406,7 +406,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
 
                       {/* Physics & Scientific Principle */}
                       {msg.result.physicsExplanation && (
-                        <div className="text-[11px] text-slate-400 bg-slate-900/50 p-3 rounded-lg border border-slate-800/80">
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-400 bg-slate-50/80 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-200/80 dark:border-slate-800/80">
                           <strong className="text-cyan-400 font-semibold">Underlying Thermodynamics & Physics: </strong>
                           <span>{msg.result.physicsExplanation}</span>
                         </div>
@@ -415,7 +415,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
                       {/* Linked Architectural Designs (Clickable Cards) */}
                       {msg.result.recommendedDesigns.length > 0 && (
                         <div className="space-y-2 pt-2">
-                          <h5 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                          <h5 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
                             <Layers className="w-3.5 h-3.5 text-cyan-400" />
                             <span>Recommended Catalogue Blueprints:</span>
                           </h5>
@@ -423,17 +423,17 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
                             {msg.result.recommendedDesigns.map((design) => (
                               <div
                                 key={design.id}
-                                className="p-3 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 transition-colors flex items-center justify-between gap-2"
+                                className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-cyan-500/50 transition-colors flex items-center justify-between gap-2"
                               >
                                 <div
                                   onClick={() => onSelectDesign(design)}
                                   className="cursor-pointer space-y-0.5 flex-1"
                                 >
                                   <div className="flex items-center space-x-1.5">
-                                    <span className="text-[10px] font-mono font-bold text-cyan-400 bg-slate-950 px-1.5 py-0.2 rounded border border-slate-800">
+                                    <span className="text-[10px] font-mono font-bold text-cyan-400 bg-white dark:bg-slate-950 px-1.5 py-0.2 rounded border border-slate-200 dark:border-slate-800">
                                       #{design.id}
                                     </span>
-                                    <span className="text-[10px] text-slate-400 uppercase font-semibold">
+                                    <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase font-semibold">
                                       {design.houseZone}
                                     </span>
                                   </div>
@@ -447,7 +447,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
 
                                 <button
                                   onClick={() => onAddDesignToPlan(design.id)}
-                                  className="p-1.5 rounded-lg bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-slate-400 transition-colors"
+                                  className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 text-slate-500 dark:text-slate-400 dark:text-slate-400 transition-colors"
                                   title="Add to Strategy Plan"
                                 >
                                   <BookmarkPlus className="w-4 h-4" />
@@ -478,7 +478,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Ask any question about heat wave medical emergencies, cooling architecture, DIY hacks, or physics..."
-                  className="w-full py-3.5 pl-4 pr-24 bg-slate-950 border border-slate-750 focus:border-amber-500 rounded-2xl text-xs sm:text-sm font-medium text-slate-100 placeholder-slate-500 focus:outline-none transition-colors shadow-inner"
+                  className="w-full py-3.5 pl-4 pr-24 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 focus:border-amber-500 rounded-2xl text-xs sm:text-sm font-medium text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none transition-colors shadow-inner"
                 />
                 <button
                   id="send-offline-ai-btn"
@@ -499,26 +499,26 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
       {studioMode === 'planner' && (
         <div className="grid lg:grid-cols-12 gap-6">
           {/* Left Form: Building Parameters (5 cols) */}
-          <div className="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
+          <div className="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xl space-y-4">
             <div className="flex items-center space-x-2">
               <Compass className="w-5 h-5 text-cyan-400" />
               <h3 className="text-sm font-bold text-white uppercase tracking-wider">
                 Home Bioclimatic Parameters
               </h3>
             </div>
-            <p className="text-xs text-slate-400">
+            <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400">
               Specify your regional climate and thermal bottlenecks to generate a custom 3-phase roadmap.
             </p>
 
             <form onSubmit={handleGeneratePlan} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1.5">
                   Local Climate Type
                 </label>
                 <select
                   value={climate}
                   onChange={(e) => setClimate(e.target.value)}
-                  className="w-full py-2.5 px-3 bg-slate-950 border border-slate-750 rounded-xl text-xs font-medium text-slate-200 focus:outline-none focus:border-cyan-500"
+                  className="w-full py-2.5 px-3 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:border-cyan-500"
                 >
                   <option value="Hot-Arid / Desert (e.g. Phoenix, Dubai, Rajasthan)">Hot-Arid / Desert (High dry-bulb, high diurnal swing)</option>
                   <option value="Hot-Humid / Tropical (e.g. Miami, Bangkok, Mumbai)">Hot-Humid / Tropical (High relative humidity, low wet-bulb depression)</option>
@@ -528,7 +528,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1.5">
                   Building Archetype & Roof Type
                 </label>
                 <input
@@ -536,18 +536,18 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
                   value={houseType}
                   onChange={(e) => setHouseType(e.target.value)}
                   placeholder="e.g. 2-Story timber frame with asphalt shingles, flat concrete roof apartment..."
-                  className="w-full py-2.5 px-3 bg-slate-950 border border-slate-750 rounded-xl text-xs font-medium text-slate-200 focus:outline-none focus:border-cyan-500"
+                  className="w-full py-2.5 px-3 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:border-cyan-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1.5">
                   Target Budget Tier
                 </label>
                 <select
                   value={budget}
                   onChange={(e) => setBudget(e.target.value)}
-                  className="w-full py-2.5 px-3 bg-slate-950 border border-slate-750 rounded-xl text-xs font-medium text-slate-200 focus:outline-none focus:border-cyan-500"
+                  className="w-full py-2.5 px-3 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:border-cyan-500"
                 >
                   <option value="Zero Dollar / DIY Renter ($0 – $150)">Zero Dollar / DIY Renter ($0 – $150)</option>
                   <option value="Moderate ($500 – $2,500)">Moderate ($500 – $2,500)</option>
@@ -556,7 +556,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider mb-1.5">
                   Specific Thermal Discomfort & Issues
                 </label>
                 <textarea
@@ -564,7 +564,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
                   value={specificProblem}
                   onChange={(e) => setSpecificProblem(e.target.value)}
                   placeholder="Describe which rooms get hot, times of day, and goals..."
-                  className="w-full py-2.5 px-3 bg-slate-950 border border-slate-750 rounded-xl text-xs font-medium text-slate-200 focus:outline-none focus:border-cyan-500 resize-none"
+                  className="w-full py-2.5 px-3 bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl text-xs font-medium text-slate-800 dark:text-slate-200 focus:outline-none focus:border-cyan-500 resize-none"
                 />
               </div>
 
@@ -579,17 +579,17 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
           </div>
 
           {/* Right Plan View (7 cols) */}
-          <div className="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-5">
+          <div className="lg:col-span-7 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xl space-y-5">
             {customPlan ? (
               <div className="space-y-5">
-                <div className="border-b border-slate-800 pb-4">
+                <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
                   <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30">
                     Offline Masterplan Generated
                   </span>
                   <h3 className="text-lg sm:text-xl font-extrabold text-white mt-1">
                     {customPlan.title}
                   </h3>
-                  <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                  <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 leading-relaxed">
                     {customPlan.summary}
                   </p>
                   <div className="mt-2 text-xs text-cyan-400 font-semibold">
@@ -602,9 +602,9 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
                   {customPlan.phases.map((phase, idx) => (
                     <div
                       key={idx}
-                      className="bg-slate-950/90 border border-slate-800 rounded-2xl p-4 space-y-3"
+                      className="bg-white/90 dark:bg-slate-950/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 space-y-3"
                     >
-                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-850 pb-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-300 dark:border-slate-200 dark:border-slate-800 pb-2">
                         <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider">
                           {phase.phaseName}
                         </h4>
@@ -613,7 +613,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
                         </div>
                       </div>
 
-                      <ul className="space-y-1.5 text-xs text-slate-300">
+                      <ul className="space-y-1.5 text-xs text-slate-700 dark:text-slate-300">
                         {phase.actions.map((act, i) => (
                           <li key={i} className="flex items-start gap-2">
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
@@ -628,7 +628,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
                           <button
                             key={d.id}
                             onClick={() => onSelectDesign(d)}
-                            className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-cyan-500 hover:text-slate-950 text-slate-300 border border-slate-800 text-[10px] font-semibold transition-colors flex items-center gap-1 cursor-pointer"
+                            className="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 hover:bg-cyan-500 hover:text-slate-950 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-[10px] font-semibold transition-colors flex items-center gap-1 cursor-pointer"
                           >
                             <span className="text-cyan-400 font-mono">#{d.id}</span>
                             <span>{d.name}</span>
@@ -672,7 +672,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
                 <h4 className="text-base font-bold text-white">
                   Configure Your House Parameters
                 </h4>
-                <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                <p className="text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 max-w-sm mx-auto">
                   Click the button on the left to synthesize a customized 3-stage bioclimatic cooling masterplan completely on-device.
                 </p>
               </div>
@@ -685,8 +685,8 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
       {studioMode === 'medical-protocols' && (
         <div className="grid lg:grid-cols-12 gap-6">
           {/* Protocol List (4 cols) */}
-          <div className="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-xl space-y-3">
-            <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+          <div className="lg:col-span-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-xl space-y-3">
+            <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
               <HeartPulse className="w-4 h-4 text-rose-400" />
               <span>Clinical Emergency Protocols</span>
             </h3>
@@ -699,7 +699,7 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
                   className={`w-full text-left p-3 rounded-2xl border transition-all cursor-pointer ${
                     activeProtocol.id === proto.id
                       ? 'bg-rose-500/20 border-rose-500 text-white shadow-md'
-                      : 'bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700'
+                      : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:border-slate-700'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-1">
@@ -720,8 +720,8 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
           </div>
 
           {/* Active Protocol Full View (8 cols) */}
-          <div className="lg:col-span-8 bg-slate-900 border border-slate-800 rounded-3xl p-6 shadow-xl space-y-5">
-            <div className="border-b border-slate-800 pb-4 flex flex-wrap items-center justify-between gap-2">
+          <div className="lg:col-span-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xl space-y-5">
+            <div className="border-b border-slate-200 dark:border-slate-800 pb-4 flex flex-wrap items-center justify-between gap-2">
               <div>
                 <span className="text-[10px] font-bold text-rose-400 uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/30">
                   {activeProtocol.severity}
@@ -736,14 +736,14 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
             </div>
 
             {/* Immediate Life-Saving Steps */}
-            <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-3">
+            <div className="bg-white dark:bg-slate-950 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
               <h4 className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 <span>Immediate Step-by-Step Action Protocol</span>
               </h4>
-              <div className="space-y-2 text-xs text-slate-200">
+              <div className="space-y-2 text-xs text-slate-800 dark:text-slate-200">
                 {activeProtocol.immediateActions.map((step, i) => (
-                  <div key={i} className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-800 leading-relaxed font-medium">
+                  <div key={i} className="p-2.5 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 leading-relaxed font-medium">
                     {step}
                   </div>
                 ))}
@@ -765,32 +765,32 @@ export const AiAdvisorView: React.FC<AiAdvisorViewProps> = ({
 
             {/* Technical Medical Sub-cards */}
             <div className="grid sm:grid-cols-2 gap-4 text-xs">
-              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5">
+              <div className="bg-white dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1.5">
                 <strong className="text-cyan-400 block uppercase font-bold text-[11px]">
                   Cooling Physics & Method
                 </strong>
-                <p className="text-slate-300 leading-relaxed">{activeProtocol.coolingTechnique}</p>
+                <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{activeProtocol.coolingTechnique}</p>
               </div>
 
-              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5">
+              <div className="bg-white dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1.5">
                 <strong className="text-emerald-400 block uppercase font-bold text-[11px]">
                   Hydration & Fluid Protocol
                 </strong>
-                <p className="text-slate-300 leading-relaxed">{activeProtocol.hydrationProtocol}</p>
+                <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{activeProtocol.hydrationProtocol}</p>
               </div>
 
-              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5">
+              <div className="bg-white dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1.5">
                 <strong className="text-amber-400 block uppercase font-bold text-[11px]">
                   When to Activate EMS (911)
                 </strong>
-                <p className="text-slate-300 leading-relaxed">{activeProtocol.whenToCallEMS}</p>
+                <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{activeProtocol.whenToCallEMS}</p>
               </div>
 
-              <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-1.5">
+              <div className="bg-white dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 space-y-1.5">
                 <strong className="text-purple-400 block uppercase font-bold text-[11px]">
                   High Risk & Vulnerable Groups
                 </strong>
-                <p className="text-slate-300 leading-relaxed">{activeProtocol.specialPopulations}</p>
+                <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{activeProtocol.specialPopulations}</p>
               </div>
             </div>
           </div>

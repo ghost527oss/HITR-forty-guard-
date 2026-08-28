@@ -71,17 +71,17 @@ Materials: ${d.materialsNeeded.join(', ')}
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity"
+        className="absolute inset-0 bg-white/90 dark:bg-slate-950/80 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
 
       <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
         <div
           id="saved-projects-drawer"
-          className="w-screen max-w-md bg-slate-900 border-l border-slate-800 shadow-2xl flex flex-col justify-between text-slate-100 animate-in slide-in-from-right duration-200"
+          className="w-screen max-w-md bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col justify-between text-slate-900 dark:text-slate-100 animate-in slide-in-from-right duration-200"
         >
           {/* Header */}
-          <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-900/90">
+          <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-white/90 dark:bg-slate-900/90">
             <div className="flex items-center space-x-2">
               <Bookmark className="w-5 h-5 text-amber-400" />
               <h2 className="text-base font-bold text-white">
@@ -92,7 +92,7 @@ Materials: ${d.materialsNeeded.join(', ')}
             <button
               id="close-saved-drawer-btn"
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:text-white hover:bg-slate-100 dark:bg-slate-800 transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -102,9 +102,9 @@ Materials: ${d.materialsNeeded.join(', ')}
           <div className="p-5 overflow-y-auto space-y-4 flex-1">
             {savedDesigns.length === 0 ? (
               <div className="text-center py-16 space-y-3">
-                <Bookmark className="w-10 h-10 text-slate-600 mx-auto" />
-                <h3 className="text-sm font-bold text-slate-300">No Designs Added Yet</h3>
-                <p className="text-xs text-slate-500 max-w-xs mx-auto">
+                <Bookmark className="w-10 h-10 text-slate-500 dark:text-slate-400 mx-auto" />
+                <h3 className="text-sm font-bold text-slate-700 dark:text-slate-300">No Designs Added Yet</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
                   Click the &quot;+&quot; or &quot;Add to Plan&quot; button on any of the 100 cooling designs to save it to your blueprint portfolio.
                 </p>
               </div>
@@ -113,7 +113,7 @@ Materials: ${d.materialsNeeded.join(', ')}
                 {savedDesigns.map((design) => (
                   <div
                     key={design.id}
-                    className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 flex items-start justify-between gap-3 group"
+                    className="p-3 rounded-xl bg-white/90 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 flex items-start justify-between gap-3 group"
                   >
                     <div
                       onClick={() => {
@@ -123,14 +123,14 @@ Materials: ${d.materialsNeeded.join(', ')}
                       className="cursor-pointer space-y-1 flex-1 pr-2"
                     >
                       <div className="flex items-center space-x-1.5">
-                        <span className="text-[10px] font-mono font-bold text-cyan-400 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+                        <span className="text-[10px] font-mono font-bold text-cyan-400 bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
                           #{design.id}
                         </span>
-                        <span className="text-[10px] text-slate-400 uppercase font-semibold">
+                        <span className="text-[10px] text-slate-500 dark:text-slate-400 dark:text-slate-400 uppercase font-semibold">
                           {design.houseZone}
                         </span>
                       </div>
-                      <h4 className="text-xs font-bold text-slate-200 group-hover:text-cyan-300 transition-colors line-clamp-2">
+                      <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-cyan-300 transition-colors line-clamp-2">
                         {design.name}
                       </h4>
                       <p className="text-[11px] text-emerald-400 font-semibold">
@@ -140,7 +140,7 @@ Materials: ${d.materialsNeeded.join(', ')}
 
                     <button
                       onClick={() => onRemove(design.id)}
-                      className="text-slate-500 hover:text-rose-400 p-1 transition-colors"
+                      className="text-slate-500 dark:text-slate-400 hover:text-rose-400 p-1 transition-colors"
                       title="Remove from plan"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -153,7 +153,7 @@ Materials: ${d.materialsNeeded.join(', ')}
 
           {/* Footer Actions */}
           {savedDesigns.length > 0 && (
-            <div className="p-5 border-t border-slate-800 bg-slate-900/95 space-y-3 shrink-0">
+            <div className="p-5 border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 space-y-3 shrink-0">
               <button
                 id="export-masterplan-btn"
                 onClick={handleExportText}
@@ -165,7 +165,7 @@ Materials: ${d.materialsNeeded.join(', ')}
 
               <button
                 onClick={onClearAll}
-                className="w-full py-2 text-xs font-semibold text-slate-400 hover:text-rose-400 transition-colors"
+                className="w-full py-2 text-xs font-semibold text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:text-rose-400 transition-colors"
               >
                 Clear All {savedDesigns.length} Items
               </button>

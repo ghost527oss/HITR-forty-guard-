@@ -46,7 +46,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   ];
 
   return (
-    <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 text-slate-100">
+    <header className="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Branding */}
@@ -60,7 +60,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   HITR <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400 font-semibold border border-cyan-500/30">100 COOLING DESIGNS</span>
                 </span>
               </div>
-              <p className="text-[11px] text-slate-400 font-medium leading-none hidden sm:block">
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 dark:text-slate-400 font-medium leading-none hidden sm:block">
                 Heat Intelligence & Territorial Resilience Architectural Library
               </p>
             </div>
@@ -78,13 +78,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                   onClick={() => setActiveTab(item.id as any)}
                   className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                     isActive
-                      ? 'bg-slate-800 text-cyan-400 border border-slate-700 shadow-inner'
+                      ? 'bg-slate-100 dark:bg-slate-800 text-cyan-400 border border-slate-300 dark:border-slate-700 shadow-inner'
                       : item.highlight
                       ? 'text-amber-400 hover:bg-amber-500/10 border border-amber-500/20'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                      : 'text-slate-700 dark:text-slate-300 hover:text-white hover:bg-slate-100/80 dark:bg-slate-800/60'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : item.highlight ? 'text-amber-400' : 'text-slate-400'}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : item.highlight ? 'text-amber-400' : 'text-slate-500 dark:text-slate-400 dark:text-slate-400'}`} />
                   <span>{item.label}</span>
                 </button>
               );
@@ -100,7 +100,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                 compareCount > 0
                   ? 'bg-cyan-500/15 border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/25'
-                  : 'bg-slate-800/80 border-slate-700 text-slate-400 hover:text-slate-200'
+                  : 'bg-slate-100/80 dark:bg-slate-800/80 border-slate-300 dark:border-slate-700 text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:text-slate-800 dark:text-slate-200'
               }`}
             >
               <GitCompare className="w-3.5 h-3.5" />
@@ -116,7 +116,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               id="open-saved-btn"
               onClick={onOpenSaved}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-slate-800/80 border border-slate-700 text-slate-300 hover:text-amber-300 hover:border-amber-500/30"
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all bg-slate-100/80 dark:bg-slate-800/80 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:text-amber-300 hover:border-amber-500/30"
             >
               <Bookmark className="w-3.5 h-3.5 text-amber-400" />
               <span className="hidden sm:inline">My Plan</span>
@@ -131,7 +131,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <button
               id="mobile-menu-toggle"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+              className="md:hidden p-2 rounded-lg text-slate-500 dark:text-slate-400 dark:text-slate-400 hover:text-white hover:bg-slate-100 dark:bg-slate-800"
               aria-label="Toggle Menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -142,7 +142,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
       {/* Mobile Drawer Navigation */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-800 bg-slate-900 px-4 pt-2 pb-4 space-y-1">
+        <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 pt-2 pb-4 space-y-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -156,8 +156,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 }}
                 className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-sm font-medium ${
                   isActive
-                    ? 'bg-slate-800 text-cyan-400 border border-slate-700'
-                    : 'text-slate-300 hover:bg-slate-800/60'
+                    ? 'bg-slate-100 dark:bg-slate-800 text-cyan-400 border border-slate-300 dark:border-slate-700'
+                    : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100/80 dark:bg-slate-800/60'
                 }`}
               >
                 <Icon className="w-4 h-4 text-cyan-400" />

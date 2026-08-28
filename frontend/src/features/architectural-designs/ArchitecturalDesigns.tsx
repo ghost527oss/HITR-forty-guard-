@@ -216,7 +216,7 @@ export default function ArchitecturalDesigns() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
+    <div className="min-h-screen bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
       {/* App Navigation */}
       <Navbar
         activeTab={activeTab}
@@ -231,7 +231,7 @@ export default function ArchitecturalDesigns() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         {/* Top Hero Banner (Shown on Catalogue view) */}
         {activeTab === 'catalogue' && (
-          <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-cyan-950/40 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
+          <div className="relative overflow-hidden bg-gradient-to-br from-slate-100 dark:from-slate-900 via-slate-100 dark:via-slate-900 to-cyan-950/40 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-xl">
             {/* Ambient Background Accents */}
             <div className="absolute top-0 right-0 -mt-12 -mr-12 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 left-1/3 -mb-12 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -246,29 +246,29 @@ export default function ArchitecturalDesigns() {
                 Bioclimatic Passive & Active Architectural Cooling Master Library
               </h1>
 
-              <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
+              <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed">
                 Explore 100 comprehensive architectural techniques to cool a home across 11 structural categories—ranging from ancient vernacular windcatchers and zero-cost DIY hacks to high-tech phase-change materials and radiant barriers.
               </p>
 
               {/* Quick Stat Highlights */}
               <div className="pt-2 flex flex-wrap items-center gap-3 text-xs">
-                <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-950/70 border border-slate-800 text-slate-300">
+                <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white/90 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
                   <span className="font-extrabold text-cyan-400 font-mono">100</span>
                   <span>Total Designs</span>
                 </div>
-                <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-950/70 border border-slate-800 text-slate-300">
+                <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white/90 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
                   <span className="font-extrabold text-emerald-400 font-mono">
                     {quickStats.cheapOrFreeCount}
                   </span>
                   <span>Free / Low Cost</span>
                 </div>
-                <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-950/70 border border-slate-800 text-slate-300">
+                <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white/90 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
                   <span className="font-extrabold text-teal-400 font-mono">
                     {quickStats.naturalCount}
                   </span>
                   <span>100% Natural Passive</span>
                 </div>
-                <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-950/70 border border-slate-800 text-slate-300">
+                <div className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-white/90 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
                   <span className="font-extrabold text-amber-400 font-mono">
                     {quickStats.diyFriendlyCount}
                   </span>
@@ -290,7 +290,7 @@ export default function ArchitecturalDesigns() {
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
                   filters.category === 'all'
                     ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-md shadow-cyan-500/20'
-                    : 'bg-slate-900 text-slate-300 border-slate-800 hover:border-slate-700 hover:text-white'
+                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 hover:text-white'
                 }`}
               >
                 All 100 Designs
@@ -303,7 +303,7 @@ export default function ArchitecturalDesigns() {
                   className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border ${
                     filters.category === cat.id
                       ? 'bg-cyan-500 text-slate-950 border-cyan-400 shadow-md shadow-cyan-500/20 font-bold'
-                      : 'bg-slate-900 text-slate-300 border-slate-800 hover:border-slate-700 hover:text-white'
+                      : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 hover:text-white'
                   }`}
                 >
                   <span className="font-mono opacity-60 text-[10px] mr-1">{cat.range}</span>
@@ -336,10 +336,10 @@ export default function ArchitecturalDesigns() {
                 ))}
               </div>
             ) : (
-              <div className="bg-slate-900 border border-dashed border-slate-700 rounded-2xl p-12 text-center space-y-3">
-                <ThermometerSnowflake className="w-10 h-10 text-slate-500 mx-auto" />
+              <div className="bg-white dark:bg-slate-900 border border-dashed border-slate-300 dark:border-slate-700 rounded-2xl p-12 text-center space-y-3">
+                <ThermometerSnowflake className="w-10 h-10 text-slate-500 dark:text-slate-400 mx-auto" />
                 <h3 className="text-lg font-bold text-white">No Matching Cooling Designs Found</h3>
-                <p className="text-xs sm:text-sm text-slate-400 max-w-sm mx-auto">
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 dark:text-slate-400 max-w-sm mx-auto">
                   Try clearing your search query or adjusting active filters to explore more of the 100 architectural techniques.
                 </p>
                 <button
@@ -386,10 +386,10 @@ export default function ArchitecturalDesigns() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-slate-800 bg-slate-900/80 py-8 text-xs text-slate-400 mt-12">
+      <footer className="border-t border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/80 py-8 text-xs text-slate-500 dark:text-slate-400 dark:text-slate-400 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-2">
-            <span className="font-bold text-slate-200">HITR Architectural Systems</span>
+            <span className="font-bold text-slate-800 dark:text-slate-200">HITR Architectural Systems</span>
             <span>•</span>
             <span>100 House Cooling Designs Bioclimatic Compendium</span>
           </div>

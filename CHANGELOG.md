@@ -5,6 +5,29 @@ All notable changes to this project are documented here. Format inspired by
 
 ## [Unreleased]
 
+### Fixed — the theme toggle now works, and the Knowledge Set follows it
+
+Two separate bugs were producing the mismatch.
+
+**The toggle was inert.** `SettingsScreen` was doing everything right: it wrote a `.dark` class
+onto `<html>` and persisted the choice to localStorage. But `tailwind.config.js` never declared
+`darkMode`, so Tailwind defaulted to `media` — it keyed off the OS preference and ignored the
+class completely. One line fixed it.
+
+**The Knowledge Set was hardcoded dark.** 544 `slate-900`/`slate-800`/`slate-300` classes across
+11 files ignored the theme entirely, so the screen was permanently dark no matter what the
+setting said. Replaced with light/dark pairs (`bg-white dark:bg-slate-950`), applied by a script
+so the transformation is uniform rather than 544 hand edits.
+
+While mapping, some classes turned out to be **not real Tailwind shades** — `slate-750` and
+`slate-850` do not exist, so those elements were rendering with no colour at all. They now map to
+valid shades.
+
+Verified by building and grepping the output: 40 `.dark` rules generated, zero invalid shades
+remaining.
+
+---
+
 ### Added — layer C: the frontend now uses real heat when a key exists
 Layer B exposed the endpoints; nothing called them. Wired the two biggest consumers.
 
