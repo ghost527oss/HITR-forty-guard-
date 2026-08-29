@@ -9,6 +9,8 @@ interface SettingsScreenProps {
   onToggleUnits: () => void;
   webSearchEnabled: boolean;
   onWebSearchEnabledChange: (enabled: boolean) => void;
+  allowMockHeat: boolean;
+  onAllowMockHeatChange: (enabled: boolean) => void;
 }
 
 const THEME_KEY = "hitr.theme";
@@ -16,7 +18,7 @@ const NOTIF_KEY = "hitr.notifications";
 
 // Settings: location (makes the whole app relative to it), units, theme,
 // notifications, emergency contact.
-export default function SettingsScreen({ location, onSearch, units, onToggleUnits, webSearchEnabled, onWebSearchEnabledChange }: SettingsScreenProps) {
+export default function SettingsScreen({ location, onSearch, units, onToggleUnits, webSearchEnabled, onWebSearchEnabledChange, allowMockHeat, onAllowMockHeatChange }: SettingsScreenProps) {
   const [theme, setTheme] = useState<"light" | "dark">(() => {
     // Audit #22 fix: theme now persists to localStorage.
     const stored = localStorage.getItem(THEME_KEY);
@@ -135,6 +137,31 @@ export default function SettingsScreen({ location, onSearch, units, onToggleUnit
           <button onClick={() => { const next = !webSearchEnabled; localStorage.setItem("hitr.google-search", String(next)); onWebSearchEnabledChange(next); }} className="flex w-full items-center justify-between rounded-2xl border border-gray-200 p-3 text-left">
             <span><span className="block text-gray-800">Offer Google search after an answer</span><span className="text-xs text-gray-500">Asks for confirmation; never searches automatically.</span></span>
             <span className={`relative h-6 w-11 rounded-full ${webSearchEnabled ? "bg-heat-600" : "bg-gray-300"}`}><span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${webSearchEnabled ? "left-[22px]" : "left-0.5"}`} /></span>
+          </button>
+        </section>
+
+        {/* Heat Data Provider Settings */}
+        <section>
+          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-400">Heat Data Fallback</h3>
+          <button
+            onClick={() => {
+              const next = !allowMockHeat;
+              localStorage.setItem("hitr.allow-mock-heat", String(next));
+              onAllowMockHeatChange(next);
+            }}
+            className="flex w-full items-center justify-between rounded-2xl border border-gray-200 p-3 text-left"
+          >
+            <span>
+              <span className="block text-gray-800">Auto-fallback to Mock Heat Data</span>
+              <span className="text-xs text-gray-500">
+                {allowMockHeat
+                  ? "Uses mock heat map overlay if live FortyGuard API key is missing or unavailable."
+                  : "Only shows live FortyGuard heat data. Overlay will be hidden if API key is unconfigured."}
+              </span>
+            </span>
+            <span className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${allowMockHeat ? "bg-heat-600" : "bg-gray-300"}`}>
+              <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${allowMockHeat ? "left-[22px]" : "left-0.5"}`} />
+            </span>
           </button>
         </section>
 

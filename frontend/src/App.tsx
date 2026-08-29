@@ -61,6 +61,7 @@ export default function App() {
   const [heatSource, setHeatSource] = useState<"mock" | "fortyguard">("mock");
   const [units, setUnits] = useState<Units>("imperial");
   const [webSearchEnabled, setWebSearchEnabled] = useState(() => localStorage.getItem("hitr.google-search") === "true");
+  const [allowMockHeat, setAllowMockHeat] = useState(() => localStorage.getItem("hitr.allow-mock-heat") !== "false");
   const [changeLevel, setChangeLevel] = useState<ChangeLevel>(1);
   const [plan, setPlan] = useState<Plan | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
@@ -101,14 +102,17 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     let realArrived = false;
-    setHeatSource("mock");
 
-    loadHeatGrid(center.lat, center.lng).then((pts) => {
-      if (!cancelled && !realArrived) setHeatData(pts);
-    }).catch(() => {
-      // Swallowed on purpose: the real path below may still succeed, and an
-      // empty overlay is a worse outcome than a stale one.
-    });
+    if (allowMockHeat) {
+      setHeatSource("mock");
+      loadHeatGrid(center.lat, center.lng).then((pts) => {
+        if (!cancelled && !realArrived) setHeatData(pts);
+      }).catch(() => {
+        // Swallowed on purpose.
+      });
+    } else {
+      setHeatData(null);
+    }
 
     loadRealHeatGrid(center.lat, center.lng).then((pts) => {
       if (cancelled || pts.length === 0) return;
@@ -116,11 +120,14 @@ export default function App() {
       setHeatData(pts);
       setHeatSource("fortyguard");
     }).catch(() => {
-      // No key configured, or the task failed. The mock simply stays on screen.
+      // No key configured, or the task failed.
+      if (!cancelled && !allowMockHeat) {
+        setHeatData(null);
+      }
     });
 
     return () => { cancelled = true; };
-  }, [center]);
+  }, [center, allowMockHeat]);
 
   const handlePick = useCallback(async (lat: number, lng: number) => {
     // Planner setup: capture the tap and return to the launch popup.
@@ -329,6 +336,8 @@ export default function App() {
             onToggleUnits={toggleUnits}
             webSearchEnabled={webSearchEnabled}
             onWebSearchEnabledChange={setWebSearchEnabled}
+            allowMockHeat={allowMockHeat}
+            onAllowMockHeatChange={setAllowMockHeat}
           />
         )}
       </main>
