@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { Box } from "lucide-react";
+import { Box, Trees } from "lucide-react";
 import type { HeatCell } from "../api";
 import { getHeatGrid } from "../api";
 import { boundsAround, loadRealHeatGrid } from "../lib/realHeat";
 
 export { boundsAround, loadRealHeatGrid };
 
-// Minimal free style using OpenStreetMap raster tiles
 const style: maplibregl.StyleSpecification = {
   version: 8,
   sources: {
@@ -48,6 +47,7 @@ export default function MapView({ center, zoom, onPick, onBoxSelected, heatData,
   const markerRef = useRef<maplibregl.Marker | null>(null);
 
   const [is3D, setIs3D] = useState(false);
+  const [show3DTrees, setShow3DTrees] = useState(true);
 
   // Initialize map once
   useEffect(() => {
@@ -57,7 +57,7 @@ export default function MapView({ center, zoom, onPick, onBoxSelected, heatData,
       style,
       center: [center.lng, center.lat],
       zoom,
-      pitch: 0, // Flat initially
+      pitch: 0,
       bearing: 0,
     });
 
@@ -107,16 +107,16 @@ export default function MapView({ center, zoom, onPick, onBoxSelected, heatData,
     map.flyTo({ center: [center.lng, center.lat], zoom, duration: 1500 });
   }, [center.lat, center.lng, zoom]);
 
-  // Render heat overlay & 3D heat extrusions
+  // Render heat overlay & 3D heat extrusions / trees
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !heatData || !heatData.length) return;
     if (!map.isStyleLoaded()) {
-      map.once("load", () => renderHeatTiles(map, heatData, is3D));
+      map.once("load", () => renderHeatTiles(map, heatData, is3D, show3DTrees));
       return;
     }
-    renderHeatTiles(map, heatData, is3D);
-  }, [heatData, is3D]);
+    renderHeatTiles(map, heatData, is3D, show3DTrees);
+  }, [heatData, is3D, show3DTrees]);
 
   // Selection box filtering
   useEffect(() => {
@@ -141,8 +141,7 @@ export default function MapView({ center, zoom, onPick, onBoxSelected, heatData,
       const el = document.createElement("div");
       el.style.cssText =
         "width:20px;height:20px;border-radius:50%;background:#f97316;" +
-        "border:3px solid white;box-shadow:0 4px 10px rgba(0,0,0,0.5);cursor:pointer;" +
-        "animation: pulse 2s infinite;";
+        "border:3px solid white;box-shadow:0 4px 10px rgba(0,0,0,0.5);cursor:pointer;";
       markerRef.current = new maplibregl.Marker({ element: el })
         .setLngLat([picked.lng, picked.lat])
         .addTo(map);
@@ -167,7 +166,7 @@ export default function MapView({ center, zoom, onPick, onBoxSelected, heatData,
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
 
-      {/* Floating 3D Pitch Control Widget */}
+      {/* Floating 3D Controls */}
       <div className="absolute bottom-6 right-4 z-10 flex flex-col gap-2">
         <button
           onClick={toggle3DMode}
@@ -178,20 +177,33 @@ export default function MapView({ center, zoom, onPick, onBoxSelected, heatData,
           }`}
         >
           <Box className="h-4 w-4" />
-          <span>{is3D ? "3D Buildings Active" : "Toggle 3D Perspective"}</span>
+          <span>{is3D ? "3D Buildings Active" : "3D Perspective"}</span>
         </button>
+
+        {is3D && (
+          <button
+            onClick={() => setShow3DTrees(!show3DTrees)}
+            className={`flex items-center gap-2 rounded-2xl px-3.5 py-2 text-xs font-bold shadow-md backdrop-blur-md transition-all ${
+              show3DTrees
+                ? "bg-emerald-600 text-white ring-2 ring-emerald-300"
+                : "bg-white/90 text-slate-700 dark:bg-slate-800/90 dark:text-slate-200"
+            }`}
+          >
+            <Trees className="h-4 w-4" />
+            <span>3D Canopy Models</span>
+          </button>
+        )}
       </div>
     </div>
   );
 }
 
-function renderHeatTiles(map: maplibregl.Map, cells: HeatCell[], is3D: boolean) {
+function renderHeatTiles(map: maplibregl.Map, cells: HeatCell[], is3D: boolean, show3DTrees: boolean) {
   const spanDeg = estimateSpan(cells);
   const halfLat = spanDeg.lat / 2;
   const halfLng = spanDeg.lng / 2;
 
-  const features = cells.map((c) => {
-    // Height extrusions for 3D mode based on temperature (hotter = taller)
+  const buildingFeatures = cells.map((c) => {
     const baseTemp = c.temp_f ?? 80;
     const height = Math.max(10, (baseTemp - 70) * 12);
 
@@ -218,14 +230,39 @@ function renderHeatTiles(map: maplibregl.Map, cells: HeatCell[], is3D: boolean) 
     };
   });
 
-  const geojson: GeoJSON.FeatureCollection = { type: "FeatureCollection", features };
+  // Generate 3D Tree Canopy extruded cylinders around cooler / moderate heat nodes
+  const treeFeatures = cells
+    .filter((_, idx) => idx % 3 === 0) // sample tree clusters
+    .map((c) => {
+      const radius = halfLng * 0.4;
+      return {
+        type: "Feature" as const,
+        geometry: {
+          type: "Polygon" as const,
+          coordinates: [[
+            [c.lng - radius, c.lat - radius],
+            [c.lng + radius, c.lat - radius],
+            [c.lng + radius, c.lat + radius],
+            [c.lng - radius, c.lat + radius],
+            [c.lng - radius, c.lat - radius],
+          ]],
+        },
+        properties: {
+          height: 14,
+          base_height: 4,
+          color: "#10b981", // Emerald green 3D foliage
+        },
+      };
+    });
+
+  const geojson: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: buildingFeatures };
+  const treeGeojson: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: treeFeatures };
 
   if (map.getSource("heat")) {
     (map.getSource("heat") as maplibregl.GeoJSONSource).setData(geojson);
   } else {
     map.addSource("heat", { type: "geojson", data: geojson });
 
-    // 2D Flat heatmap layer
     map.addLayer({
       id: "heat-tiles",
       type: "fill",
@@ -240,7 +277,6 @@ function renderHeatTiles(map: maplibregl.Map, cells: HeatCell[], is3D: boolean) 
       paint: { "line-color": ["get", "color"], "line-width": 0.5, "line-opacity": 0.7 },
     });
 
-    // 3D Extrusion Building Layer
     map.addLayer({
       id: "heat-3d-buildings",
       type: "fill-extrusion",
@@ -254,9 +290,29 @@ function renderHeatTiles(map: maplibregl.Map, cells: HeatCell[], is3D: boolean) 
     });
   }
 
-  // Toggle layer visibility depending on 3D state
+  if (map.getSource("3d-trees")) {
+    (map.getSource("3d-trees") as maplibregl.GeoJSONSource).setData(treeGeojson);
+  } else {
+    map.addSource("3d-trees", { type: "geojson", data: treeGeojson });
+    map.addLayer({
+      id: "tree-3d-canopy",
+      type: "fill-extrusion",
+      source: "3d-trees",
+      paint: {
+        "fill-extrusion-color": "#059669",
+        "fill-extrusion-height": ["get", "height"],
+        "fill-extrusion-base": ["get", "base_height"],
+        "fill-extrusion-opacity": 0.85,
+      },
+    });
+  }
+
   if (map.getLayer("heat-3d-buildings")) {
     map.setLayoutProperty("heat-3d-buildings", "visibility", is3D ? "visible" : "none");
+  }
+
+  if (map.getLayer("tree-3d-canopy")) {
+    map.setLayoutProperty("tree-3d-canopy", "visibility", is3D && show3DTrees ? "visible" : "none");
   }
 }
 
