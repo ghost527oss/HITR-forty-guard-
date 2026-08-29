@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import BottomNav from "./components/BottomNav";
+import StartScreen from "./components/StartScreen";
 import HomeScreen from "./screens/HomeScreen";
 import MapScreen from "./screens/MapScreen";
 import CentralAssistantScreen from "./screens/CentralAssistantScreen";
@@ -48,6 +49,10 @@ async function geocode(q: string): Promise<Center | null> {
 }
 
 export default function App() {
+  const [showStartScreen, setShowStartScreen] = useState(() => {
+    // Show start screen once per session or initial load
+    return !sessionStorage.getItem("hitr.start-screen-dismissed");
+  });
   const [view, setView] = useState<View>("home");
   const [center, setCenter] = useState<Center>(DEFAULT_CENTER);
   const [zoom] = useState(12);
@@ -210,6 +215,15 @@ export default function App() {
   // Push the whole content area down by the banner's height (40px) so screens
   // start below it instead of underneath it.
   const heatAlertActive = (reading?.temp_f ?? 0) >= 90;
+
+  const handleStartPlatform = useCallback(() => {
+    sessionStorage.setItem("hitr.start-screen-dismissed", "true");
+    setShowStartScreen(false);
+  }, []);
+
+  if (showStartScreen) {
+    return <StartScreen onStart={handleStartPlatform} />;
+  }
 
   return (
     <div className="relative h-full w-full overflow-hidden">
