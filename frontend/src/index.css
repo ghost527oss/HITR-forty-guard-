@@ -8,4 +8,35 @@ body,
   height: 100%;
   margin: 0;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+html.dark,
+html.dark body,
+html.dark #root {
+  background-color: #0b1329;
+  color: #f8fafc;
+  color-scheme: dark;
+}
+
+/* Smooth transition for theme toggle */
+body {
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+/* Sleek custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(51, 65, 85, 0.6);
 }

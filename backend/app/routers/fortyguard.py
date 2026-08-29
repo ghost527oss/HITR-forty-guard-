@@ -25,6 +25,7 @@ from fastapi.responses import JSONResponse
 from ..services.fortyguard_client import (
     FortyGuardAreaError,
     FortyGuardAuthError,
+    FortyGuardConfigError,
     FortyGuardError,
     FortyGuardPlanError,
     FortyGuardRateLimitError,
@@ -50,12 +51,14 @@ def _today() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 
-def _translate(exc: FortyGuardError) -> HTTPException:
+def _translate(exc: Exception) -> HTTPException:
     """Map client exceptions onto status codes that mean something to a caller.
 
     Validation errors (400) are never billed by the vendor, so they are worth
     distinguishing from everything else.
     """
+    if isinstance(exc, FortyGuardConfigError):
+        return HTTPException(status_code=503, detail=str(exc))
     if isinstance(exc, (FortyGuardRequestError, FortyGuardAreaError)):
         return HTTPException(status_code=400, detail=str(exc))
     if isinstance(exc, FortyGuardAuthError):
@@ -66,7 +69,9 @@ def _translate(exc: FortyGuardError) -> HTTPException:
         return HTTPException(status_code=429, detail=str(exc))
     if isinstance(exc, FortyGuardTimeoutError):
         return HTTPException(status_code=504, detail=str(exc))
-    return HTTPException(status_code=502, detail=str(exc))
+    if isinstance(exc, FortyGuardError):
+        return HTTPException(status_code=502, detail=str(exc))
+    return HTTPException(status_code=502, detail=f"FortyGuard API Error: {str(exc)}")
 
 
 @heat_router.get("/area")
@@ -96,7 +101,7 @@ def heat_area(
     try:
         activity_id = service.submit(west, south, east, north,
                                      date or _today(), granularity=granularity)
-    except FortyGuardError as exc:
+    except Exception as exc:
         raise _translate(exc) from exc
 
     if wait_s > 0:
@@ -104,7 +109,7 @@ def heat_area(
         while time.monotonic() < deadline:
             try:
                 result = service.poll(activity_id)
-            except FortyGuardError as exc:
+            except Exception as exc:
                 raise _translate(exc) from exc
             if result["status"] == READY:
                 return result
@@ -133,7 +138,7 @@ def heat_job(activity_id: str):
         raise HTTPException(status_code=503, detail="FORTYGUARD_API_KEY is not set.")
     try:
         result = service.poll(activity_id)
-    except FortyGuardError as exc:
+    except Exception as exc:
         raise _translate(exc) from exc
     if result["status"] == "failed":
         return JSONResponse(status_code=502, content=result)

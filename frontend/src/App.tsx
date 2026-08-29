@@ -108,30 +108,59 @@ export default function App() {
     let cancelled = false;
     let realArrived = false;
 
+    // Phase 1: Immediately render mock heat grid so the map is never blank
     if (allowMockHeat) {
       setHeatSource("mock");
-      loadHeatGrid(center.lat, center.lng).then((pts) => {
-        if (!cancelled && !realArrived) setHeatData(pts);
-      }).catch(() => {
-        // Swallowed on purpose.
-      });
+      loadHeatGrid(center.lat, center.lng)
+        .then((pts) => {
+          if (!cancelled && !realArrived && pts && pts.length > 0) {
+            setHeatData(pts);
+          }
+        })
+        .catch(() => {
+          // Swallowed on purpose.
+        });
     } else {
       setHeatData(null);
     }
 
-    loadRealHeatGrid(center.lat, center.lng).then((pts) => {
-      if (cancelled || pts.length === 0) return;
-      realArrived = true;
-      setHeatData(pts);
-      setHeatSource("fortyguard");
-    }).catch(() => {
-      // No key configured, or the task failed.
-      if (!cancelled && !allowMockHeat) {
-        setHeatData(null);
-      }
-    });
+    // Phase 2: Attempt real FortyGuard temperature tiles in the background
+    loadRealHeatGrid(center.lat, center.lng)
+      .then((pts) => {
+        if (cancelled) return;
+        if (pts && pts.length > 0) {
+          realArrived = true;
+          setHeatData(pts);
+          setHeatSource("fortyguard");
+        } else if (allowMockHeat) {
+          // Real heat returned empty tiles, fallback to mock grid
+          loadHeatGrid(center.lat, center.lng).then((mockPts) => {
+            if (!cancelled && mockPts && mockPts.length > 0) {
+              setHeatData(mockPts);
+              setHeatSource("mock");
+            }
+          });
+        }
+      })
+      .catch(() => {
+        // FortyGuard request failed or key not configured — fallback to mock grid
+        if (!cancelled) {
+          if (allowMockHeat) {
+            loadHeatGrid(center.lat, center.lng).then((mockPts) => {
+              if (!cancelled && mockPts && mockPts.length > 0) {
+                setHeatData(mockPts);
+                setHeatSource("mock");
+              }
+            });
+          } else {
+            setHeatData(null);
+          }
+        }
+      });
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [center, allowMockHeat]);
 
   const handlePick = useCallback(async (lat: number, lng: number) => {
