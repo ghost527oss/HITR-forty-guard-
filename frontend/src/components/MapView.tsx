@@ -148,7 +148,7 @@ export default function MapView({ center, zoom, onPick, onBoxSelected, heatData,
     }
   }, [picked]);
 
-  // Toggle 3D pitch/tilt mode
+  // Toggle 3D pitch/tilt mode (55 degree camera pitch tilt towards target)
   const toggle3DMode = () => {
     const map = mapRef.current;
     if (!map) return;
@@ -156,7 +156,7 @@ export default function MapView({ center, zoom, onPick, onBoxSelected, heatData,
     setIs3D(nextIs3D);
 
     if (nextIs3D) {
-      map.easeTo({ pitch: 55, bearing: -20, duration: 1000 });
+      map.easeTo({ pitch: 55, bearing: 0, duration: 1000 });
     } else {
       map.easeTo({ pitch: 0, bearing: 0, duration: 1000 });
     }
@@ -166,7 +166,7 @@ export default function MapView({ center, zoom, onPick, onBoxSelected, heatData,
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
 
-      {/* Floating 3D Controls */}
+      {/* Floating 3D Perspective Controls */}
       <div className="absolute bottom-6 right-4 z-10 flex flex-col gap-2">
         <button
           onClick={toggle3DMode}
@@ -230,9 +230,8 @@ function renderHeatTiles(map: maplibregl.Map, cells: HeatCell[], is3D: boolean, 
     };
   });
 
-  // Generate 3D Tree Canopy extruded cylinders around cooler / moderate heat nodes
   const treeFeatures = cells
-    .filter((_, idx) => idx % 3 === 0) // sample tree clusters
+    .filter((_, idx) => idx % 3 === 0)
     .map((c) => {
       const radius = halfLng * 0.4;
       return {
@@ -250,7 +249,7 @@ function renderHeatTiles(map: maplibregl.Map, cells: HeatCell[], is3D: boolean, 
         properties: {
           height: 14,
           base_height: 4,
-          color: "#10b981", // Emerald green 3D foliage
+          color: "#10b981",
         },
       };
     });
