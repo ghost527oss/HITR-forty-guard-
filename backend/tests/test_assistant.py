@@ -101,3 +101,10 @@ def test_field_helper_normalises_lists():
     """Audit #18: list columns (e.g. symptoms) must be searchable as text."""
     assert knowledge._field({"symptoms": ["hot skin", "dizzy"]}, "symptoms") == "hot skin dizzy"
     assert knowledge._field({}, "missing", "fallback") == "fallback"
+
+
+def test_ask_question_length_limit(client):
+    """Security check: questions exceeding 500 characters must return HTTP 422."""
+    long_question = "a" * 501
+    r = client.post("/api/ai/ask", json={"question": long_question})
+    assert r.status_code == 422

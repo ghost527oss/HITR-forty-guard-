@@ -1,6 +1,6 @@
 """AI assistant endpoints (Layer 4 — grounded assistant)."""
 from fastapi import APIRouter, Query
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from ..services import assistant, knowledge
 
@@ -8,7 +8,8 @@ router = APIRouter(prefix="/api/ai", tags=["ai"])
 
 
 class AskRequest(BaseModel):
-    question: str
+    # Security constraint: Limit input question length to prevent DoS / memory abuse.
+    question: str = Field(..., max_length=500)
 
 
 @router.get("/status")
