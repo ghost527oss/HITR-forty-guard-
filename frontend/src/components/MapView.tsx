@@ -3,10 +3,10 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Box, Trees } from "lucide-react";
 import type { HeatCell } from "../api";
-import { getHeatGrid } from "../api";
 import { boundsAround, loadRealHeatGrid } from "../lib/realHeat";
+import { loadHeatGrid } from "../lib/heatGrid";
 
-export { boundsAround, loadRealHeatGrid };
+export { boundsAround, loadRealHeatGrid, loadHeatGrid };
 
 const style: maplibregl.StyleSpecification = {
   version: 8,
@@ -592,7 +592,4 @@ function estimateSpan(cells: HeatCell[]): { lat: number; lng: number } {
   };
 }
 
-export async function loadHeatGrid(lat: number, lng: number, spanDeg = 0.04): Promise<HeatCell[]> {
-  const res = await getHeatGrid(lat, lng, spanDeg, 24);
-  return res.cells ?? res.points ?? [];
-}
+

@@ -1,19 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import BottomNav from "./components/BottomNav";
 import StartScreen from "./components/StartScreen";
-import HomeScreen from "./screens/HomeScreen";
-import MapScreen from "./screens/MapScreen";
-import CentralAssistantScreen from "./screens/CentralAssistantScreen";
-import ArchitecturalDesignsScreen from "./screens/ArchitecturalDesignsScreen";
-import PlannerScreen from "./screens/PlannerScreen";
-import SettingsScreen from "./screens/SettingsScreen";
-import EmergencyScreen from "./screens/EmergencyScreen";
-import DatabaseScreen from "./screens/DatabaseScreen";
-import HeatSurfaceScreen from "./screens/HeatSurfaceScreen";
-import CitySimulationScreen from "./screens/CitySimulationScreen";
-import TrainingScreen from "./screens/TrainingScreen";
 import { Crosshair, X } from "lucide-react";
-import DesignStudioScreen from "./screens/DesignStudioScreen";
 import PlannerStartModal, { type PlannerScope } from "./components/PlannerStartModal";
 import AlertBanner from "./components/AlertBanner";
 import {
@@ -30,9 +18,22 @@ import {
   type WeatherNow,
 } from "./api";
 import { heatwaveStatus } from "./planner/uhiFactors";
-import { loadHeatGrid } from "./components/MapView";
+import { loadHeatGrid } from "./lib/heatGrid";
 import { loadRealHeatGrid, RealHeatUnavailable, type HeatJobPhase } from "./lib/realHeat";
 import type { View } from "./nav";
+
+const HomeScreen = lazy(() => import("./screens/HomeScreen"));
+const MapScreen = lazy(() => import("./screens/MapScreen"));
+const CentralAssistantScreen = lazy(() => import("./screens/CentralAssistantScreen"));
+const ArchitecturalDesignsScreen = lazy(() => import("./screens/ArchitecturalDesignsScreen"));
+const PlannerScreen = lazy(() => import("./screens/PlannerScreen"));
+const SettingsScreen = lazy(() => import("./screens/SettingsScreen"));
+const EmergencyScreen = lazy(() => import("./screens/EmergencyScreen"));
+const DatabaseScreen = lazy(() => import("./screens/DatabaseScreen"));
+const HeatSurfaceScreen = lazy(() => import("./screens/HeatSurfaceScreen"));
+const CitySimulationScreen = lazy(() => import("./screens/CitySimulationScreen"));
+const TrainingScreen = lazy(() => import("./screens/TrainingScreen"));
+const DesignStudioScreen = lazy(() => import("./screens/DesignStudioScreen"));
 
 export type Units = "imperial" | "metric";
 
@@ -349,6 +350,13 @@ export default function App() {
       )}
 
       <main className={`absolute inset-x-0 bottom-12 ${heatAlertActive ? "top-10" : "top-0"}`}>
+        <Suspense
+          fallback={
+            <div className="flex h-full items-center justify-center bg-[var(--hitr-bg)] text-sm text-slate-500">
+              Loading workspace…
+            </div>
+          }
+        >
         {view === "home" && (
           <HomeScreen
             onNavigate={setView}
@@ -478,6 +486,7 @@ export default function App() {
             onAllowMockHeatChange={setAllowMockHeat}
           />
         )}
+        </Suspense>
       </main>
 
       {/* Planner launch popup (Database → City Planner) */}

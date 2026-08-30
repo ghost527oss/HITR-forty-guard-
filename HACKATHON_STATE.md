@@ -147,6 +147,7 @@ Never put keys in `frontend/` or `VITE_*`.
 - FortyGuard live job not verifiable in this sandbox (no production key here).
 - Pattern endpoint may still be slow locally (OSM); Vercel `/spot` skips OSM.
 - After overlay is a **simulated** light pack, not the full Design Studio draft.
+- **“No index.html — will run on site root”:** Python `api/` made Vercel miss `frontend/dist`. Vite now builds to repo-root `public/`; `vercel.json` `outputDirectory` is `public`. Dashboard **Root Directory must be empty** (not `frontend`). Redeploy. Live URL still **NOT VERIFIED**.
 
 ## Testing status
 
@@ -156,6 +157,7 @@ Never put keys in `frontend/` or `VITE_*`.
 ## Agent handoff
 
 ```
+<<<<<<< HEAD
 CURRENT DEVELOPMENT BATCH: 9 COMPLETE
 FEATURES COMPLETED: PRODUCT_FEATURE_PLAN.md items 1–25
 FEATURES CURRENTLY IN PROGRESS: none
@@ -166,6 +168,19 @@ IMPORTANT ARCHITECTURAL DECISIONS:
   - Tool mode intercepts tap so spot analysis is not required to place.
 KNOWN PROBLEMS: live FortyGuard unverified; Open-Meteo needs network
 LAST VERIFIED STATE: tsc + mapScenario vitest including mergeManualDrops (2026-08-30)
+=======
+CURRENT DEVELOPMENT BATCH: 9 COMPLETE + P0 white-screen audit (partial)
+FEATURES COMPLETED: PRODUCT_FEATURE_PLAN.md items 1–25
+FEATURES CURRENTLY IN PROGRESS: production boot (Vercel not verified)
+NEXT 3 FEATURES: none numbered remaining — polish only if asked
+IMPORTANT FILES: vercel.json, App.tsx, lib/heatGrid.ts, main.tsx, lib/theme.ts
+IMPORTANT ARCHITECTURAL DECISIONS:
+  - Drops reuse simulateDesign/cellDropC; no second Studio.
+  - Tool mode intercepts tap so spot analysis is not required to place.
+  - Do not import MapView from App; lazy screens after StartScreen.
+KNOWN PROBLEMS: live FortyGuard unverified; Open-Meteo needs network; Vercel white screen unverified
+LAST VERIFIED STATE: tsc after heatGrid extract + lazy screens (2026-08-30)
+>>>>>>> 9109001 (Fix Vercel blank deploy: build SPA into public/)
 ```
 
 

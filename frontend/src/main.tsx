@@ -6,8 +6,13 @@ import { applyStoredTheme } from "./lib/theme";
 
 applyStoredTheme();
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-);
+const rootEl = document.getElementById("root");
+if (!rootEl) {
+  document.body.textContent = "HITR failed to boot: missing #root.";
+} else {
+  ReactDOM.createRoot(rootEl).render(
+    <React.StrictMode>
+      <App />
+    </React.StrictMode>,
+  );
+}
