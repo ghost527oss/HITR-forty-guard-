@@ -106,9 +106,11 @@ class HeatmapService:
     @property
     def client(self) -> FortyGuardClient:
         if self._client is None:
+            base_url = settings.fortyguard_base_url or DEFAULT_BASE_URL
             self._client = FortyGuardClient(
                 api_key=settings.fortyguard_api_key,
-                plan=getattr(settings, "fortyguard_plan", "basic"),
+                plan=settings.fortyguard_plan,
+                base_url=base_url,
             )
         return self._client
 
@@ -244,8 +246,8 @@ class HeatmapService:
             # Length tells you the right key is loaded without revealing it.
             "api_key": ("set" if settings.fortyguard_api_key else "missing"),
             "api_key_length": len(settings.fortyguard_api_key),
-            "base_url": getattr(settings, "fortyguard_base_url", DEFAULT_BASE_URL),
-            "plan": getattr(settings, "fortyguard_plan", "basic"),
+            "base_url": settings.fortyguard_base_url or DEFAULT_BASE_URL,
+            "plan": settings.fortyguard_plan,
             "granularity_options": list(VALID_GRANULARITY),
             "coverage": "United States only",
         }
