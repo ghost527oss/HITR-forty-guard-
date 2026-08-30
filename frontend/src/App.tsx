@@ -18,11 +18,13 @@ import PlannerStartModal, { type PlannerScope } from "./components/PlannerStartM
 import AlertBanner from "./components/AlertBanner";
 import {
   analyzeSpot,
+  analyzePattern,
   getPlan,
   type ChangeLevel,
   type HeatReading,
   type HeatCell,
   type LandInfo,
+  type PatternAnalysis,
   type Plan,
 } from "./api";
 import { loadHeatGrid } from "./components/MapView";
@@ -60,10 +62,12 @@ export default function App() {
   const [picked, setPicked] = useState<Center | null>(null);
   const [reading, setReading] = useState<HeatReading | null>(null);
   const [land, setLand] = useState<LandInfo | null>(null);
+  const [pattern, setPattern] = useState<PatternAnalysis | null>(null);
   const [loading, setLoading] = useState(false);
   const [heatData, setHeatData] = useState<HeatCell[] | null>(null);
   // Which provider produced `heatData`. Drives the map's source badge.
   const [heatSource, setHeatSource] = useState<"mock" | "fortyguard">("mock");
+  const [heatUnavailable, setHeatUnavailable] = useState<string | null>(null);
   const [units, setUnits] = useState<Units>("imperial");
   const [webSearchEnabled, setWebSearchEnabled] = useState(() => localStorage.getItem("hitr.google-search") === "true");
   const [allowMockHeat, setAllowMockHeat] = useState(() => localStorage.getItem("hitr.allow-mock-heat") !== "false");
@@ -107,8 +111,8 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     let realArrived = false;
+    setHeatUnavailable(null);
 
-    // Phase 1: Immediately render mock heat grid so the map is never blank
     if (allowMockHeat) {
       setHeatSource("mock");
       loadHeatGrid(center.lat, center.lng)
@@ -118,43 +122,50 @@ export default function App() {
           }
         })
         .catch(() => {
-          // Swallowed on purpose.
+          /* mock paint is best-effort while real heat is in flight */
         });
     } else {
       setHeatData(null);
     }
 
-    // Phase 2: Attempt real FortyGuard temperature tiles in the background
     loadRealHeatGrid(center.lat, center.lng)
       .then((pts) => {
         if (cancelled) return;
         if (pts && pts.length > 0) {
           realArrived = true;
+          setHeatUnavailable(null);
           setHeatData(pts);
           setHeatSource("fortyguard");
-        } else if (allowMockHeat) {
-          // Real heat returned empty tiles, fallback to mock grid
+          return;
+        }
+        if (allowMockHeat) {
           loadHeatGrid(center.lat, center.lng).then((mockPts) => {
             if (!cancelled && mockPts && mockPts.length > 0) {
               setHeatData(mockPts);
               setHeatSource("mock");
             }
           });
+        } else {
+          setHeatData(null);
+          setHeatUnavailable(
+            "Real heat data returned no tiles. Mock fallback is turned off in Settings.",
+          );
         }
       })
       .catch(() => {
-        // FortyGuard request failed or key not configured — fallback to mock grid
-        if (!cancelled) {
-          if (allowMockHeat) {
-            loadHeatGrid(center.lat, center.lng).then((mockPts) => {
-              if (!cancelled && mockPts && mockPts.length > 0) {
-                setHeatData(mockPts);
-                setHeatSource("mock");
-              }
-            });
-          } else {
-            setHeatData(null);
-          }
+        if (cancelled) return;
+        if (allowMockHeat) {
+          loadHeatGrid(center.lat, center.lng).then((mockPts) => {
+            if (!cancelled && mockPts && mockPts.length > 0) {
+              setHeatData(mockPts);
+              setHeatSource("mock");
+            }
+          });
+        } else {
+          setHeatData(null);
+          setHeatUnavailable(
+            "Real FortyGuard heat is unavailable (missing or invalid API key). Turn on Auto-fallback Mock Heat Grid in Settings to view sample tiles.",
+          );
         }
       });
 
@@ -173,11 +184,16 @@ export default function App() {
     setPicked({ lat, lng });
     setLoading(true);
     setStatus(null);
+    setPattern(null);
     try {
-      const r = await analyzeSpot(lat, lng);
+      const [r, p] = await Promise.all([
+        analyzeSpot(lat, lng),
+        analyzePattern(lat, lng).catch(() => null),
+      ]);
       if (id === clickCounterRef.current) {
         setReading(r.heat);
         setLand(r.land);
+        setPattern(p);
       }
     } catch (err: any) {
       if (id === clickCounterRef.current) {
@@ -201,6 +217,7 @@ export default function App() {
         setPicked(null);
         setReading(null);
         setLand(null);
+        setPattern(null);
         setPlan(null);
       } else {
         setStatus(`Couldn't find "${q}". Try a US city name.`);
@@ -288,7 +305,7 @@ export default function App() {
             title={title}
             onSearch={handleSearch}
             onPick={handlePick}
-            onClearPick={() => setPicked(null)}
+            onClearPick={() => { setPicked(null); setPattern(null); }}
             picked={picked}
             reading={reading}
             land={land}
@@ -297,6 +314,8 @@ export default function App() {
             onToggleUnits={toggleUnits}
             heatData={heatData}
             heatSource={heatSource}
+            heatUnavailable={heatUnavailable}
+            pattern={pattern}
             onViewSurface={() => setView("heat_surface")}
             onAssistant={() => setView("assistant")}
             onSOS={() => setView("emergency")}

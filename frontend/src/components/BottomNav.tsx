@@ -8,7 +8,7 @@ interface BottomNavProps {
 // Bottom toolbar: Home, Map, Assistant, Database, Settings.
 export default function BottomNav({ active, onNavigate }: BottomNavProps) {
   return (
-    <nav className="absolute bottom-0 left-0 right-0 z-30 border-t border-gray-200 bg-white/95 backdrop-blur">
+    <nav className="absolute bottom-0 left-0 right-0 z-30 border-t border-slate-200/80 bg-white/95 backdrop-blur dark:border-slate-700/70 dark:bg-[var(--hitr-nav)]">
       <div className="mx-auto flex max-w-lg items-stretch justify-around px-1">
         {NAV_ITEMS.map((item) => {
           const isActive = active === item.view;
@@ -17,7 +17,7 @@ export default function BottomNav({ active, onNavigate }: BottomNavProps) {
               key={item.view}
               onClick={() => onNavigate(item.view)}
               className={`flex flex-col items-center gap-0.5 py-2 px-1 text-[10px] font-medium transition-colors ${
-                isActive ? "text-heat-600" : "text-gray-500"
+                isActive ? "text-heat-600" : "text-gray-500 dark:text-slate-400"
               }`}
             >
               <item.icon

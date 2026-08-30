@@ -5,6 +5,23 @@ All notable changes to this project are documented here. Format inspired by
 
 ## [Unreleased]
 
+### Added — Batch 1 map loop (Now/After, diagnosis, priority)
+Closes the map-session gap from `PRODUCT_FEATURE_PLAN.md` Tier 1 without new APIs:
+
+- **Now / After plan** on the map: auto trees + water via existing `suggestPlacements` +
+  `simulateDesign`. After recolors tiles; peak −°C and affected-cell count shown. Empty
+  placement (grid cooler than 95°F) is an honest “After matches Now” state.
+- **Why this tile**: tap still uses `/api/analysis/spot`; pattern from `/api/analysis/pattern`
+  (failure is ignored so a 500 on pattern does not block temperature). BottomBar diagnosis.
+- **Act here first**: hottest three cells of the current overlay; tap runs the same `onPick`.
+
+Heat fetch, mock toggle, FortyGuard area path, and Design Studio are unchanged. Scenario is
+computed client-side from whatever grid already loaded.
+
+Verified: `tsc --noEmit` clean; `vitest run src/lib/mapScenario.test.ts` 3 passed.
+
+## [Unreleased] (previous)
+
 ### Fixed — the planner levels now visibly do different things
 Side-by-side check confirmed the user's report: Light, Medium and Re-plan all
 opened with the **same** actions — each level's signature items were appended

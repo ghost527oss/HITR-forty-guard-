@@ -11,11 +11,14 @@ The result feeds the planner (Layer 3) and the assistant (Layer 4).
 from __future__ import annotations
 
 import math
+import os
 
 import httpx
 
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
-TIMEOUT = 12.0
+# Vercel Hobby kills functions at ~10s. Overpass is often slower than that,
+# which produced HTTP 500 on GET /api/analysis/spot in production.
+TIMEOUT = 2.5 if os.environ.get("VERCEL") else 8.0
 
 # Human-readable labels per classification.
 KIND_LABELS = {
@@ -131,6 +134,9 @@ def classify_heuristic(lat: float, lng: float) -> dict:
 
 def classify_spot(lat: float, lng: float) -> dict:
     """Classify a spot: try OSM, fall back offline on any error."""
+    # Skip Overpass on serverless — it is the #1 cause of 500s on Vercel.
+    if os.environ.get("VERCEL"):
+        return classify_heuristic(lat, lng)
     try:
         return classify_from_osm(lat, lng)
     except Exception:  # network, timeout, rate-limit, parsing

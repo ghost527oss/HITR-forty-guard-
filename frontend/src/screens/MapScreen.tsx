@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Crosshair } from "lucide-react";
 import MapView, { type BoxBounds } from "../components/MapView";
 import TopBar from "../components/TopBar";
@@ -6,7 +6,8 @@ import BottomBar from "../components/BottomBar";
 import HeatMapFAB from "../components/HeatMapFAB";
 import PlanSheet from "../components/PlanSheet";
 import type { Units } from "../App";
-import type { HeatReading, HeatCell, LandInfo, ChangeLevel } from "../api";
+import type { HeatReading, HeatCell, LandInfo, ChangeLevel, PatternAnalysis } from "../api";
+import { buildMapScenario } from "../lib/mapScenario";
 
 interface Center {
   lat: number;
@@ -29,6 +30,8 @@ interface MapScreenProps {
   heatData: HeatCell[] | null;
   onViewSurface?: () => void;
   heatSource?: "mock" | "fortyguard";
+  heatUnavailable?: string | null;
+  pattern?: PatternAnalysis | null;
   onAssistant?: () => void;
   onSOS?: () => void;
   onDatabase?: () => void;
@@ -41,11 +44,17 @@ interface MapScreenProps {
 export default function MapScreen(props: MapScreenProps) {
   const {
     center, zoom, title, onSearch, onPick, onClearPick, picked, reading,
-    land, loading, units, onToggleUnits, heatData, heatSource, onViewSurface,
+    land, loading, units, onToggleUnits, heatData, heatSource, heatUnavailable, pattern, onViewSurface,
     onAssistant, onSOS, onDatabase, onGeneratePlan, planLoading,
   } = props;
   const [planSheetOpen, setPlanSheetOpen] = useState(false);
   const [box, setBox] = useState<BoxBounds | null>(null);
+  const [scenarioMode, setScenarioMode] = useState<"now" | "after">("now");
+
+  const scenario = useMemo(() => (heatData && heatData.length ? buildMapScenario(heatData) : null), [heatData]);
+  const displayHeat = scenarioMode === "after" && scenario?.placements.length
+    ? scenario.summary.cells
+    : heatData;
 
   const handlePlanConfirm = (level: ChangeLevel) => {
     setPlanSheetOpen(false);
@@ -57,16 +66,82 @@ export default function MapScreen(props: MapScreenProps) {
 
   return (
     <div className="relative h-full w-full overflow-hidden">
+      {heatUnavailable && (
+        <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-slate-900/35 px-6">
+          <div className="pointer-events-auto max-w-sm rounded-2xl bg-[var(--hitr-surface)] p-5 text-center shadow-xl ring-1 ring-slate-200 dark:ring-slate-700">
+            <p className="text-sm font-bold text-slate-900 dark:text-white">Heat overlay unavailable</p>
+            <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">{heatUnavailable}</p>
+          </div>
+        </div>
+      )}
       <MapView
         center={center}
         zoom={zoom}
         onPick={onPick}
         onBoxSelected={setBox}
-        heatData={heatData}
+        heatData={displayHeat}
         selectionBox={box}
         picked={picked}
       />
       <TopBar title={title} onSearch={onSearch} units={units} onToggleUnits={onToggleUnits} />
+
+      {heatData && heatData.length > 0 && !heatUnavailable && (
+        <div className="absolute left-3 top-16 z-20 flex max-w-[min(100%-1.5rem,20rem)] flex-col gap-2">
+          <div className="flex overflow-hidden rounded-full bg-slate-900/90 text-[10px] font-bold text-white shadow-lg ring-1 ring-white/15">
+            <button
+              type="button"
+              onClick={() => setScenarioMode("now")}
+              className={`px-3 py-1.5 ${scenarioMode === "now" ? "bg-orange-500 text-white" : "text-white/70"}`}
+            >
+              Now
+            </button>
+            <button
+              type="button"
+              onClick={() => setScenarioMode("after")}
+              className={`px-3 py-1.5 ${scenarioMode === "after" ? "bg-orange-500 text-white" : "text-white/70"}`}
+            >
+              After plan
+            </button>
+          </div>
+          {scenarioMode === "after" && scenario && (
+            <div className="rounded-xl bg-[var(--hitr-surface)] px-3 py-2 text-[11px] text-slate-700 shadow-md ring-1 ring-slate-200 dark:text-slate-200 dark:ring-slate-600">
+              {scenario.placements.length === 0 ? (
+                <p>No cells hot enough for auto-placement (≥95°F). After matches Now.</p>
+              ) : (
+                <p>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                    −{scenario.summary.maxDropC.toFixed(1)}°C
+                  </span>
+                  {" "}peak · {scenario.summary.affectedCells} cells · {scenario.placements.length} actions
+                  (trees + water, capped).
+                </p>
+              )}
+            </div>
+          )}
+          {scenario && scenario.priority.length > 0 && (
+            <div className="rounded-xl bg-[var(--hitr-surface)] px-2.5 py-2 shadow-md ring-1 ring-slate-200 dark:ring-slate-600">
+              <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-slate-400">Act here first</p>
+              <ul className="space-y-1">
+                {scenario.priority.map((c, i) => (
+                  <li key={`${c.lat}-${c.lng}`}>
+                    <button
+                      type="button"
+                      onClick={() => onPick(c.lat, c.lng)}
+                      className="flex w-full items-center justify-between rounded-lg px-1.5 py-1 text-left text-[11px] hover:bg-slate-100 dark:hover:bg-slate-700"
+                    >
+                      <span className="font-semibold text-slate-800 dark:text-slate-100">
+                        #{i + 1} {Math.round(c.temp_f)}°F
+                      </span>
+                      <span className="text-slate-500">{c.risk}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
       <BottomBar
         picked={picked}
         reading={reading}
@@ -75,6 +150,7 @@ export default function MapScreen(props: MapScreenProps) {
         units={units}
         onViewSurface={onViewSurface}
         heatSource={heatSource}
+        pattern={pattern}
       />
 
       {/* Two different things can be selected: the AREA you are looking at

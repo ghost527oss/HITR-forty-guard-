@@ -12,7 +12,7 @@ from fastapi import APIRouter, Query
 
 from ..config import settings
 from ..services import landuse
-from ..services.heat_provider import build_provider
+from ..services.heat_provider import MockHeatProvider, build_provider
 from ..services.planner import analyze_pattern
 from ..services.heat_surface import compute_surface
 from ..services.city_simulation import analyze_city_3d
@@ -36,8 +36,14 @@ def analyze_spot(
     lng: float = Query(..., ge=-180, le=180),
 ):
     """Live heat + land classification for a single coordinate."""
-    heat = get_provider().get_temperature(lat, lng).to_dict()
-    land = landuse.classify_spot(lat, lng)
+    try:
+        heat = get_provider().get_temperature(lat, lng).to_dict()
+    except Exception:
+        heat = MockHeatProvider().get_temperature(lat, lng).to_dict()
+    try:
+        land = landuse.classify_spot(lat, lng)
+    except Exception:
+        land = landuse.classify_heuristic(lat, lng)
     summary = f"{land['label'].capitalize()}, {heat['temp_f']}°F ({heat['risk']})"
     return {"heat": heat, "land": land, "summary": summary}
 

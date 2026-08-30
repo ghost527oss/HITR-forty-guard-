@@ -1,6 +1,12 @@
 import { useEffect, useState } from "react";
 import type { Units } from "../App";
 import { Moon, Sun, TriangleAlert, Palette, Check } from "lucide-react";
+import {
+  applyTheme,
+  type ColorPalette,
+  readStoredPalette,
+  readStoredTheme,
+} from "../lib/theme";
 
 interface SettingsScreenProps {
   location: string;
@@ -13,11 +19,9 @@ interface SettingsScreenProps {
   onAllowMockHeatChange: (enabled: boolean) => void;
 }
 
-const THEME_KEY = "hitr.theme";
-const PALETTE_KEY = "hitr.palette";
 const NOTIF_KEY = "hitr.notifications";
 
-export type ColorPalette = "soft-classic" | "warm-amber" | "slate-crisp" | "emerald-mint" | "ocean-cool";
+export type { ColorPalette };
 
 interface PaletteOption {
   id: ColorPalette;
@@ -75,15 +79,8 @@ export default function SettingsScreen({
   allowMockHeat,
   onAllowMockHeatChange,
 }: SettingsScreenProps) {
-  const [theme, setTheme] = useState<"light" | "dark">((): "light" | "dark" => {
-    const stored = localStorage.getItem(THEME_KEY);
-    return stored === "dark" ? "dark" : "light";
-  });
-
-  const [palette, setPalette] = useState<ColorPalette>((): ColorPalette => {
-    const stored = localStorage.getItem(PALETTE_KEY) as ColorPalette;
-    return stored && PALETTES.some((p) => p.id === stored) ? stored : "soft-classic";
-  });
+  const [theme, setTheme] = useState<"light" | "dark">(readStoredTheme);
+  const [palette, setPalette] = useState<ColorPalette>(readStoredPalette);
 
   const [notifications, setNotifications] = useState<boolean>(() => {
     const stored = localStorage.getItem(NOTIF_KEY);
@@ -92,14 +89,8 @@ export default function SettingsScreen({
   const [loc, setLoc] = useState("");
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", theme === "dark");
-    localStorage.setItem(THEME_KEY, theme);
-  }, [theme]);
-
-  useEffect(() => {
-    document.documentElement.setAttribute("data-palette", palette);
-    localStorage.setItem(PALETTE_KEY, palette);
-  }, [palette]);
+    applyTheme(theme, palette);
+  }, [theme, palette]);
 
   useEffect(() => {
     localStorage.setItem(NOTIF_KEY, notifications ? "true" : "false");

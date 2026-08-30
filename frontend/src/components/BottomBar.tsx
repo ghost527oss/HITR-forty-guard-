@@ -1,4 +1,4 @@
-import type { HeatReading, LandInfo } from "../api";
+import type { HeatReading, LandInfo, PatternAnalysis } from "../api";
 import type { Units } from "../App";
 
 interface BottomBarProps {
@@ -10,19 +10,20 @@ interface BottomBarProps {
   onViewSurface?: () => void;
   /** Source of the heat overlay (not the spot reading). */
   heatSource?: "mock" | "fortyguard";
+  pattern?: PatternAnalysis | null;
 }
 
 // Bottom bar showing the selected spot's live temperature + land use (structure first).
-export default function BottomBar({ picked, reading, land, loading, units, onViewSurface, heatSource = "mock" }: BottomBarProps) {
+export default function BottomBar({ picked, reading, land, loading, units, onViewSurface, heatSource = "mock", pattern = null }: BottomBarProps) {
   return (
     <footer className="absolute bottom-0 left-0 right-0 z-10 p-3">
-      <div className="mx-auto max-w-lg rounded-2xl bg-white/90 shadow-lg p-4 backdrop-blur">
+      <div className="mx-auto max-w-lg rounded-2xl bg-white/90 shadow-lg p-4 backdrop-blur dark:bg-[var(--hitr-surface)] dark:ring-1 dark:ring-slate-600/50">
         {!picked && (
-          <p className="text-gray-600 text-sm">
+          <p className="text-gray-600 text-sm dark:text-slate-300">
             Tap anywhere on the map to see the live temperature and what's there.
           </p>
         )}
-        {picked && loading && <p className="text-gray-600 text-sm">Reading temperature…</p>}
+        {picked && loading && <p className="text-gray-600 text-sm dark:text-slate-300">Reading temperature…</p>}
         {picked && !loading && reading && (
           <div className="flex items-center justify-between">
             <div>
@@ -65,6 +66,13 @@ export default function BottomBar({ picked, reading, land, loading, units, onVie
               </div>
               {onViewSurface && <button onClick={onViewSurface} className="mt-1 text-xs font-medium text-heat-700">View surface</button>}
             </div>
+          </div>
+        )}
+        {picked && !loading && pattern && (
+          <div className="mt-3 border-t border-slate-200 pt-2 dark:border-slate-600">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Why this tile</p>
+            <p className="mt-0.5 text-xs font-semibold text-slate-800 dark:text-slate-100">{pattern.pattern_label}</p>
+            <p className="mt-0.5 text-[11px] leading-snug text-slate-600 dark:text-slate-300">{pattern.summary}</p>
           </div>
         )}
       </div>
