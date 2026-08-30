@@ -31,6 +31,7 @@ export const POLL = {
 
 export type FetchJob = (activityId: string) => Promise<HeatAreaResponse>;
 export type SubmitArea = (b: Bounds, granularity?: number) => Promise<HeatAreaResponse>;
+export type HeatJobPhase = "processing" | "ready" | "failed" | "unavailable";
 
 /**
  * Load real tiles for an area, polling until the task resolves.
@@ -48,24 +49,45 @@ export async function loadRealHeatGrid(
     submit?: SubmitArea;
     fetchJob?: FetchJob;
     sleep?: (ms: number) => Promise<void>;
+    onStatus?: (phase: HeatJobPhase) => void;
   } = {},
 ): Promise<HeatCell[]> {
   const submit = opts.submit ?? submitHeatArea;
   const fetchJob = opts.fetchJob ?? getHeatJob;
   const sleep =
     opts.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+  const onStatus = opts.onStatus;
 
-  let job = await submit(boundsAround(lat, lng, spanDeg));
+  let job: HeatAreaResponse;
+  try {
+    job = await submit(boundsAround(lat, lng, spanDeg));
+  } catch (e) {
+    if (e instanceof RealHeatUnavailable) {
+      onStatus?.("unavailable");
+    } else {
+      onStatus?.("failed");
+    }
+    throw e;
+  }
+
+  if (job.status === "processing") onStatus?.("processing");
+  if (job.status === "failed") {
+    onStatus?.("failed");
+    throw new Error(job.error ?? "Heatmap did not finish in time");
+  }
 
   for (let i = 0; i < POLL.maxPolls && job.status === "processing"; i++) {
     if (!job.activity_id) break;
     await sleep(POLL.intervalMs);
     job = await fetchJob(job.activity_id);
+    if (job.status === "processing") onStatus?.("processing");
   }
 
   if (job.status !== "ready") {
+    onStatus?.("failed");
     throw new Error(job.error ?? "Heatmap did not finish in time");
   }
+  onStatus?.("ready");
   return job.points;
 }
 

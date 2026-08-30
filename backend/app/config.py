@@ -1,15 +1,27 @@
 """Application configuration, loaded from environment / .env."""
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=(".env", "backend/.env"),
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
     app_env: str = "development"
     app_name: str = "HITR"
 
-    # FortyGuard Temperature API
+    # FortyGuard Temperature API (Vercel: FORTYGUARD_API_KEY)
     fortyguard_api_key: str = ""
+
+    @field_validator("fortyguard_api_key", mode="before")
+    @classmethod
+    def _strip_key(cls, v):
+        if isinstance(v, str):
+            return v.strip().strip('"').strip("'")
+        return v or ""
     # Gemini (Google AI Studio)
     gemini_api_key: str = ""
 

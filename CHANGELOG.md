@@ -5,6 +5,62 @@ All notable changes to this project are documented here. Format inspired by
 
 ## [Unreleased]
 
+### Added — Batch 9 (drop intervention on the heat map)
+- Map tool chips: Drop tree / water / roof. Tap places a pin; After grid uses `simulateDesign` + `cellDropC`. Undo last drop. Not a second Design Studio.
+
+### Added — Batch 8 (designs for this spot, equity lens, breeze assist)
+- BottomBar: 3 library designs scored from spot temp + land kind (existing 100-design catalogue).
+- Map: Priority people = heat percentile × canopy gap × inverse hospital distance (no census).
+- BottomBar: Open-Meteo wind compass + windward planting hint.
+
+### Added — Batch 7 (budget pack, cited why, Plan A vs B)
+- Map Low/Med/High budget packs the existing tree/water/roof suggestions and re-simulates After.
+- Planner Learn why: encyclopedia snippet by intervention key (miss is honest).
+- Design Studio Save A / Save B in localStorage; compare peak drop, cells, counts.
+
+### Added — Batch 6 (FortyGuard job chip, block brief, heat-adjusted hydration)
+- Map chip: processing / ready / failed / unavailable / mock. Mock underlay stays while real job polls. Failures are not hidden.
+- Planner: Copy block brief (markdown: spot, temps, top 3 actions, scale). Clipboard, else download.
+- Home water goal from today's Open-Meteo max + heatwave alert (not a static 2500).
+
+### Added — Batch 5 (canopy gaps, cool-roof pins, analysis layers)
+- Map layer chips: Heat / Water / Path / Gaps / Roofs independently.
+- Canopy-gap dots = `suggestPlacements` tree clusters; Plant suggested clusters → After overlay.
+- Cool-roof pins only where `getCitySimulation3D` buildings exist; honest empty if the twin fails.
+
+### Added — Batch 4 (peak vs now, seasonal surface, rebuild honesty)
+- Map BottomBar: Open-Meteo today max vs spot now; omitted if weather missing.
+- Heat Surface: Jan/Apr/Jul/Oct chips from existing `temporal.seasonal_sampling` (same fetch as diurnal).
+- Planner Rebuild (level 4): honesty banner + Light plan compare (action counts / scale). Light fetch failure does not block Rebuild.
+
+### Added — Batch 3 (walk-to-cool, fix-hotspot CTA, water-refuge pins)
+- Map: dashed teal path from picked pin to nearest cooler tile (mean − 1.5°F, skip <8 m) on the existing heat grid; BottomBar shows meters.
+- Heat Surface hotspot cards: “Fix this hotspot” runs Light (`change_level=1`) `getPlan` at cluster `center_lat/lng` (not stale `picked`), then opens Planner.
+- Map: blue water-station dots from `buildMapScenario` water placements (same `suggestPlacements` as After overlay).
+
+### Added — Batch 2 (diurnal scrubber, PMV walk comfort, heatwave mode)
+- Heat Surface: hour chips 00/06/12/18 using existing `temporal.diurnal_sampling` (one fetch).
+- Optional `hour` query on `GET /api/analysis/surface` (default unchanged).
+- Map BottomBar: ISO 7730 PMV/PPD from Open-Meteo wind/RH + spot °C. Weather miss → no fake comfort.
+- Heatwave badge on Home + Map; Plan sheet recommends Light (water/shade) on official P2 alert.
+
+### Added — Batch 1 map loop (Now/After, diagnosis, priority)
+Closes the map-session gap from `PRODUCT_FEATURE_PLAN.md` Tier 1 without new APIs:
+
+- **Now / After plan** on the map: auto trees + water via existing `suggestPlacements` +
+  `simulateDesign`. After recolors tiles; peak −°C and affected-cell count shown. Empty
+  placement (grid cooler than 95°F) is an honest “After matches Now” state.
+- **Why this tile**: tap still uses `/api/analysis/spot`; pattern from `/api/analysis/pattern`
+  (failure is ignored so a 500 on pattern does not block temperature). BottomBar diagnosis.
+- **Act here first**: hottest three cells of the current overlay; tap runs the same `onPick`.
+
+Heat fetch, mock toggle, FortyGuard area path, and Design Studio are unchanged. Scenario is
+computed client-side from whatever grid already loaded.
+
+Verified: `tsc --noEmit` clean; `vitest run src/lib/mapScenario.test.ts` 3 passed.
+
+## [Unreleased] (previous)
+
 ### Fixed — the planner levels now visibly do different things
 Side-by-side check confirmed the user's report: Light, Medium and Re-plan all
 opened with the **same** actions — each level's signature items were appended

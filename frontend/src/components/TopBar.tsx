@@ -11,9 +11,9 @@ interface TopBarProps {
 export default function TopBar({ title, onSearch, units, onToggleUnits }: TopBarProps) {
   return (
     <header className="absolute top-0 left-0 right-0 z-10 flex items-center gap-3 p-3">
-      <div className="rounded-lg bg-white/90 px-4 py-2 shadow font-semibold">{title}</div>
+      <div className="rounded-lg bg-white/90 px-4 py-2 shadow font-semibold text-slate-900 dark:bg-[var(--hitr-surface)] dark:text-[var(--hitr-text)] dark:ring-1 dark:ring-slate-600/60">{title}</div>
       <input
-        className="flex-1 max-w-md rounded-lg bg-white/90 px-4 py-2 shadow outline-none placeholder:text-gray-500"
+        className="flex-1 max-w-md rounded-lg bg-white/90 px-4 py-2 shadow outline-none placeholder:text-gray-500 dark:bg-[var(--hitr-surface)] dark:text-[var(--hitr-text)] dark:placeholder:text-slate-400 dark:ring-1 dark:ring-slate-600/60"
         placeholder="Search any city or place…"
         onKeyDown={(e) => {
           if (e.key === "Enter") onSearch((e.target as HTMLInputElement).value);

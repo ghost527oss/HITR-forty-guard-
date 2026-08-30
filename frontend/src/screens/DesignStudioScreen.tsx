@@ -45,6 +45,7 @@ import {
 } from "../planner/uhiFactors";
 import type { PlannerScope } from "../components/PlannerStartModal";
 import { SCOPES, SCOPE_SPANS } from "../components/PlannerStartModal";
+import { compareStudioPair, loadStudioPair, saveStudioSlot, type SavedStudioDesign } from "../lib/studioCompare";
 
 interface DesignStudioScreenProps {
   lat: number;
@@ -93,6 +94,7 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
   const [sim, setSim] = useState<CitySimulation3D | null>(null);
   const [weather, setWeather] = useState<WeatherNow | null>(null);
   const [placements, setPlacements] = useState<Placement[]>([]);
+  const [savedPair, setSavedPair] = useState(() => loadStudioPair());
   const [tool, setTool] = useState<PlacementKind | null>(scope === "farm" ? "garden" : null);
   const [layers, setLayers] = useState<LayerState>({
     heat: true,
@@ -751,6 +753,41 @@ export default function DesignStudioScreen(props: DesignStudioScreenProps) {
               (≈{Math.round((100 * design.affectedCells) / cells.length)} %). The area average barely moves
               (−{design.avgDropC.toFixed(2)} °C) — that's the physics: a tree cools its block, not the whole
               city (Lee &amp; Kim 2022).
+            </p>
+          )}
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {(["A", "B"] as const).map((slot) => (
+              <button
+                key={slot}
+                type="button"
+                disabled={!design || !placements.length}
+                onClick={() => {
+                  if (!design) return;
+                  setSavedPair(saveStudioSlot(slot, {
+                    locationName,
+                    lat,
+                    lng,
+                    placements,
+                    summary: {
+                      maxDropC: design.maxDropC,
+                      affectedCells: design.affectedCells,
+                      maxBeforeF: design.maxBeforeF,
+                      maxAfterF: design.maxAfterF,
+                    },
+                  }));
+                }}
+                className="rounded-full bg-slate-900/5 px-2.5 py-1 text-[10px] font-bold text-slate-700 disabled:opacity-40 dark:bg-white/10 dark:text-slate-200"
+              >
+                Save {slot}
+              </button>
+            ))}
+          </div>
+          {savedPair.A && savedPair.B && (
+            <p className="mt-1.5 text-[10px] leading-4 text-slate-600 dark:text-slate-300">
+              {(() => {
+                const c = compareStudioPair(savedPair.A as SavedStudioDesign, savedPair.B as SavedStudioDesign);
+                return `A vs B: ${c.countA} vs ${c.countB} actions · peak drop ${savedPair.A.summary.maxDropC.toFixed(1)} vs ${savedPair.B.summary.maxDropC.toFixed(1)}°C · cells ${savedPair.A.summary.affectedCells} vs ${savedPair.B.summary.affectedCells} (B−A drop ${c.dropDeltaC >= 0 ? "+" : ""}${c.dropDeltaC.toFixed(1)}°C).`;
+              })()}
             </p>
           )}
         </div>

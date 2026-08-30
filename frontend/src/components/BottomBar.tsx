@@ -1,5 +1,8 @@
-import type { HeatReading, LandInfo } from "../api";
+import type { HeatReading, LandInfo, PatternAnalysis, WeatherNow } from "../api";
 import type { Units } from "../App";
+import { pmvFanger, ppdFromPmv, pmvLabel } from "../planner/uhiFactors";
+import { matchDesignsForSpot } from "../lib/spotDesigns";
+import { breezeHint } from "../lib/breezeHint";
 
 interface BottomBarProps {
   picked: { lat: number; lng: number } | null;
@@ -10,19 +13,34 @@ interface BottomBarProps {
   onViewSurface?: () => void;
   /** Source of the heat overlay (not the spot reading). */
   heatSource?: "mock" | "fortyguard";
+  pattern?: PatternAnalysis | null;
+  weather?: WeatherNow | null;
+  coolWalk?: { cell: { lat: number; lng: number; temp_f: number }; meters: number } | null;
 }
 
 // Bottom bar showing the selected spot's live temperature + land use (structure first).
-export default function BottomBar({ picked, reading, land, loading, units, onViewSurface, heatSource = "mock" }: BottomBarProps) {
+export default function BottomBar({ picked, reading, land, loading, units, onViewSurface, heatSource = "mock", pattern = null, weather = null, coolWalk = null }: BottomBarProps) {
+  const comfort = (() => {
+    if (!reading || !weather) return null;
+    const pmv = pmvFanger({
+      taC: reading.temp_c,
+      trC: reading.temp_c + 6,
+      va: Math.max(0.1, weather.wind_ms),
+      rh: weather.rh,
+    });
+    const label = pmvLabel(pmv);
+    return { pmv, ppd: ppdFromPmv(pmv), label };
+  })();
+
   return (
     <footer className="absolute bottom-0 left-0 right-0 z-10 p-3">
-      <div className="mx-auto max-w-lg rounded-2xl bg-white/90 shadow-lg p-4 backdrop-blur">
+      <div className="mx-auto max-w-lg rounded-2xl bg-white/90 shadow-lg p-4 backdrop-blur dark:bg-[var(--hitr-surface)] dark:ring-1 dark:ring-slate-600/50">
         {!picked && (
-          <p className="text-gray-600 text-sm">
+          <p className="text-gray-600 text-sm dark:text-slate-300">
             Tap anywhere on the map to see the live temperature and what's there.
           </p>
         )}
-        {picked && loading && <p className="text-gray-600 text-sm">Reading temperature…</p>}
+        {picked && loading && <p className="text-gray-600 text-sm dark:text-slate-300">Reading temperature…</p>}
         {picked && !loading && reading && (
           <div className="flex items-center justify-between">
             <div>
@@ -65,6 +83,57 @@ export default function BottomBar({ picked, reading, land, loading, units, onVie
               </div>
               {onViewSurface && <button onClick={onViewSurface} className="mt-1 text-xs font-medium text-heat-700">View surface</button>}
             </div>
+          </div>
+        )}
+        {picked && !loading && pattern && (
+          <div className="mt-3 border-t border-slate-200 pt-2 dark:border-slate-600">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Why this tile</p>
+            <p className="mt-0.5 text-xs font-semibold text-slate-800 dark:text-slate-100">{pattern.pattern_label}</p>
+            <p className="mt-0.5 text-[11px] leading-snug text-slate-600 dark:text-slate-300">{pattern.summary}</p>
+          </div>
+        )}
+        {picked && !loading && reading && weather?.days?.[0] && (
+          <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-300">
+            {(() => {
+              const maxC = weather.days[0].t_max_c;
+              const maxF = Math.round(maxC * 9 / 5 + 32);
+              const nowF = reading.temp_f;
+              const nowC = reading.temp_c;
+              const hotter = maxC > nowC + 0.4;
+              return units === "imperial"
+                ? `Now ${nowF}°F · today max ${maxF}°F${hotter ? " — plan for the peak, not this minute" : ""}`
+                : `Now ${nowC}°C · today max ${maxC.toFixed(1)}°C${hotter ? " — plan for the peak, not this minute" : ""}`;
+            })()}
+          </p>
+        )}
+        {picked && !loading && comfort && (
+          <div className="mt-2 text-[11px] text-slate-600 dark:text-slate-300">
+            Walk comfort (PMV {comfort.pmv.toFixed(1)}):{" "}
+            <span className="font-semibold">{comfort.label.text}</span>
+            {" · "}
+            {Math.round(comfort.ppd)}% dissatisfied · wind {weather?.wind_ms.toFixed(1)} m/s · RH {Math.round(weather?.rh ?? 0)}%
+          </div>
+        )}
+        {picked && !loading && coolWalk && (
+          <p className="mt-1 text-[11px] text-teal-700 dark:text-teal-300">
+            Nearest cooler tile: {Math.round(coolWalk.meters)} m · {Math.round(coolWalk.cell.temp_f)}°F (teal path)
+          </p>
+        )}
+        {picked && !loading && weather && (
+          <p className="mt-1 text-[11px] text-sky-800 dark:text-sky-300">{breezeHint(weather.wind_dir, weather.wind_ms)}</p>
+        )}
+        {picked && !loading && reading && (
+          <div className="mt-2 border-t border-slate-200 pt-2 dark:border-slate-600">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Designs for this spot</p>
+            <ul className="mt-1 space-y-1">
+              {matchDesignsForSpot(reading.temp_f, land?.kind ?? "other").map((d) => (
+                <li key={d.id} className="text-[11px] text-slate-700 dark:text-slate-200">
+                  <span className="font-semibold">{d.name}</span>
+                  {" · "}
+                  {d.tempDropEstimate} °C · {d.costLevel}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
       </div>

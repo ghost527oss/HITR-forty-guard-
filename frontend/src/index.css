@@ -2,10 +2,152 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --hitr-bg: #f4f6f8;
+  --hitr-surface: #ffffff;
+  --hitr-surface-2: #f8fafc;
+  --hitr-text: #0f172a;
+  --hitr-muted: #64748b;
+  --hitr-border: #e2e8f0;
+  --hitr-accent: #ea580c;
+  --hitr-accent-soft: #fff7ed;
+  --hitr-nav: rgba(255, 255, 255, 0.94);
+  color-scheme: light;
+}
+
+html.dark {
+  --hitr-bg: #121820;
+  --hitr-surface: #1b2430;
+  --hitr-surface-2: #161d27;
+  --hitr-text: #e8eef6;
+  --hitr-muted: #94a3b8;
+  --hitr-border: #2c3848;
+  --hitr-accent: #fb923c;
+  --hitr-accent-soft: #2a2118;
+  --hitr-nav: rgba(18, 24, 32, 0.94);
+  color-scheme: dark;
+}
+
+[data-palette="soft-classic"] {
+  --hitr-accent: #ea580c;
+  --hitr-accent-soft: #fff7ed;
+}
+html.dark[data-palette="soft-classic"] {
+  --hitr-accent: #fb923c;
+  --hitr-accent-soft: #2a2118;
+}
+
+[data-palette="warm-amber"] {
+  --hitr-accent: #d97706;
+  --hitr-accent-soft: #fffbeb;
+}
+html.dark[data-palette="warm-amber"] {
+  --hitr-accent: #fbbf24;
+  --hitr-accent-soft: #2a2214;
+}
+
+[data-palette="slate-crisp"] {
+  --hitr-accent: #475569;
+  --hitr-accent-soft: #f1f5f9;
+}
+html.dark[data-palette="slate-crisp"] {
+  --hitr-accent: #94a3b8;
+  --hitr-accent-soft: #1e293b;
+}
+
+[data-palette="emerald-mint"] {
+  --hitr-accent: #059669;
+  --hitr-accent-soft: #ecfdf5;
+}
+html.dark[data-palette="emerald-mint"] {
+  --hitr-accent: #34d399;
+  --hitr-accent-soft: #14241f;
+}
+
+[data-palette="ocean-cool"] {
+  --hitr-accent: #0284c7;
+  --hitr-accent-soft: #f0f9ff;
+}
+html.dark[data-palette="ocean-cool"] {
+  --hitr-accent: #38bdf8;
+  --hitr-accent-soft: #13222c;
+}
+
 html,
 body,
 #root {
   height: 100%;
   margin: 0;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--hitr-bg);
+  color: var(--hitr-text);
+}
+
+html.dark,
+html.dark body,
+html.dark #root {
+  background-color: var(--hitr-bg);
+  color: var(--hitr-text);
+}
+
+body {
+  transition: background-color 0.22s ease, color 0.22s ease;
+}
+
+/* Accent follows the selected palette without rewriting every screen. */
+.bg-orange-500,
+.bg-heat-600 {
+  background-color: var(--hitr-accent) !important;
+}
+.text-orange-500,
+.text-heat-600,
+.text-orange-600 {
+  color: var(--hitr-accent) !important;
+}
+.ring-orange-500 {
+  --tw-ring-color: var(--hitr-accent);
+}
+.hover\:bg-orange-600:hover {
+  background-color: color-mix(in srgb, var(--hitr-accent) 88%, black) !important;
+}
+
+html.dark .bg-white,
+html.dark .bg-white\/80,
+html.dark .bg-white\/90,
+html.dark .bg-white\/95 {
+  background-color: var(--hitr-surface);
+}
+html.dark .bg-slate-50,
+html.dark .bg-slate-50\/50,
+html.dark .bg-slate-50\/60 {
+  background-color: var(--hitr-bg);
+}
+html.dark .text-slate-900,
+html.dark .text-gray-900 {
+  color: var(--hitr-text);
+}
+html.dark .text-gray-600,
+html.dark .text-gray-500,
+html.dark .text-slate-700 {
+  color: var(--hitr-muted);
+}
+html.dark .border-slate-200,
+html.dark .border-gray-200,
+html.dark .ring-slate-200 {
+  border-color: var(--hitr-border);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.7);
 }

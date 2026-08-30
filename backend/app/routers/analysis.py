@@ -12,7 +12,7 @@ from fastapi import APIRouter, Query
 
 from ..config import settings
 from ..services import landuse
-from ..services.heat_provider import build_provider
+from ..services.heat_provider import MockHeatProvider, build_provider
 from ..services.planner import analyze_pattern
 from ..services.heat_surface import compute_surface
 from ..services.city_simulation import analyze_city_3d
@@ -36,8 +36,14 @@ def analyze_spot(
     lng: float = Query(..., ge=-180, le=180),
 ):
     """Live heat + land classification for a single coordinate."""
-    heat = get_provider().get_temperature(lat, lng).to_dict()
-    land = landuse.classify_spot(lat, lng)
+    try:
+        heat = get_provider().get_temperature(lat, lng).to_dict()
+    except Exception:
+        heat = MockHeatProvider().get_temperature(lat, lng).to_dict()
+    try:
+        land = landuse.classify_spot(lat, lng)
+    except Exception:
+        land = landuse.classify_heuristic(lat, lng)
     summary = f"{land['label'].capitalize()}, {heat['temp_f']}°F ({heat['risk']})"
     return {"heat": heat, "land": land, "summary": summary}
 
@@ -63,15 +69,15 @@ def heat_surface(
     lng: float = Query(..., ge=-180, le=180),
     radius_m: int = Query(100, ge=50, le=500),
     resolution: int = Query(10, ge=8, le=20),
+    hour: int | None = Query(None, ge=0, le=23),
 ):
     """
     3D temperature raster (the "heat surface" behind the map screen).
 
-    Inputs: lat, lng, radius_m (50-500), resolution (8-20 cells per side).
-    Outputs: grid_sample[] (cells), hotspots[], coolspots[], surface_min/max/avg,
-    temporal (diurnal + seasonal sampling).
+    Inputs: lat, lng, radius_m (50-500), resolution (8-20 cells per side),
+    optional hour (0-23) to apply the diurnal offset without nested temporal sampling.
     """
-    return compute_surface(lat, lng, radius_m, resolution)
+    return compute_surface(lat, lng, radius_m, resolution, hour=hour)
 
 
 @router.get("/simulation_3d")

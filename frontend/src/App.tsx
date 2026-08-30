@@ -1,32 +1,39 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import BottomNav from "./components/BottomNav";
-import HomeScreen from "./screens/HomeScreen";
-import MapScreen from "./screens/MapScreen";
-import CentralAssistantScreen from "./screens/CentralAssistantScreen";
-import ArchitecturalDesignsScreen from "./screens/ArchitecturalDesignsScreen";
-import PlannerScreen from "./screens/PlannerScreen";
-import SettingsScreen from "./screens/SettingsScreen";
-import EmergencyScreen from "./screens/EmergencyScreen";
-import DatabaseScreen from "./screens/DatabaseScreen";
-import HeatSurfaceScreen from "./screens/HeatSurfaceScreen";
-import CitySimulationScreen from "./screens/CitySimulationScreen";
-import TrainingScreen from "./screens/TrainingScreen";
+import StartScreen from "./components/StartScreen";
 import { Crosshair, X } from "lucide-react";
-import DesignStudioScreen from "./screens/DesignStudioScreen";
 import PlannerStartModal, { type PlannerScope } from "./components/PlannerStartModal";
 import AlertBanner from "./components/AlertBanner";
 import {
   analyzeSpot,
+  analyzePattern,
   getPlan,
+  getWeatherNow,
   type ChangeLevel,
   type HeatReading,
   type HeatCell,
   type LandInfo,
+  type PatternAnalysis,
   type Plan,
+  type WeatherNow,
 } from "./api";
-import { loadHeatGrid } from "./components/MapView";
-import { loadRealHeatGrid } from "./lib/realHeat";
+import { heatwaveStatus } from "./planner/uhiFactors";
+import { loadHeatGrid } from "./lib/heatGrid";
+import { loadRealHeatGrid, RealHeatUnavailable, type HeatJobPhase } from "./lib/realHeat";
 import type { View } from "./nav";
+
+const HomeScreen = lazy(() => import("./screens/HomeScreen"));
+const MapScreen = lazy(() => import("./screens/MapScreen"));
+const CentralAssistantScreen = lazy(() => import("./screens/CentralAssistantScreen"));
+const ArchitecturalDesignsScreen = lazy(() => import("./screens/ArchitecturalDesignsScreen"));
+const PlannerScreen = lazy(() => import("./screens/PlannerScreen"));
+const SettingsScreen = lazy(() => import("./screens/SettingsScreen"));
+const EmergencyScreen = lazy(() => import("./screens/EmergencyScreen"));
+const DatabaseScreen = lazy(() => import("./screens/DatabaseScreen"));
+const HeatSurfaceScreen = lazy(() => import("./screens/HeatSurfaceScreen"));
+const CitySimulationScreen = lazy(() => import("./screens/CitySimulationScreen"));
+const TrainingScreen = lazy(() => import("./screens/TrainingScreen"));
+const DesignStudioScreen = lazy(() => import("./screens/DesignStudioScreen"));
 
 export type Units = "imperial" | "metric";
 
@@ -48,6 +55,10 @@ async function geocode(q: string): Promise<Center | null> {
 }
 
 export default function App() {
+  const [showStartScreen, setShowStartScreen] = useState(() => {
+    // Show start screen once per session or initial load
+    return !sessionStorage.getItem("hitr.start-screen-dismissed");
+  });
   const [view, setView] = useState<View>("home");
   const [center, setCenter] = useState<Center>(DEFAULT_CENTER);
   const [zoom] = useState(12);
@@ -55,14 +66,20 @@ export default function App() {
   const [picked, setPicked] = useState<Center | null>(null);
   const [reading, setReading] = useState<HeatReading | null>(null);
   const [land, setLand] = useState<LandInfo | null>(null);
+  const [pattern, setPattern] = useState<PatternAnalysis | null>(null);
+  const [weather, setWeather] = useState<WeatherNow | null>(null);
   const [loading, setLoading] = useState(false);
   const [heatData, setHeatData] = useState<HeatCell[] | null>(null);
   // Which provider produced `heatData`. Drives the map's source badge.
   const [heatSource, setHeatSource] = useState<"mock" | "fortyguard">("mock");
+  const [heatUnavailable, setHeatUnavailable] = useState<string | null>(null);
+  const [heatJob, setHeatJob] = useState<HeatJobPhase | "mock">("mock");
   const [units, setUnits] = useState<Units>("imperial");
   const [webSearchEnabled, setWebSearchEnabled] = useState(() => localStorage.getItem("hitr.google-search") === "true");
+  const [allowMockHeat, setAllowMockHeat] = useState(() => localStorage.getItem("hitr.allow-mock-heat") !== "false");
   const [changeLevel, setChangeLevel] = useState<ChangeLevel>(1);
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [lightCompare, setLightCompare] = useState<Plan | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   // Planner launch flow: popup → (optional) map pick → Design Studio.
@@ -89,6 +106,24 @@ export default function App() {
     return () => { cancelled = true; };
   }, [center.lat, center.lng]);
 
+  useEffect(() => {
+    let cancelled = false;
+    getWeatherNow(center.lat, center.lng)
+      .then((w) => {
+        if (!cancelled) setWeather(w);
+      })
+      .catch(() => {
+        if (!cancelled) setWeather(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [center.lat, center.lng]);
+
+  const heatwave = weather
+    ? heatwaveStatus(weather.days.map((d) => ({ tMaxC: d.t_max_c, tMinC: d.t_min_c })))
+    : null;
+
   // Heat grid, two phases.
   //
   // 1. The mock paints instantly so the map is never empty. It costs nothing.
@@ -101,26 +136,77 @@ export default function App() {
   useEffect(() => {
     let cancelled = false;
     let realArrived = false;
-    setHeatSource("mock");
+    setHeatUnavailable(null);
+    setHeatJob(allowMockHeat ? "mock" : "processing");
 
-    loadHeatGrid(center.lat, center.lng).then((pts) => {
-      if (!cancelled && !realArrived) setHeatData(pts);
-    }).catch(() => {
-      // Swallowed on purpose: the real path below may still succeed, and an
-      // empty overlay is a worse outcome than a stale one.
-    });
+    if (allowMockHeat) {
+      setHeatSource("mock");
+      loadHeatGrid(center.lat, center.lng)
+        .then((pts) => {
+          if (!cancelled && !realArrived && pts && pts.length > 0) {
+            setHeatData(pts);
+          }
+        })
+        .catch(() => {
+          /* mock paint is best-effort while real heat is in flight */
+        });
+    } else {
+      setHeatData(null);
+    }
 
-    loadRealHeatGrid(center.lat, center.lng).then((pts) => {
-      if (cancelled || pts.length === 0) return;
-      realArrived = true;
-      setHeatData(pts);
-      setHeatSource("fortyguard");
-    }).catch(() => {
-      // No key configured, or the task failed. The mock simply stays on screen.
-    });
+    loadRealHeatGrid(center.lat, center.lng, 0.04, {
+      onStatus: (phase) => {
+        if (!cancelled) setHeatJob(phase);
+      },
+    })
+      .then((pts) => {
+        if (cancelled) return;
+        if (pts && pts.length > 0) {
+          realArrived = true;
+          setHeatUnavailable(null);
+          setHeatData(pts);
+          setHeatSource("fortyguard");
+          return;
+        }
+        if (allowMockHeat) {
+          loadHeatGrid(center.lat, center.lng).then((mockPts) => {
+            if (!cancelled && mockPts && mockPts.length > 0) {
+              setHeatData(mockPts);
+              setHeatSource("mock");
+            }
+          });
+        } else {
+          setHeatData(null);
+          setHeatUnavailable(
+            "Real heat data returned no tiles. Mock fallback is turned off in Settings.",
+          );
+        }
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        if (err instanceof RealHeatUnavailable) setHeatJob("unavailable");
+        else setHeatJob("failed");
+        if (allowMockHeat) {
+          loadHeatGrid(center.lat, center.lng).then((mockPts) => {
+            if (!cancelled && mockPts && mockPts.length > 0) {
+              setHeatData(mockPts);
+              setHeatSource("mock");
+            }
+          });
+        } else {
+          setHeatData(null);
+          setHeatUnavailable(
+            err instanceof RealHeatUnavailable
+              ? "Real FortyGuard heat is unavailable (missing or invalid API key). Turn on Auto-fallback Mock Heat Grid in Settings to view sample tiles."
+              : (err?.message ?? "FortyGuard job failed."),
+          );
+        }
+      });
 
-    return () => { cancelled = true; };
-  }, [center]);
+    return () => {
+      cancelled = true;
+    };
+  }, [center, allowMockHeat]);
 
   const handlePick = useCallback(async (lat: number, lng: number) => {
     // Planner setup: capture the tap and return to the launch popup.
@@ -132,11 +218,16 @@ export default function App() {
     setPicked({ lat, lng });
     setLoading(true);
     setStatus(null);
+    setPattern(null);
     try {
-      const r = await analyzeSpot(lat, lng);
+      const [r, p] = await Promise.all([
+        analyzeSpot(lat, lng),
+        analyzePattern(lat, lng).catch(() => null),
+      ]);
       if (id === clickCounterRef.current) {
         setReading(r.heat);
         setLand(r.land);
+        setPattern(p);
       }
     } catch (err: any) {
       if (id === clickCounterRef.current) {
@@ -160,7 +251,9 @@ export default function App() {
         setPicked(null);
         setReading(null);
         setLand(null);
+        setPattern(null);
         setPlan(null);
+        setLightCompare(null);
       } else {
         setStatus(`Couldn't find "${q}". Try a US city name.`);
       }
@@ -178,8 +271,13 @@ export default function App() {
     setStatus(null);
     try {
       const p = await getPlan(picked.lat, picked.lng, level);
+      let light: Plan | null = null;
+      if (level === 4) {
+        light = await getPlan(picked.lat, picked.lng, 1).catch(() => null);
+      }
       if (id === planCounterRef.current) {
         setPlan(p);
+        setLightCompare(light);
       }
     } catch (err: any) {
       if (id === planCounterRef.current) {
@@ -192,6 +290,30 @@ export default function App() {
     }
   }, [picked, changeLevel]);
 
+  const handleFixHotspot = useCallback(async (lat: number, lng: number) => {
+    setPicked({ lat, lng });
+    setChangeLevel(1);
+    const id = ++planCounterRef.current;
+    setPlanLoading(true);
+    setStatus(null);
+    try {
+      const p = await getPlan(lat, lng, 1);
+      if (id === planCounterRef.current) {
+        setPlan(p);
+        setLightCompare(null);
+        setView("planner");
+      }
+    } catch (err: any) {
+      if (id === planCounterRef.current) {
+        setStatus(`Couldn't generate plan: ${err?.message ?? "network error"}`);
+      }
+    } finally {
+      if (id === planCounterRef.current) {
+        setPlanLoading(false);
+      }
+    }
+  }, []);
+
   const toggleUnits = useCallback(
     () => setUnits((u) => (u === "imperial" ? "metric" : "imperial")),
     []
@@ -203,6 +325,15 @@ export default function App() {
   // Push the whole content area down by the banner's height (40px) so screens
   // start below it instead of underneath it.
   const heatAlertActive = (reading?.temp_f ?? 0) >= 90;
+
+  const handleStartPlatform = useCallback(() => {
+    sessionStorage.setItem("hitr.start-screen-dismissed", "true");
+    setShowStartScreen(false);
+  }, []);
+
+  if (showStartScreen) {
+    return <StartScreen onStart={handleStartPlatform} />;
+  }
 
   return (
     <div className="relative h-full w-full overflow-hidden">
@@ -219,10 +350,19 @@ export default function App() {
       )}
 
       <main className={`absolute inset-x-0 bottom-12 ${heatAlertActive ? "top-10" : "top-0"}`}>
+        <Suspense
+          fallback={
+            <div className="flex h-full items-center justify-center bg-[var(--hitr-bg)] text-sm text-slate-500">
+              Loading workspace…
+            </div>
+          }
+        >
         {view === "home" && (
           <HomeScreen
             onNavigate={setView}
             location={title}
+            heatwave={heatwave}
+            weather={weather}
             temp={reading
               ? (units === "imperial"
                   ? `${reading.temp_f}°F`
@@ -238,7 +378,7 @@ export default function App() {
             title={title}
             onSearch={handleSearch}
             onPick={handlePick}
-            onClearPick={() => setPicked(null)}
+            onClearPick={() => { setPicked(null); setPattern(null); }}
             picked={picked}
             reading={reading}
             land={land}
@@ -247,6 +387,11 @@ export default function App() {
             onToggleUnits={toggleUnits}
             heatData={heatData}
             heatSource={heatSource}
+            heatUnavailable={heatUnavailable}
+            heatJob={heatJob}
+            pattern={pattern}
+            weather={weather}
+            heatwave={heatwave}
             onViewSurface={() => setView("heat_surface")}
             onAssistant={() => setView("assistant")}
             onSOS={() => setView("emergency")}
@@ -294,6 +439,12 @@ export default function App() {
             onGenerate={() => handleGeneratePlan()}
             hasPicked={!!picked}
             onGoMap={() => setView("map")}
+            lightCompare={lightCompare}
+            locationName={title}
+            picked={picked}
+            reading={reading}
+            land={land}
+            pattern={pattern}
           />
         )}
 
@@ -303,6 +454,8 @@ export default function App() {
             lng={picked.lng}
             locationName={title}
             onBack={() => setView("map")}
+            onFixHotspot={handleFixHotspot}
+            fixBusy={planLoading}
           />
         )}
 
@@ -329,8 +482,11 @@ export default function App() {
             onToggleUnits={toggleUnits}
             webSearchEnabled={webSearchEnabled}
             onWebSearchEnabledChange={setWebSearchEnabled}
+            allowMockHeat={allowMockHeat}
+            onAllowMockHeatChange={setAllowMockHeat}
           />
         )}
+        </Suspense>
       </main>
 
       {/* Planner launch popup (Database → City Planner) */}

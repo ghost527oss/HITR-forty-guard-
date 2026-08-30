@@ -267,9 +267,11 @@ export function getHeatSurface(
   lng: number,
   radius_m = 150,
   resolution = 12,
+  hour?: number,
 ): Promise<HeatSurfaceResult> {
+  const hourQ = hour === undefined ? "" : `&hour=${hour}`;
   return get<HeatSurfaceResult>(
-    `/api/analysis/surface?lat=${lat}&lng=${lng}&radius_m=${radius_m}&resolution=${resolution}`,
+    `/api/analysis/surface?lat=${lat}&lng=${lng}&radius_m=${radius_m}&resolution=${resolution}${hourQ}`,
   );
 }
 
@@ -314,6 +316,17 @@ export interface KnowledgeStats {
     buildings: number;
     source: string;
   };
+}
+
+export interface EncyclopediaEntry {
+  slug: string;
+  title: string;
+  plain_language: string;
+  category?: string;
+}
+
+export function browseEncyclopedia(): Promise<{ category: string; entries: EncyclopediaEntry[] }> {
+  return get<{ category: string; entries: EncyclopediaEntry[] }>("/api/ai/browse");
 }
 
 export async function askAssistant(question: string): Promise<AssistantReply> {

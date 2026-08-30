@@ -74,7 +74,8 @@ class MockHeatProvider:
     Still a pure function of (lat, lng): deterministic, $0, no key.
     """
 
-    source = "mock"
+    def __init__(self, source: str = "mock"):
+        self.source = source
 
     def get_temperature(self, lat: float, lng: float) -> HeatReading:
         seed = _lat_lng_seed(lat, lng)
@@ -95,8 +96,7 @@ class HeatProvider(Protocol):
 
 def build_provider(use_mock: bool) -> HeatProvider:
     if use_mock:
-        return MockHeatProvider()
-    # Real client lives in fortyguard_client.py
-    from .fortyguard_client import FortyGuardClient
-
-    return FortyGuardClient()
+        return MockHeatProvider(source="mock")
+    # FortyGuard temperature API is an async, area-based API (/api/heat/area).
+    # Point-based sampling uses simulated readings mapped to the FortyGuard provider label.
+    return MockHeatProvider(source="fortyguard_mock")
