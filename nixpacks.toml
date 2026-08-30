@@ -1,0 +1,19 @@
+[phases.setup]
+nixPkgs = ["nodejs_18", "python312"]
+
+[phases.install]
+cmds = [
+  "cd frontend && npm ci",
+  "pip install -r backend/requirements.txt",
+  "pip install -r requirements.txt"
+]
+
+[phases.build]
+cmds = ["cd frontend && npm run build && ls -lh ../public/"]
+
+[start]
+cmd = "uvicorn backend.app.main:app --host 0.0.0.0 --port ${PORT:-8000} --app-dir . --workers 1"
+
+[variables]
+PYTHON_VERSION = "3.12"
+NODE_ENV = "production"
