@@ -157,18 +157,6 @@ Never put keys in `frontend/` or `VITE_*`.
 ## Agent handoff
 
 ```
-<<<<<<< HEAD
-CURRENT DEVELOPMENT BATCH: 9 COMPLETE
-FEATURES COMPLETED: PRODUCT_FEATURE_PLAN.md items 1–25
-FEATURES CURRENTLY IN PROGRESS: none
-NEXT 3 FEATURES: none numbered remaining — polish only if asked
-IMPORTANT FILES: MapScreen.tsx, mapScenario.ts
-IMPORTANT ARCHITECTURAL DECISIONS:
-  - Drops reuse simulateDesign/cellDropC; no second Studio.
-  - Tool mode intercepts tap so spot analysis is not required to place.
-KNOWN PROBLEMS: live FortyGuard unverified; Open-Meteo needs network
-LAST VERIFIED STATE: tsc + mapScenario vitest including mergeManualDrops (2026-08-30)
-=======
 CURRENT DEVELOPMENT BATCH: 9 COMPLETE + P0 white-screen audit (partial)
 FEATURES COMPLETED: PRODUCT_FEATURE_PLAN.md items 1–25
 FEATURES CURRENTLY IN PROGRESS: production boot (Vercel not verified)
@@ -180,7 +168,6 @@ IMPORTANT ARCHITECTURAL DECISIONS:
   - Do not import MapView from App; lazy screens after StartScreen.
 KNOWN PROBLEMS: live FortyGuard unverified; Open-Meteo needs network; Vercel white screen unverified
 LAST VERIFIED STATE: tsc after heatGrid extract + lazy screens (2026-08-30)
->>>>>>> 9109001 (Fix Vercel blank deploy: build SPA into public/)
 ```
 
 
