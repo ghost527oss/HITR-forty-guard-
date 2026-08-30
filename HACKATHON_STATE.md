@@ -89,25 +89,23 @@ Never put keys in `frontend/` or `VITE_*`.
 - Pattern endpoint may still be slow locally (OSM); Vercel `/spot` skips OSM.
 - After overlay is a **simulated** light pack, not the full Design Studio draft.
 
-## Testing status — Batch 1
+## Testing status
 
-- VERIFIED: `frontend` `tsc --noEmit`; vitest `mapScenario.test.ts` 3/3.
-- NOT VERIFIABLE HERE: live FortyGuard, Vercel deploy, OSM Overpass.
+- VERIFIED Batch 2: `tsc --noEmit`.
+- NOT VERIFIABLE HERE: Open-Meteo live, FortyGuard, Vercel.
 
 ## Agent handoff
 
 ```
-CURRENT DEVELOPMENT BATCH: 1 COMPLETE
-FEATURES COMPLETED: Scenario overlay, Spot diagnosis, Priority index
+CURRENT DEVELOPMENT BATCH: 2 COMPLETE
+FEATURES COMPLETED: overlay/diagnosis/priority; time scrubber; PMV; heatwave
 FEATURES CURRENTLY IN PROGRESS: none
-NEXT 3 FEATURES: Time scrubber (6), PMV walk comfort (7), Heatwave mode (8)
-  — or 7+12 walk-to-cool if visual wow is preferred
-IMPORTANT FILES: frontend/src/lib/mapScenario.ts, MapScreen.tsx, BottomBar.tsx, App.tsx,
-  planner/uhiFactors.ts, PRODUCT_FEATURE_PLAN.md, HACKATHON_STATE.md
+NEXT 3 FEATURES: Walk-to-cool (12), Fix this hotspot CTA (23), Water-refuge (11)
+IMPORTANT FILES: HeatSurfaceScreen.tsx, BottomBar.tsx, PlanSheet.tsx, App.tsx, analysis.py
 IMPORTANT ARCHITECTURAL DECISIONS:
-  - Scenario is client-side on already-loaded heat cells (no extra FortyGuard calls).
-  - Pattern fetch is best-effort so spot 500s are not reintroduced.
-  - Mock/real heat loading in App.tsx was not rewritten.
-KNOWN PROBLEMS: live FortyGuard unverified in sandbox
-LAST VERIFIED STATE: tsc clean, mapScenario tests pass (2026-08-30)
+  - Diurnal UI uses existing temporal samples (one surface fetch).
+  - PMV omitted if Open-Meteo fails.
+  - Heatwave recommends Light; does not auto-generate a plan.
+KNOWN PROBLEMS: live FortyGuard unverified; Open-Meteo needs network
+LAST VERIFIED STATE: tsc clean (2026-08-30)
 ```
