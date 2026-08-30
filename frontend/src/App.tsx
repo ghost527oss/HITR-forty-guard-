@@ -77,6 +77,7 @@ export default function App() {
   const [allowMockHeat, setAllowMockHeat] = useState(() => localStorage.getItem("hitr.allow-mock-heat") !== "false");
   const [changeLevel, setChangeLevel] = useState<ChangeLevel>(1);
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [lightCompare, setLightCompare] = useState<Plan | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   // Planner launch flow: popup → (optional) map pick → Design Studio.
@@ -241,6 +242,7 @@ export default function App() {
         setLand(null);
         setPattern(null);
         setPlan(null);
+        setLightCompare(null);
       } else {
         setStatus(`Couldn't find "${q}". Try a US city name.`);
       }
@@ -258,8 +260,13 @@ export default function App() {
     setStatus(null);
     try {
       const p = await getPlan(picked.lat, picked.lng, level);
+      let light: Plan | null = null;
+      if (level === 4) {
+        light = await getPlan(picked.lat, picked.lng, 1).catch(() => null);
+      }
       if (id === planCounterRef.current) {
         setPlan(p);
+        setLightCompare(light);
       }
     } catch (err: any) {
       if (id === planCounterRef.current) {
@@ -282,6 +289,7 @@ export default function App() {
       const p = await getPlan(lat, lng, 1);
       if (id === planCounterRef.current) {
         setPlan(p);
+        setLightCompare(null);
         setView("planner");
       }
     } catch (err: any) {
@@ -411,6 +419,7 @@ export default function App() {
             onGenerate={() => handleGeneratePlan()}
             hasPicked={!!picked}
             onGoMap={() => setView("map")}
+            lightCompare={lightCompare}
           />
         )}
 

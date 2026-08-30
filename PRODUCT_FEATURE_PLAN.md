@@ -1,6 +1,6 @@
 # HITR product strategy & feature plan
 
-**Implementation status:** Batch 1 COMPLETE. Batch 2 COMPLETE. Batch 3 COMPLETE (2026-08-30) — **12 Walk-to-cool**, **23 Fix this hotspot**, **11 Water-refuge**. Wait before Batch 4.
+**Implementation status:** Batches 1–4 COMPLETE (2026-08-30). Batch 4: **16 Peak vs now**, **21 Seasonal surface**, **25 Rebuild honesty**. Wait before Batch 5.
 
 **Code stays frozen until you pick features.** This document is strategy + implementable ideas only.
 

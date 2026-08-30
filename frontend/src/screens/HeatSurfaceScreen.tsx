@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { getHeatSurface, type HeatSurfaceResult } from "../api";
 
 const HOURS = [0, 6, 12, 18] as const;
+const MONTH_LABEL: Record<number, string> = { 1: "Jan", 4: "Apr", 7: "Jul", 10: "Oct" };
 
 export default function HeatSurfaceScreen({
   lat,
@@ -22,6 +23,7 @@ export default function HeatSurfaceScreen({
   const [data, setData] = useState<HeatSurfaceResult | null>(null);
   const [error, setError] = useState("");
   const [hour, setHour] = useState<number | "now">("now");
+  const [month, setMonth] = useState<number | "now">("now");
 
   useEffect(() => {
     let cancelled = false;
@@ -44,6 +46,11 @@ export default function HeatSurfaceScreen({
     return data.temporal?.diurnal_sampling.find((s) => s.hour === hour) ?? null;
   }, [data, hour]);
 
+  const season = useMemo(() => {
+    if (!data || month === "now") return null;
+    return data.temporal?.seasonal_sampling.find((s) => s.month === month) ?? null;
+  }, [data, month]);
+
   return (
     <section className="h-full overflow-y-auto bg-[var(--hitr-bg)] p-5 pb-24 text-slate-800 dark:text-slate-100">
       <button onClick={onBack} className="flex items-center gap-1 text-sm font-medium text-heat-600">
@@ -62,7 +69,7 @@ export default function HeatSurfaceScreen({
             <div className="mt-2 flex flex-wrap gap-1.5">
               <button
                 type="button"
-                onClick={() => setHour("now")}
+                onClick={() => { setHour("now"); }}
                 className={`rounded-full px-3 py-1 text-xs font-bold ${
                   hour === "now" ? "bg-orange-500 text-white" : "bg-white ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-600"
                 }`}
@@ -73,7 +80,7 @@ export default function HeatSurfaceScreen({
                 <button
                   key={h}
                   type="button"
-                  onClick={() => setHour(h)}
+                  onClick={() => { setHour(h); setMonth("now"); }}
                   className={`rounded-full px-3 py-1 text-xs font-bold ${
                     hour === h ? "bg-orange-500 text-white" : "bg-white ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-600"
                   }`}
@@ -84,7 +91,43 @@ export default function HeatSurfaceScreen({
             </div>
           </div>
 
-          {hour === "now" || !sample ? (
+          {data.temporal?.seasonal_sampling?.length ? (
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Season</p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setMonth("now")}
+                  className={`rounded-full px-3 py-1 text-xs font-bold ${
+                    month === "now" ? "bg-sky-600 text-white" : "bg-white ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-600"
+                  }`}
+                >
+                  This snapshot
+                </button>
+                {data.temporal.seasonal_sampling.map((s) => (
+                  <button
+                    key={s.month}
+                    type="button"
+                    onClick={() => { setMonth(s.month); setHour("now"); }}
+                    className={`rounded-full px-3 py-1 text-xs font-bold ${
+                      month === s.month ? "bg-sky-600 text-white" : "bg-white ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-600"
+                    }`}
+                  >
+                    {MONTH_LABEL[s.month] ?? `M${s.month}`}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {season ? (
+            <div className="space-y-1 rounded-2xl bg-white p-4 ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-600">
+              <p className="font-semibold">{MONTH_LABEL[season.month] ?? `Month ${season.month}`} seasonal sample</p>
+              <p>
+                Range: {season.surface_min_f}–{season.surface_max_f}°F · average {season.surface_avg_f}°F
+              </p>
+            </div>
+          ) : hour === "now" || !sample ? (
             <div className="space-y-1 rounded-2xl bg-white p-4 ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-600">
               <p>
                 Range: {data.surface_min_f}–{data.surface_max_f}°F · average {data.surface_avg_f}°F

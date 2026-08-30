@@ -90,6 +90,20 @@ export default function BottomBar({ picked, reading, land, loading, units, onVie
             <p className="mt-0.5 text-[11px] leading-snug text-slate-600 dark:text-slate-300">{pattern.summary}</p>
           </div>
         )}
+        {picked && !loading && reading && weather?.days?.[0] && (
+          <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-300">
+            {(() => {
+              const maxC = weather.days[0].t_max_c;
+              const maxF = Math.round(maxC * 9 / 5 + 32);
+              const nowF = reading.temp_f;
+              const nowC = reading.temp_c;
+              const hotter = maxC > nowC + 0.4;
+              return units === "imperial"
+                ? `Now ${nowF}°F · today max ${maxF}°F${hotter ? " — plan for the peak, not this minute" : ""}`
+                : `Now ${nowC}°C · today max ${maxC.toFixed(1)}°C${hotter ? " — plan for the peak, not this minute" : ""}`;
+            })()}
+          </p>
+        )}
         {picked && !loading && comfort && (
           <div className="mt-2 text-[11px] text-slate-600 dark:text-slate-300">
             Walk comfort (PMV {comfort.pmv.toFixed(1)}):{" "}

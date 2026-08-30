@@ -22,7 +22,8 @@ Home, map heat overlay, tap-to-spot, planner levels 0–4, Design Studio, Knowle
 
 **Batch 1:** Now/After scenario overlay, spot diagnosis card, priority list.  
 **Batch 2:** Heat-surface time chips, PMV walk comfort, heatwave mode (Open-Meteo + P2 rules).  
-**Batch 3:** Walk-to-cool path, Fix this hotspot CTA, water-refuge pins.
+**Batch 3:** Walk-to-cool path, Fix this hotspot CTA, water-refuge pins.  
+**Batch 4:** Peak vs now, seasonal surface chips, Rebuild honesty banner.
 
 ## Feature roadmap (from PRODUCT_FEATURE_PLAN.md)
 
@@ -37,7 +38,21 @@ Home, map heat overlay, tap-to-spot, planner levels 0–4, Design Studio, Knowle
 | 12 | Walk-to-cool | COMPLETED |
 | 23 | Fix this hotspot CTA | COMPLETED |
 | 11 | Water-refuge pins | COMPLETED |
+| 16 | Peak vs now | COMPLETED |
+| 21 | Seasonal surface | COMPLETED |
+| 25 | Rebuild honesty | COMPLETED |
 | others | see PRODUCT_FEATURE_PLAN.md | NOT STARTED |
+
+## Completed work — Batch 4
+
+### Peak vs now
+- Files: `BottomBar.tsx` + existing `weather.days[0].t_max_c`
+
+### Seasonal surface
+- Files: `HeatSurfaceScreen.tsx` `seasonal_sampling` (no extra fetch)
+
+### Rebuild honesty
+- Files: `App.tsx` parallel Light plan on level 4, `PlannerScreen.tsx` banner
 
 ## Completed work — Batch 3
 

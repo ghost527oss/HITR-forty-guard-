@@ -13,6 +13,7 @@ interface PlannerScreenProps {
   onGenerate: () => void;
   hasPicked: boolean;
   onGoMap: () => void;
+  lightCompare?: Plan | null;
 }
 
 const COST_COLOR: Record<string, string> = {
@@ -22,7 +23,7 @@ const COST_COLOR: Record<string, string> = {
 };
 
 export default function PlannerScreen(props: PlannerScreenProps) {
-  const { changeLevel, onSetChangeLevel, plan, loading, onGenerate, hasPicked, onGoMap } = props;
+  const { changeLevel, onSetChangeLevel, plan, loading, onGenerate, hasPicked, onGoMap, lightCompare = null } = props;
   const activeLevel = CHANGE_LEVELS.find((l) => l.value === changeLevel);
 
   return (
@@ -75,6 +76,25 @@ export default function PlannerScreen(props: PlannerScreenProps) {
           >
             {loading ? "Calculating Spatial Plan…" : "Generate Resilience Plan"}
           </button>
+        )}
+
+        {plan && plan.change_level === 4 && (
+          <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-xs text-amber-950 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-100">
+            <p className="font-bold uppercase tracking-wide">Rebuild honesty</p>
+            <p className="mt-1 font-semibold">Touches street grid / zoning / utilities — not a paint job.</p>
+            {lightCompare ? (
+              <p className="mt-1">
+                Same block: Light has {lightCompare.interventions.length} surface actions
+                ({lightCompare.scale.touches}). Rebuild lists {plan.interventions.length} actions
+                ({plan.scale.touches}). Peak temp at this spot is still {plan.temp_f}°F until work is built —
+                the engine does not invent a bigger °C drop for a bigger map.
+              </p>
+            ) : (
+              <p className="mt-1">
+                Peak at this spot is {plan.temp_f}°F. Rebuild changes what the city *is*, not a fake extra °C vs Light.
+              </p>
+            )}
+          </div>
         )}
 
         {plan && (

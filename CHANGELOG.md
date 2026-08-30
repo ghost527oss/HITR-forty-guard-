@@ -5,6 +5,11 @@ All notable changes to this project are documented here. Format inspired by
 
 ## [Unreleased]
 
+### Added — Batch 4 (peak vs now, seasonal surface, rebuild honesty)
+- Map BottomBar: Open-Meteo today max vs spot now; omitted if weather missing.
+- Heat Surface: Jan/Apr/Jul/Oct chips from existing `temporal.seasonal_sampling` (same fetch as diurnal).
+- Planner Rebuild (level 4): honesty banner + Light plan compare (action counts / scale). Light fetch failure does not block Rebuild.
+
 ### Added — Batch 3 (walk-to-cool, fix-hotspot CTA, water-refuge pins)
 - Map: dashed teal path from picked pin to nearest cooler tile (mean − 1.5°F, skip <8 m) on the existing heat grid; BottomBar shows meters.
 - Heat Surface hotspot cards: “Fix this hotspot” runs Light (`change_level=1`) `getPlan` at cluster `center_lat/lng` (not stale `picked`), then opens Planner.
