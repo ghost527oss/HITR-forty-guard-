@@ -5,6 +5,11 @@ All notable changes to this project are documented here. Format inspired by
 
 ## [Unreleased]
 
+### Added — Batch 5 (canopy gaps, cool-roof pins, analysis layers)
+- Map layer chips: Heat / Water / Path / Gaps / Roofs independently.
+- Canopy-gap dots = `suggestPlacements` tree clusters; Plant suggested clusters → After overlay.
+- Cool-roof pins only where `getCitySimulation3D` buildings exist; honest empty if the twin fails.
+
 ### Added — Batch 4 (peak vs now, seasonal surface, rebuild honesty)
 - Map BottomBar: Open-Meteo today max vs spot now; omitted if weather missing.
 - Heat Surface: Jan/Apr/Jul/Oct chips from existing `temporal.seasonal_sampling` (same fetch as diurnal).

@@ -6,6 +6,7 @@ import {
   metersBetween,
   type DesignSummary,
   type Placement,
+  type PlacementContext,
   type LatLng,
 } from "../planner/uhiFactors";
 
@@ -40,14 +41,15 @@ export function rankPriorityCells(cells: HeatCell[], n = 3): HeatCell[] {
   return [...cells].sort((a, b) => b.temp_f - a.temp_f || a.lat - b.lat).slice(0, n);
 }
 
-export function buildMapScenario(cells: HeatCell[]): MapScenario | null {
+export function buildMapScenario(cells: HeatCell[], ctx: PlacementContext = EMPTY_CTX): MapScenario | null {
   if (!cells.length) return null;
-  const trees = suggestPlacements(cells, EMPTY_CTX, "tree_cluster", { count: 5 });
-  const water = suggestPlacements(cells, EMPTY_CTX, "water_station", {
+  const trees = suggestPlacements(cells, ctx, "tree_cluster", { count: 5 });
+  const water = suggestPlacements(cells, ctx, "water_station", {
     count: 4,
     existing: trees,
   });
-  const placements = [...trees, ...water];
+  const roofs = suggestPlacements(cells, ctx, "cool_roof", { count: 4 });
+  const placements = [...trees, ...water, ...roofs];
   const summary = simulateDesign(cells, placements);
   return {
     placements,

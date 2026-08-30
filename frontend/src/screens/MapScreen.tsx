@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Crosshair } from "lucide-react";
 import MapView, { type BoxBounds } from "../components/MapView";
 import TopBar from "../components/TopBar";
@@ -7,7 +7,8 @@ import HeatMapFAB from "../components/HeatMapFAB";
 import PlanSheet from "../components/PlanSheet";
 import type { Units } from "../App";
 import type { HeatReading, HeatCell, LandInfo, ChangeLevel, PatternAnalysis, WeatherNow } from "../api";
-import type { HeatwaveStatus } from "../planner/uhiFactors";
+import { getCitySimulation3D } from "../api";
+import type { HeatwaveStatus, PlacementContext } from "../planner/uhiFactors";
 import { buildMapScenario, nearestCoolerTile } from "../lib/mapScenario";
 
 interface Center {
@@ -53,8 +54,42 @@ export default function MapScreen(props: MapScreenProps) {
   const [planSheetOpen, setPlanSheetOpen] = useState(false);
   const [box, setBox] = useState<BoxBounds | null>(null);
   const [scenarioMode, setScenarioMode] = useState<"now" | "after">("now");
+  const [placeCtx, setPlaceCtx] = useState<PlacementContext>({ vegetation: [], buildings: [] });
+  const [layers, setLayers] = useState({
+    heat: true,
+    water: true,
+    path: true,
+    canopy: false,
+    roofs: false,
+  });
 
-  const scenario = useMemo(() => (heatData && heatData.length ? buildMapScenario(heatData) : null), [heatData]);
+  useEffect(() => {
+    if (!picked) {
+      setPlaceCtx({ vegetation: [], buildings: [] });
+      return;
+    }
+    let cancelled = false;
+    getCitySimulation3D(picked.lat, picked.lng)
+      .then((sim) => {
+        if (cancelled) return;
+        setPlaceCtx({
+          vegetation: sim.vegetation.map((v) => ({ lat: v.lat, lng: v.lng })),
+          buildings: sim.buildings.map((b) => ({ lat: b.lat, lng: b.lng, height_m: b.height_m })),
+          hospitals: sim.hospitals.map((h) => ({ lat: h.lat, lng: h.lng })),
+        });
+      })
+      .catch(() => {
+        if (!cancelled) setPlaceCtx({ vegetation: [], buildings: [] });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [picked?.lat, picked?.lng]);
+
+  const scenario = useMemo(
+    () => (heatData && heatData.length ? buildMapScenario(heatData, placeCtx) : null),
+    [heatData, placeCtx],
+  );
   const displayHeat = scenarioMode === "after" && scenario?.placements.length
     ? scenario.summary.cells
     : heatData;
@@ -67,6 +102,12 @@ export default function MapScreen(props: MapScreenProps) {
     : null;
   const waterStations = (scenario?.placements ?? [])
     .filter((p) => p.kind === "water_station")
+    .map((p) => ({ lat: p.lat, lng: p.lng, label: p.reason }));
+  const canopyGaps = (scenario?.placements ?? [])
+    .filter((p) => p.kind === "tree_cluster")
+    .map((p) => ({ lat: p.lat, lng: p.lng, label: p.reason }));
+  const roofTargets = (scenario?.placements ?? [])
+    .filter((p) => p.kind === "cool_roof")
     .map((p) => ({ lat: p.lat, lng: p.lng, label: p.reason }));
 
   const handlePlanConfirm = (level: ChangeLevel) => {
@@ -128,8 +169,58 @@ export default function MapScreen(props: MapScreenProps) {
                     −{scenario.summary.maxDropC.toFixed(1)}°C
                   </span>
                   {" "}peak · {scenario.summary.affectedCells} cells · {scenario.placements.length} actions
-                  (trees + water, capped).
+                  (trees + water{scenario.placements.some((p) => p.kind === "cool_roof") ? " + roofs" : ""}, capped).
                 </p>
+              )}
+            </div>
+          )}
+          <div className="flex flex-wrap gap-1">
+            {([
+              ["heat", "Heat"],
+              ["water", "Water"],
+              ["path", "Path"],
+              ["canopy", "Gaps"],
+              ["roofs", "Roofs"],
+            ] as const).map(([key, label]) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setLayers((l) => ({ ...l, [key]: !l[key] }))}
+                className={`rounded-full px-2 py-0.5 text-[10px] font-bold shadow ${
+                  layers[key] ? "bg-orange-500 text-white" : "bg-slate-900/80 text-white/70"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {layers.canopy && (
+            <div className="rounded-xl bg-[var(--hitr-surface)] px-3 py-2 text-[11px] text-slate-700 shadow-md ring-1 ring-slate-200 dark:text-slate-200 dark:ring-slate-600">
+              <p>Canopy gaps: {canopyGaps.length} suggested tree clusters (no canopy within 60 m).</p>
+              {canopyGaps.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setScenarioMode("after")}
+                  className="mt-1 rounded-full bg-emerald-600 px-2.5 py-0.5 text-[10px] font-bold text-white"
+                >
+                  Plant suggested clusters
+                </button>
+              )}
+            </div>
+          )}
+          {layers.roofs && (
+            <div className="rounded-xl bg-[var(--hitr-surface)] px-3 py-2 text-[11px] text-slate-700 shadow-md ring-1 ring-slate-200 dark:text-slate-200 dark:ring-slate-600">
+              {roofTargets.length === 0
+                ? "No cool-roof targets — need building footprints (tap a spot so the 3D twin can load)."
+                : `${roofTargets.length} roof targets (must sit on a building).`}
+              {roofTargets.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setScenarioMode("after")}
+                  className="mt-1 block rounded-full bg-violet-600 px-2.5 py-0.5 text-[10px] font-bold text-white"
+                >
+                  Apply cool-roof set
+                </button>
               )}
             </div>
           )}

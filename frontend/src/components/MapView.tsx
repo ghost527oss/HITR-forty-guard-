@@ -45,11 +45,20 @@ interface MapViewProps {
   picked?: { lat: number; lng: number } | null;
   coolPath?: { from: { lat: number; lng: number }; to: { lat: number; lng: number } } | null;
   waterStations?: MapOverlayPoint[] | null;
+  canopyGaps?: MapOverlayPoint[] | null;
+  roofTargets?: MapOverlayPoint[] | null;
+  showHeat?: boolean;
+  showWater?: boolean;
+  showCoolPath?: boolean;
+  showCanopy?: boolean;
+  showRoofs?: boolean;
 }
 
 export default function MapView({
   center, zoom, onPick, onBoxSelected, heatData, selectionBox, picked,
   coolPath = null, waterStations = null,
+  canopyGaps = null, roofTargets = null,
+  showHeat = true, showWater = true, showCoolPath = true, showCanopy = false, showRoofs = false,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -190,13 +199,16 @@ export default function MapView({
         if (map.getLayer("cool-path-line")) map.removeLayer("cool-path-line");
         map.removeSource("cool-path");
       }
+      if (map.getLayer("cool-path-line")) {
+        map.setLayoutProperty("cool-path-line", "visibility", showCoolPath ? "visible" : "none");
+      }
     };
     if (!map.isStyleLoaded()) {
       map.once("load", apply);
       return;
     }
     apply();
-  }, [coolPath]);
+  }, [coolPath, showCoolPath]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -224,13 +236,84 @@ export default function MapView({
           },
         });
       }
+      if (map.getLayer("water-refuges-dots")) {
+        map.setLayoutProperty("water-refuges-dots", "visibility", showWater ? "visible" : "none");
+      }
     };
     if (!map.isStyleLoaded()) {
       map.once("load", apply);
       return;
     }
     apply();
-  }, [waterStations]);
+  }, [waterStations, showWater]);
+
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const vis = (on: boolean) => (on ? "visible" : "none");
+    const apply = () => {
+      for (const id of ["heat-tiles", "heat-tile-borders", "heat-3d-buildings", "tree-3d-canopy"]) {
+        if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", vis(showHeat));
+      }
+      if (map.getLayer("cool-path-line")) map.setLayoutProperty("cool-path-line", "visibility", vis(showCoolPath));
+      if (map.getLayer("water-refuges-dots")) map.setLayoutProperty("water-refuges-dots", "visibility", vis(showWater));
+      if (map.getLayer("canopy-gaps-dots")) map.setLayoutProperty("canopy-gaps-dots", "visibility", vis(showCanopy));
+      if (map.getLayer("roof-targets-dots")) map.setLayoutProperty("roof-targets-dots", "visibility", vis(showRoofs));
+    };
+    if (!map.isStyleLoaded()) {
+      map.once("load", apply);
+      return;
+    }
+    apply();
+  }, [showHeat, showCoolPath, showWater, showCanopy, showRoofs, heatData, coolPath, waterStations, canopyGaps, roofTargets]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const paintDots = (
+      sourceId: string,
+      layerId: string,
+      pts: MapOverlayPoint[] | null,
+      color: string,
+      visible: boolean,
+    ) => {
+      const features = (pts ?? []).map((w) => ({
+        type: "Feature" as const,
+        geometry: { type: "Point" as const, coordinates: [w.lng, w.lat] },
+        properties: { label: w.label ?? "" },
+      }));
+      const fc: GeoJSON.FeatureCollection = { type: "FeatureCollection", features };
+      if (map.getSource(sourceId)) {
+        (map.getSource(sourceId) as maplibregl.GeoJSONSource).setData(fc);
+      } else {
+        map.addSource(sourceId, { type: "geojson", data: fc });
+        map.addLayer({
+          id: layerId,
+          type: "circle",
+          source: sourceId,
+          paint: {
+            "circle-radius": 6,
+            "circle-color": color,
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#ffffff",
+          },
+        });
+      }
+      if (map.getLayer(layerId)) {
+        map.setLayoutProperty(layerId, "visibility", visible ? "visible" : "none");
+      }
+    };
+    const apply = () => {
+      paintDots("canopy-gaps", "canopy-gaps-dots", canopyGaps, "#16a34a", showCanopy);
+      paintDots("roof-targets", "roof-targets-dots", roofTargets, "#a855f7", showRoofs);
+    };
+    if (!map.isStyleLoaded()) {
+      map.once("load", apply);
+      return;
+    }
+    apply();
+  }, [canopyGaps, roofTargets, showCanopy, showRoofs]);
 
   // Toggle 3D pitch/tilt mode (55 degree camera pitch tilt towards target)
   const toggle3DMode = () => {

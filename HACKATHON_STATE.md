@@ -23,7 +23,8 @@ Home, map heat overlay, tap-to-spot, planner levels 0–4, Design Studio, Knowle
 **Batch 1:** Now/After scenario overlay, spot diagnosis card, priority list.  
 **Batch 2:** Heat-surface time chips, PMV walk comfort, heatwave mode (Open-Meteo + P2 rules).  
 **Batch 3:** Walk-to-cool path, Fix this hotspot CTA, water-refuge pins.  
-**Batch 4:** Peak vs now, seasonal surface chips, Rebuild honesty banner.
+**Batch 4:** Peak vs now, seasonal surface chips, Rebuild honesty banner.  
+**Batch 5:** Canopy gaps, cool-roof targets, analysis layer toggles.
 
 ## Feature roadmap (from PRODUCT_FEATURE_PLAN.md)
 
@@ -41,7 +42,21 @@ Home, map heat overlay, tap-to-spot, planner levels 0–4, Design Studio, Knowle
 | 16 | Peak vs now | COMPLETED |
 | 21 | Seasonal surface | COMPLETED |
 | 25 | Rebuild honesty | COMPLETED |
+| 9 | Canopy gap layer | COMPLETED |
+| 10 | Cool-roof targets | COMPLETED |
+| 15 | Analysis layer toggles | COMPLETED |
 | others | see PRODUCT_FEATURE_PLAN.md | NOT STARTED |
+
+## Completed work — Batch 5
+
+### Canopy gap
+- Tree-cluster suggestions as green dots; Plant → After overlay.
+
+### Cool roofs
+- `cool_roof` only with simulation buildings; empty copy if twin missing.
+
+### Layers
+- Heat, Water, Path, Gaps, Roofs visibility on MapView.
 
 ## Completed work — Batch 4
 
@@ -127,15 +142,15 @@ Never put keys in `frontend/` or `VITE_*`.
 ## Agent handoff
 
 ```
-CURRENT DEVELOPMENT BATCH: 3 COMPLETE
-FEATURES COMPLETED: overlay/diagnosis/priority; time scrubber; PMV; heatwave; walk-to-cool; fix-hotspot; water-refuge
+CURRENT DEVELOPMENT BATCH: 5 COMPLETE
+FEATURES COMPLETED: batches 1–5 (see table)
 FEATURES CURRENTLY IN PROGRESS: none
-NEXT 3 FEATURES: see PRODUCT_FEATURE_PLAN.md (do not start until asked)
-IMPORTANT FILES: mapScenario.ts, MapView.tsx, MapScreen.tsx, HeatSurfaceScreen.tsx, App.tsx, BottomBar.tsx
+NEXT 3 FEATURES: FortyGuard job chip (17), Block brief export (18), Heat-adjusted hydration (24)
+IMPORTANT FILES: mapScenario.ts, MapView.tsx, MapScreen.tsx
 IMPORTANT ARCHITECTURAL DECISIONS:
-  - Cooler tile = mean−1.5°F, skip <8 m, existing heat grid only.
-  - Fix-hotspot calls getPlan(lat,lng,1) with cluster coords, not React picked.
-  - Water pins reuse suggestPlacements water_station from buildMapScenario.
+  - Cool roofs never invent buildings; sim 3D miss → empty roofs.
+  - Layer chips only toggle visibility; they do not refetch.
 KNOWN PROBLEMS: live FortyGuard unverified; Open-Meteo needs network
 LAST VERIFIED STATE: tsc + mapScenario vitest (2026-08-30)
 ```
+

@@ -1,6 +1,6 @@
 # HITR product strategy & feature plan
 
-**Implementation status:** Batches 1–4 COMPLETE (2026-08-30). Batch 4: **16 Peak vs now**, **21 Seasonal surface**, **25 Rebuild honesty**. Wait before Batch 5.
+**Implementation status:** Batches 1–5 COMPLETE (2026-08-30). Batch 5: **9 Canopy gap**, **10 Cool-roof targets**, **15 Analysis layers**. Wait before Batch 6.
 
 **Code stays frozen until you pick features.** This document is strategy + implementable ideas only.
 

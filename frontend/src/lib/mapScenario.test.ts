@@ -60,4 +60,19 @@ describe("buildMapScenario", () => {
       expect(s!.summary.cells).toHaveLength(cells.length);
     }
   });
+
+  it("places cool roofs only on buildings", () => {
+    const cells: HeatCell[] = [];
+    for (let i = 0; i < 6; i++) {
+      for (let j = 0; j < 6; j++) {
+        cells.push(cell(34 + i * 0.002, -118 + j * 0.002, 100 + i));
+      }
+    }
+    expect(buildMapScenario(cells)!.placements.some((p) => p.kind === "cool_roof")).toBe(false);
+    const withB = buildMapScenario(cells, {
+      vegetation: [],
+      buildings: cells.map((c) => ({ lat: c.lat, lng: c.lng, height_m: 18 })),
+    });
+    expect(withB!.placements.some((p) => p.kind === "cool_roof")).toBe(true);
+  });
 });
