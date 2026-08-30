@@ -26,7 +26,8 @@ Home, map heat overlay, tap-to-spot, planner levels 0–4, Design Studio, Knowle
 **Batch 4:** Peak vs now, seasonal surface chips, Rebuild honesty banner.  
 **Batch 5:** Canopy gaps, cool-roof targets, analysis layer toggles.  
 **Batch 6:** FortyGuard job chip, block brief export, heat-adjusted hydration.  
-**Batch 7:** Budget pack, cited why, Plan A vs B.
+**Batch 7:** Budget pack, cited why, Plan A vs B.  
+**Batch 8:** Designs for this spot, equity lens, breeze assist.
 
 ## Feature roadmap (from PRODUCT_FEATURE_PLAN.md)
 
@@ -53,6 +54,9 @@ Home, map heat overlay, tap-to-spot, planner levels 0–4, Design Studio, Knowle
 | 4 | Budget pack | COMPLETED |
 | 13 | Cited why | COMPLETED |
 | 5 | Plan A vs B | COMPLETED |
+| 14 | Design for this spot | COMPLETED |
+| 19 | Equity lens | COMPLETED |
+| 20 | Breeze assist | COMPLETED |
 | others | see PRODUCT_FEATURE_PLAN.md | NOT STARTED |
 
 ## Completed work — Batch 5
@@ -150,18 +154,19 @@ Never put keys in `frontend/` or `VITE_*`.
 ## Agent handoff
 
 ```
-CURRENT DEVELOPMENT BATCH: 7 COMPLETE
-FEATURES COMPLETED: batches 1–7 (see table)
+CURRENT DEVELOPMENT BATCH: 8 COMPLETE
+FEATURES COMPLETED: batches 1–8 (see table)
 FEATURES CURRENTLY IN PROGRESS: none
-NEXT 3 FEATURES: Design for this spot (14), Equity lens (19), Breeze assist (20)
-IMPORTANT FILES: mapScenario.ts, MapScreen.tsx, PlannerScreen.tsx, encyclopediaCite.ts, studioCompare.ts, DesignStudioScreen.tsx
+NEXT 3 FEATURES: Drop intervention (22) is the last numbered plan item; then polish only
+IMPORTANT FILES: spotDesigns.ts, exposureScore.ts, breezeHint.ts, BottomBar.tsx, MapScreen.tsx
 IMPORTANT ARCHITECTURAL DECISIONS:
-  - Budget filters existing placements; does not invent extra cooling.
-  - Cite miss is shown honestly; no LLM fill-in.
-  - A/B is localStorage of Studio placements + DesignSummary numbers.
+  - Designs scored from catalogue climate + land zone; no new API.
+  - Equity uses vegetation/hospitals from existing 3D twin; no census.
+  - Breeze is copy + compass; no fake pin offset.
 KNOWN PROBLEMS: live FortyGuard unverified; Open-Meteo needs network
-LAST VERIFIED STATE: tsc + vitest mapScenario/cite/studioCompare (2026-08-30)
+LAST VERIFIED STATE: tsc + vitest spotDesigns/exposure/breeze (2026-08-30)
 ```
+
 
 
 

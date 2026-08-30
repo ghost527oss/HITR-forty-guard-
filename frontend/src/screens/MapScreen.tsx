@@ -10,6 +10,7 @@ import type { HeatReading, HeatCell, LandInfo, ChangeLevel, PatternAnalysis, Wea
 import { getCitySimulation3D } from "../api";
 import type { HeatwaveStatus, PlacementContext } from "../planner/uhiFactors";
 import { buildMapScenario, nearestCoolerTile, scenarioAtBudget, type BudgetTier } from "../lib/mapScenario";
+import { rankExposureCells } from "../lib/exposureScore";
 
 interface Center {
   lat: number;
@@ -95,6 +96,10 @@ export default function MapScreen(props: MapScreenProps) {
   const scenario = useMemo(
     () => (heatData && fullScenario ? scenarioAtBudget(heatData, fullScenario, budget) : null),
     [heatData, fullScenario, budget],
+  );
+  const exposure = useMemo(
+    () => (heatData && heatData.length ? rankExposureCells(heatData, placeCtx, 3) : []),
+    [heatData, placeCtx],
   );
   const displayHeat = scenarioMode === "after" && scenario?.placements.length
     ? scenario.summary.cells
@@ -272,6 +277,30 @@ export default function MapScreen(props: MapScreenProps) {
                         #{i + 1} {Math.round(c.temp_f)}°F
                       </span>
                       <span className="text-slate-500">{c.risk}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+          {exposure.length > 0 && (
+            <div className="rounded-xl bg-[var(--hitr-surface)] px-2.5 py-2 shadow-md ring-1 ring-slate-200 dark:ring-slate-600">
+              <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-slate-400">Priority people</p>
+              <ul className="space-y-1">
+                {exposure.map((e, i) => (
+                  <li key={`eq-${e.cell.lat}-${e.cell.lng}`}>
+                    <button
+                      type="button"
+                      onClick={() => onPick(e.cell.lat, e.cell.lng)}
+                      className="flex w-full items-center justify-between rounded-lg px-1.5 py-1 text-left text-[11px] hover:bg-slate-100 dark:hover:bg-slate-700"
+                    >
+                      <span className="font-semibold text-slate-800 dark:text-slate-100">
+                        #{i + 1} {Math.round(e.cell.temp_f)}°F
+                      </span>
+                      <span className="text-slate-500">
+                        {e.canopyGap ? "no canopy" : "has trees"}
+                        {e.hospitalM != null ? ` · ${Math.round(e.hospitalM)} m hospital` : ""}
+                      </span>
                     </button>
                   </li>
                 ))}

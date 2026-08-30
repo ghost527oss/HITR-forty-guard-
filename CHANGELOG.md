@@ -5,6 +5,11 @@ All notable changes to this project are documented here. Format inspired by
 
 ## [Unreleased]
 
+### Added — Batch 8 (designs for this spot, equity lens, breeze assist)
+- BottomBar: 3 library designs scored from spot temp + land kind (existing 100-design catalogue).
+- Map: Priority people = heat percentile × canopy gap × inverse hospital distance (no census).
+- BottomBar: Open-Meteo wind compass + windward planting hint.
+
 ### Added — Batch 7 (budget pack, cited why, Plan A vs B)
 - Map Low/Med/High budget packs the existing tree/water/roof suggestions and re-simulates After.
 - Planner Learn why: encyclopedia snippet by intervention key (miss is honest).

@@ -1,6 +1,8 @@
 import type { HeatReading, LandInfo, PatternAnalysis, WeatherNow } from "../api";
 import type { Units } from "../App";
 import { pmvFanger, ppdFromPmv, pmvLabel } from "../planner/uhiFactors";
+import { matchDesignsForSpot } from "../lib/spotDesigns";
+import { breezeHint } from "../lib/breezeHint";
 
 interface BottomBarProps {
   picked: { lat: number; lng: number } | null;
@@ -116,6 +118,23 @@ export default function BottomBar({ picked, reading, land, loading, units, onVie
           <p className="mt-1 text-[11px] text-teal-700 dark:text-teal-300">
             Nearest cooler tile: {Math.round(coolWalk.meters)} m · {Math.round(coolWalk.cell.temp_f)}°F (teal path)
           </p>
+        )}
+        {picked && !loading && weather && (
+          <p className="mt-1 text-[11px] text-sky-800 dark:text-sky-300">{breezeHint(weather.wind_dir, weather.wind_ms)}</p>
+        )}
+        {picked && !loading && reading && (
+          <div className="mt-2 border-t border-slate-200 pt-2 dark:border-slate-600">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Designs for this spot</p>
+            <ul className="mt-1 space-y-1">
+              {matchDesignsForSpot(reading.temp_f, land?.kind ?? "other").map((d) => (
+                <li key={d.id} className="text-[11px] text-slate-700 dark:text-slate-200">
+                  <span className="font-semibold">{d.name}</span>
+                  {" · "}
+                  {d.tempDropEstimate} °C · {d.costLevel}
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </div>
     </footer>

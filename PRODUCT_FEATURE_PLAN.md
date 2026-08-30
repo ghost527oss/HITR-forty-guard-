@@ -1,6 +1,6 @@
 # HITR product strategy & feature plan
 
-**Implementation status:** Batches 1–7 COMPLETE (2026-08-30). Batch 7: **4 Budget pack**, **13 Cited why**, **5 Plan A vs B**. Wait before Batch 8.
+**Implementation status:** Batches 1–8 COMPLETE (2026-08-30). Batch 8: **14 Design for this spot**, **19 Equity lens**, **20 Breeze assist**. Wait before Batch 9.
 
 **Code stays frozen until you pick features.** This document is strategy + implementable ideas only.
 
