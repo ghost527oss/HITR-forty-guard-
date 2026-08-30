@@ -31,7 +31,7 @@ import {
 } from "./api";
 import { heatwaveStatus } from "./planner/uhiFactors";
 import { loadHeatGrid } from "./components/MapView";
-import { loadRealHeatGrid } from "./lib/realHeat";
+import { loadRealHeatGrid, RealHeatUnavailable, type HeatJobPhase } from "./lib/realHeat";
 import type { View } from "./nav";
 
 export type Units = "imperial" | "metric";
@@ -72,6 +72,7 @@ export default function App() {
   // Which provider produced `heatData`. Drives the map's source badge.
   const [heatSource, setHeatSource] = useState<"mock" | "fortyguard">("mock");
   const [heatUnavailable, setHeatUnavailable] = useState<string | null>(null);
+  const [heatJob, setHeatJob] = useState<HeatJobPhase | "mock">("mock");
   const [units, setUnits] = useState<Units>("imperial");
   const [webSearchEnabled, setWebSearchEnabled] = useState(() => localStorage.getItem("hitr.google-search") === "true");
   const [allowMockHeat, setAllowMockHeat] = useState(() => localStorage.getItem("hitr.allow-mock-heat") !== "false");
@@ -135,6 +136,7 @@ export default function App() {
     let cancelled = false;
     let realArrived = false;
     setHeatUnavailable(null);
+    setHeatJob(allowMockHeat ? "mock" : "processing");
 
     if (allowMockHeat) {
       setHeatSource("mock");
@@ -151,7 +153,11 @@ export default function App() {
       setHeatData(null);
     }
 
-    loadRealHeatGrid(center.lat, center.lng)
+    loadRealHeatGrid(center.lat, center.lng, 0.04, {
+      onStatus: (phase) => {
+        if (!cancelled) setHeatJob(phase);
+      },
+    })
       .then((pts) => {
         if (cancelled) return;
         if (pts && pts.length > 0) {
@@ -175,8 +181,10 @@ export default function App() {
           );
         }
       })
-      .catch(() => {
+      .catch((err) => {
         if (cancelled) return;
+        if (err instanceof RealHeatUnavailable) setHeatJob("unavailable");
+        else setHeatJob("failed");
         if (allowMockHeat) {
           loadHeatGrid(center.lat, center.lng).then((mockPts) => {
             if (!cancelled && mockPts && mockPts.length > 0) {
@@ -187,7 +195,9 @@ export default function App() {
         } else {
           setHeatData(null);
           setHeatUnavailable(
-            "Real FortyGuard heat is unavailable (missing or invalid API key). Turn on Auto-fallback Mock Heat Grid in Settings to view sample tiles.",
+            err instanceof RealHeatUnavailable
+              ? "Real FortyGuard heat is unavailable (missing or invalid API key). Turn on Auto-fallback Mock Heat Grid in Settings to view sample tiles."
+              : (err?.message ?? "FortyGuard job failed."),
           );
         }
       });
@@ -344,6 +354,7 @@ export default function App() {
             onNavigate={setView}
             location={title}
             heatwave={heatwave}
+            weather={weather}
             temp={reading
               ? (units === "imperial"
                   ? `${reading.temp_f}°F`
@@ -369,6 +380,7 @@ export default function App() {
             heatData={heatData}
             heatSource={heatSource}
             heatUnavailable={heatUnavailable}
+            heatJob={heatJob}
             pattern={pattern}
             weather={weather}
             heatwave={heatwave}
@@ -420,6 +432,11 @@ export default function App() {
             hasPicked={!!picked}
             onGoMap={() => setView("map")}
             lightCompare={lightCompare}
+            locationName={title}
+            picked={picked}
+            reading={reading}
+            land={land}
+            pattern={pattern}
           />
         )}
 

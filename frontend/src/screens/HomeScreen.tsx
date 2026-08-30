@@ -15,21 +15,27 @@ import {
 } from "lucide-react";
 import type { View } from "../nav";
 import type { HeatwaveStatus } from "../planner/uhiFactors";
+import type { WeatherNow } from "../api";
+import { dailyWaterGoalMl } from "../lib/hydrationGoal";
 
 interface HomeScreenProps {
   onNavigate: (v: View) => void;
   location: string;
   temp: string;
   heatwave?: HeatwaveStatus | null;
+  weather?: WeatherNow | null;
 }
 
-export default function HomeScreen({ onNavigate, location, temp, heatwave = null }: HomeScreenProps) {
+export default function HomeScreen({ onNavigate, location, temp, heatwave = null, weather = null }: HomeScreenProps) {
   // Water hydration tracking state
   const [waterMl, setWaterMl] = useState(() => {
     const saved = localStorage.getItem("hitr.water-ml");
     return saved ? parseInt(saved, 10) : 1000;
   });
-  const goalMl = 2500;
+  const goalMl = dailyWaterGoalMl(
+    weather?.days?.[0]?.t_max_c,
+    heatwave?.level === "alert",
+  );
 
   useEffect(() => {
     localStorage.setItem("hitr.water-ml", waterMl.toString());
@@ -134,7 +140,13 @@ export default function HomeScreen({ onNavigate, location, temp, heatwave = null
                 </div>
                 <div>
                   <div className="text-xs font-bold text-slate-900 dark:text-white">Hydration Tracker</div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400">Target: {goalMl} ml / day</div>
+                  <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Target: {goalMl} ml / day
+                    {weather?.days?.[0]
+                      ? ` · today max ${Math.round(weather.days[0].t_max_c)}°C`
+                      : " · default 2500 (no forecast)"}
+                    {heatwave?.level === "alert" ? " · heatwave +500 ml" : ""}
+                  </div>
                 </div>
               </div>
               <button

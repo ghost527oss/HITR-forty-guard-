@@ -5,6 +5,11 @@ All notable changes to this project are documented here. Format inspired by
 
 ## [Unreleased]
 
+### Added — Batch 6 (FortyGuard job chip, block brief, heat-adjusted hydration)
+- Map chip: processing / ready / failed / unavailable / mock. Mock underlay stays while real job polls. Failures are not hidden.
+- Planner: Copy block brief (markdown: spot, temps, top 3 actions, scale). Clipboard, else download.
+- Home water goal from today's Open-Meteo max + heatwave alert (not a static 2500).
+
 ### Added — Batch 5 (canopy gaps, cool-roof pins, analysis layers)
 - Map layer chips: Heat / Water / Path / Gaps / Roofs independently.
 - Canopy-gap dots = `suggestPlacements` tree clusters; Plant suggested clusters → After overlay.

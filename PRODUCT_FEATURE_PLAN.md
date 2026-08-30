@@ -1,6 +1,6 @@
 # HITR product strategy & feature plan
 
-**Implementation status:** Batches 1–5 COMPLETE (2026-08-30). Batch 5: **9 Canopy gap**, **10 Cool-roof targets**, **15 Analysis layers**. Wait before Batch 6.
+**Implementation status:** Batches 1–6 COMPLETE (2026-08-30). Batch 6: **17 FortyGuard job chip**, **18 Block brief**, **24 Heat-adjusted hydration**. Wait before Batch 7.
 
 **Code stays frozen until you pick features.** This document is strategy + implementable ideas only.
 

@@ -2,8 +2,12 @@ import { Eye, HardHat, Info, MapPin } from "lucide-react";
 import {
   CHANGE_LEVELS,
   type ChangeLevel,
+  type HeatReading,
+  type LandInfo,
+  type PatternAnalysis,
   type Plan,
 } from "../api";
+import { formatBlockBrief } from "../lib/blockBrief";
 
 interface PlannerScreenProps {
   changeLevel: ChangeLevel;
@@ -14,6 +18,11 @@ interface PlannerScreenProps {
   hasPicked: boolean;
   onGoMap: () => void;
   lightCompare?: Plan | null;
+  locationName?: string;
+  picked?: { lat: number; lng: number } | null;
+  reading?: HeatReading | null;
+  land?: LandInfo | null;
+  pattern?: PatternAnalysis | null;
 }
 
 const COST_COLOR: Record<string, string> = {
@@ -23,7 +32,7 @@ const COST_COLOR: Record<string, string> = {
 };
 
 export default function PlannerScreen(props: PlannerScreenProps) {
-  const { changeLevel, onSetChangeLevel, plan, loading, onGenerate, hasPicked, onGoMap, lightCompare = null } = props;
+  const { changeLevel, onSetChangeLevel, plan, loading, onGenerate, hasPicked, onGoMap, lightCompare = null, locationName = "Selected block", picked = null, reading = null, land = null, pattern = null } = props;
   const activeLevel = CHANGE_LEVELS.find((l) => l.value === changeLevel);
 
   return (
@@ -75,6 +84,48 @@ export default function PlannerScreen(props: PlannerScreenProps) {
             className="w-full rounded-2xl bg-slate-900 dark:bg-white py-3.5 text-xs font-bold text-white dark:text-slate-900 shadow-md hover:bg-orange-600 dark:hover:bg-orange-500 dark:hover:text-white transition-all disabled:opacity-50"
           >
             {loading ? "Calculating Spatial Plan…" : "Generate Resilience Plan"}
+          </button>
+        )}
+
+        {plan && plan.change_level === 4 && (
+          <div className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-xs text-amber-950 dark:border-amber-800 dark:bg-amber-950/50 dark:text-amber-100">
+            <p className="font-bold uppercase tracking-wide">Rebuild honesty</p>
+            <p className="mt-1 font-semibold">Touches street grid / zoning / utilities — not a paint job.</p>
+            {lightCompare ? (
+              <p className="mt-1">
+                Same block: Light has {lightCompare.interventions.length} surface actions
+                ({lightCompare.scale.touches}). Rebuild lists {plan.interventions.length} actions
+                ({plan.scale.touches}). Peak temp at this spot is still {plan.temp_f}°F until work is built —
+                the engine does not invent a bigger °C drop for a bigger map.
+              </p>
+            ) : (
+              <p className="mt-1">
+                Peak at this spot is {plan.temp_f}°F. Rebuild changes what the city *is*, not a fake extra °C vs Light.
+              </p>
+            )}
+          </div>
+        )}
+
+        {plan && (
+          <button
+            type="button"
+            onClick={async () => {
+              const md = formatBlockBrief({ location: locationName, picked, reading, land, pattern, plan });
+              try {
+                await navigator.clipboard.writeText(md);
+              } catch {
+                const blob = new Blob([md], { type: "text/markdown" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "hitr-block-brief.md";
+                a.click();
+                URL.revokeObjectURL(url);
+              }
+            }}
+            className="w-full rounded-2xl bg-white py-2.5 text-xs font-bold text-slate-800 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-white dark:ring-slate-600"
+          >
+            Copy block brief
           </button>
         )}
 

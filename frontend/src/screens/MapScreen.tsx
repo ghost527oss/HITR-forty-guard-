@@ -33,6 +33,7 @@ interface MapScreenProps {
   onViewSurface?: () => void;
   heatSource?: "mock" | "fortyguard";
   heatUnavailable?: string | null;
+  heatJob?: "processing" | "ready" | "failed" | "unavailable" | "mock";
   pattern?: PatternAnalysis | null;
   weather?: WeatherNow | null;
   heatwave?: HeatwaveStatus | null;
@@ -48,7 +49,7 @@ interface MapScreenProps {
 export default function MapScreen(props: MapScreenProps) {
   const {
     center, zoom, title, onSearch, onPick, onClearPick, picked, reading,
-    land, loading, units, onToggleUnits, heatData, heatSource, heatUnavailable, pattern, weather, heatwave, onViewSurface,
+    land, loading, units, onToggleUnits, heatData, heatSource, heatUnavailable, heatJob = "mock", pattern, weather, heatwave, onViewSurface,
     onAssistant, onSOS, onDatabase, onGeneratePlan, planLoading,
   } = props;
   const [planSheetOpen, setPlanSheetOpen] = useState(false);
@@ -140,6 +141,21 @@ export default function MapScreen(props: MapScreenProps) {
         waterStations={waterStations}
       />
       <TopBar title={title} onSearch={onSearch} units={units} onToggleUnits={onToggleUnits} />
+      <div className="pointer-events-none absolute right-3 top-16 z-20">
+        <span className={`pointer-events-auto rounded-full px-2.5 py-1 text-[10px] font-bold shadow ${
+          heatJob === "ready" ? "bg-emerald-600 text-white"
+            : heatJob === "processing" ? "bg-amber-500 text-white"
+              : heatJob === "failed" ? "bg-rose-600 text-white"
+                : heatJob === "unavailable" ? "bg-slate-700 text-white"
+                  : "bg-slate-900/80 text-white/80"
+        }`}>
+          {heatJob === "ready" ? "FortyGuard ready"
+            : heatJob === "processing" ? "FortyGuard processing…"
+              : heatJob === "failed" ? "FortyGuard failed"
+                : heatJob === "unavailable" ? "FortyGuard: no key"
+                  : "Overlay: mock"}
+        </span>
+      </div>
 
       {heatData && heatData.length > 0 && !heatUnavailable && (
         <div className="absolute left-3 top-16 z-20 flex max-w-[min(100%-1.5rem,20rem)] flex-col gap-2">

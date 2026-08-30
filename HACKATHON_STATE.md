@@ -24,7 +24,8 @@ Home, map heat overlay, tap-to-spot, planner levels 0–4, Design Studio, Knowle
 **Batch 2:** Heat-surface time chips, PMV walk comfort, heatwave mode (Open-Meteo + P2 rules).  
 **Batch 3:** Walk-to-cool path, Fix this hotspot CTA, water-refuge pins.  
 **Batch 4:** Peak vs now, seasonal surface chips, Rebuild honesty banner.  
-**Batch 5:** Canopy gaps, cool-roof targets, analysis layer toggles.
+**Batch 5:** Canopy gaps, cool-roof targets, analysis layer toggles.  
+**Batch 6:** FortyGuard job chip, block brief export, heat-adjusted hydration.
 
 ## Feature roadmap (from PRODUCT_FEATURE_PLAN.md)
 
@@ -45,6 +46,9 @@ Home, map heat overlay, tap-to-spot, planner levels 0–4, Design Studio, Knowle
 | 9 | Canopy gap layer | COMPLETED |
 | 10 | Cool-roof targets | COMPLETED |
 | 15 | Analysis layer toggles | COMPLETED |
+| 17 | FortyGuard job chip | COMPLETED |
+| 18 | Block brief export | COMPLETED |
+| 24 | Heat-adjusted hydration | COMPLETED |
 | others | see PRODUCT_FEATURE_PLAN.md | NOT STARTED |
 
 ## Completed work — Batch 5
@@ -142,15 +146,17 @@ Never put keys in `frontend/` or `VITE_*`.
 ## Agent handoff
 
 ```
-CURRENT DEVELOPMENT BATCH: 5 COMPLETE
-FEATURES COMPLETED: batches 1–5 (see table)
+CURRENT DEVELOPMENT BATCH: 6 COMPLETE
+FEATURES COMPLETED: batches 1–6 (see table)
 FEATURES CURRENTLY IN PROGRESS: none
-NEXT 3 FEATURES: FortyGuard job chip (17), Block brief export (18), Heat-adjusted hydration (24)
-IMPORTANT FILES: mapScenario.ts, MapView.tsx, MapScreen.tsx
+NEXT 3 FEATURES: Budget pack (4), Cited why (13), Plan A vs B (5)
+IMPORTANT FILES: realHeat.ts, App.tsx, MapScreen.tsx, PlannerScreen.tsx, HomeScreen.tsx, hydrationGoal.ts, blockBrief.ts
 IMPORTANT ARCHITECTURAL DECISIONS:
-  - Cool roofs never invent buildings; sim 3D miss → empty roofs.
-  - Layer chips only toggle visibility; they do not refetch.
+  - Job chip reports real status; mock underlay remains during processing.
+  - Brief is markdown copy, not a new backend.
+  - Hydration goal omitted extra ml if no forecast (stays 2500).
 KNOWN PROBLEMS: live FortyGuard unverified; Open-Meteo needs network
-LAST VERIFIED STATE: tsc + mapScenario vitest (2026-08-30)
+LAST VERIFIED STATE: tsc + vitest hydration/brief/realHeat (2026-08-30)
 ```
+
 
