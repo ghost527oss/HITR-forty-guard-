@@ -1,5 +1,6 @@
-import type { HeatReading, LandInfo, PatternAnalysis } from "../api";
+import type { HeatReading, LandInfo, PatternAnalysis, WeatherNow } from "../api";
 import type { Units } from "../App";
+import { pmvFanger, ppdFromPmv, pmvLabel } from "../planner/uhiFactors";
 
 interface BottomBarProps {
   picked: { lat: number; lng: number } | null;
@@ -11,10 +12,23 @@ interface BottomBarProps {
   /** Source of the heat overlay (not the spot reading). */
   heatSource?: "mock" | "fortyguard";
   pattern?: PatternAnalysis | null;
+  weather?: WeatherNow | null;
 }
 
 // Bottom bar showing the selected spot's live temperature + land use (structure first).
-export default function BottomBar({ picked, reading, land, loading, units, onViewSurface, heatSource = "mock", pattern = null }: BottomBarProps) {
+export default function BottomBar({ picked, reading, land, loading, units, onViewSurface, heatSource = "mock", pattern = null, weather = null }: BottomBarProps) {
+  const comfort = (() => {
+    if (!reading || !weather) return null;
+    const pmv = pmvFanger({
+      taC: reading.temp_c,
+      trC: reading.temp_c + 6,
+      va: Math.max(0.1, weather.wind_ms),
+      rh: weather.rh,
+    });
+    const label = pmvLabel(pmv);
+    return { pmv, ppd: ppdFromPmv(pmv), label };
+  })();
+
   return (
     <footer className="absolute bottom-0 left-0 right-0 z-10 p-3">
       <div className="mx-auto max-w-lg rounded-2xl bg-white/90 shadow-lg p-4 backdrop-blur dark:bg-[var(--hitr-surface)] dark:ring-1 dark:ring-slate-600/50">
@@ -73,6 +87,14 @@ export default function BottomBar({ picked, reading, land, loading, units, onVie
             <p className="text-[10px] font-bold uppercase tracking-wide text-slate-400">Why this tile</p>
             <p className="mt-0.5 text-xs font-semibold text-slate-800 dark:text-slate-100">{pattern.pattern_label}</p>
             <p className="mt-0.5 text-[11px] leading-snug text-slate-600 dark:text-slate-300">{pattern.summary}</p>
+          </div>
+        )}
+        {picked && !loading && comfort && (
+          <div className="mt-2 text-[11px] text-slate-600 dark:text-slate-300">
+            Walk comfort (PMV {comfort.pmv.toFixed(1)}):{" "}
+            <span className="font-semibold">{comfort.label.text}</span>
+            {" · "}
+            {Math.round(comfort.ppd)}% dissatisfied · wind {weather?.wind_ms.toFixed(1)} m/s · RH {Math.round(weather?.rh ?? 0)}%
           </div>
         )}
       </div>

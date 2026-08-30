@@ -14,14 +14,16 @@ import {
   Trees,
 } from "lucide-react";
 import type { View } from "../nav";
+import type { HeatwaveStatus } from "../planner/uhiFactors";
 
 interface HomeScreenProps {
   onNavigate: (v: View) => void;
   location: string;
   temp: string;
+  heatwave?: HeatwaveStatus | null;
 }
 
-export default function HomeScreen({ onNavigate, location, temp }: HomeScreenProps) {
+export default function HomeScreen({ onNavigate, location, temp, heatwave = null }: HomeScreenProps) {
   // Water hydration tracking state
   const [waterMl, setWaterMl] = useState(() => {
     const saved = localStorage.getItem("hitr.water-ml");
@@ -113,6 +115,11 @@ export default function HomeScreen({ onNavigate, location, temp }: HomeScreenPro
           </span>
           <span className="text-[11px] text-slate-400">Region configured in Settings</span>
         </div>
+        {heatwave && heatwave.level !== "none" && (
+          <p className="mt-3 rounded-xl bg-rose-50 px-3 py-2 text-[11px] text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
+            {heatwave.level === "alert" ? "Heatwave" : "Heat watch"}: {heatwave.reason}
+          </p>
+        )}
       </div>
 
       {/* Utilities Grid: Hydration Tracker & Spatial Resilience Database Card */}

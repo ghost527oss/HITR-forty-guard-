@@ -1,6 +1,6 @@
 # HITR product strategy & feature plan
 
-**Implementation status:** Batch 1 COMPLETE (2026-08-30) — features **2 Scenario overlay**, **3 Spot diagnosis**, **1 Priority index**. Wait for instruction before Batch 2.
+**Implementation status:** Batch 1 COMPLETE. Batch 2 COMPLETE (2026-08-30) — **6 Time scrubber**, **7 PMV walk comfort**, **8 Heatwave mode**. Wait before Batch 3.
 
 **Code stays frozen until you pick features.** This document is strategy + implementable ideas only.
 
@@ -107,7 +107,7 @@ Difficulty = one focused builder, not a team. Times = hours, not calendar days.
 
 ---
 
-### 6. Hour-of-day heat (use the diurnal engine you already compute)
+### 6. Hour-of-day heat (use the diurnal engine you already compute) — COMPLETED
 
 1. **Name:** Time scrubber  
 2. **User:** Slider 0 / 6 / 12 / 18 on Heat Surface; grid + hotspot count update.  
@@ -122,7 +122,7 @@ Difficulty = one focused builder, not a team. Times = hours, not calendar days.
 
 ---
 
-### 7. Pedestrian comfort (PMV) on the picked street
+### 7. Pedestrian comfort (PMV) on the picked street — COMPLETED
 
 1. **Name:** Walk comfort  
 2. **User:** Spot card shows PMV/PPD: “Walking here: Hot · 78% dissatisfied” using live Open-Meteo wind/RH + tile temp.  
@@ -137,7 +137,7 @@ Difficulty = one focused builder, not a team. Times = hours, not calendar days.
 
 ---
 
-### 8. Heatwave-aware planning (3-day Open-Meteo)
+### 8. Heatwave-aware planning (3-day Open-Meteo) — COMPLETED
 
 1. **Name:** Heatwave mode  
 2. **User:** If `heatwaveStatus` is alert, Home + Map badge: “3-day heatwave — prioritize water + shade, not cool roofs.” Planner defaults to survival interventions.  

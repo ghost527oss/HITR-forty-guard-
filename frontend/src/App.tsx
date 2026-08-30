@@ -20,13 +20,16 @@ import {
   analyzeSpot,
   analyzePattern,
   getPlan,
+  getWeatherNow,
   type ChangeLevel,
   type HeatReading,
   type HeatCell,
   type LandInfo,
   type PatternAnalysis,
   type Plan,
+  type WeatherNow,
 } from "./api";
+import { heatwaveStatus } from "./planner/uhiFactors";
 import { loadHeatGrid } from "./components/MapView";
 import { loadRealHeatGrid } from "./lib/realHeat";
 import type { View } from "./nav";
@@ -63,6 +66,7 @@ export default function App() {
   const [reading, setReading] = useState<HeatReading | null>(null);
   const [land, setLand] = useState<LandInfo | null>(null);
   const [pattern, setPattern] = useState<PatternAnalysis | null>(null);
+  const [weather, setWeather] = useState<WeatherNow | null>(null);
   const [loading, setLoading] = useState(false);
   const [heatData, setHeatData] = useState<HeatCell[] | null>(null);
   // Which provider produced `heatData`. Drives the map's source badge.
@@ -98,6 +102,24 @@ export default function App() {
       });
     return () => { cancelled = true; };
   }, [center.lat, center.lng]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getWeatherNow(center.lat, center.lng)
+      .then((w) => {
+        if (!cancelled) setWeather(w);
+      })
+      .catch(() => {
+        if (!cancelled) setWeather(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [center.lat, center.lng]);
+
+  const heatwave = weather
+    ? heatwaveStatus(weather.days.map((d) => ({ tMaxC: d.t_max_c, tMinC: d.t_min_c })))
+    : null;
 
   // Heat grid, two phases.
   //
@@ -290,6 +312,7 @@ export default function App() {
           <HomeScreen
             onNavigate={setView}
             location={title}
+            heatwave={heatwave}
             temp={reading
               ? (units === "imperial"
                   ? `${reading.temp_f}°F`
@@ -316,6 +339,8 @@ export default function App() {
             heatSource={heatSource}
             heatUnavailable={heatUnavailable}
             pattern={pattern}
+            weather={weather}
+            heatwave={heatwave}
             onViewSurface={() => setView("heat_surface")}
             onAssistant={() => setView("assistant")}
             onSOS={() => setView("emergency")}

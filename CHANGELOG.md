@@ -5,6 +5,12 @@ All notable changes to this project are documented here. Format inspired by
 
 ## [Unreleased]
 
+### Added — Batch 2 (diurnal scrubber, PMV walk comfort, heatwave mode)
+- Heat Surface: hour chips 00/06/12/18 using existing `temporal.diurnal_sampling` (one fetch).
+- Optional `hour` query on `GET /api/analysis/surface` (default unchanged).
+- Map BottomBar: ISO 7730 PMV/PPD from Open-Meteo wind/RH + spot °C. Weather miss → no fake comfort.
+- Heatwave badge on Home + Map; Plan sheet recommends Light (water/shade) on official P2 alert.
+
 ### Added — Batch 1 map loop (Now/After, diagnosis, priority)
 Closes the map-session gap from `PRODUCT_FEATURE_PLAN.md` Tier 1 without new APIs:
 

@@ -6,7 +6,8 @@ import BottomBar from "../components/BottomBar";
 import HeatMapFAB from "../components/HeatMapFAB";
 import PlanSheet from "../components/PlanSheet";
 import type { Units } from "../App";
-import type { HeatReading, HeatCell, LandInfo, ChangeLevel, PatternAnalysis } from "../api";
+import type { HeatReading, HeatCell, LandInfo, ChangeLevel, PatternAnalysis, WeatherNow } from "../api";
+import type { HeatwaveStatus } from "../planner/uhiFactors";
 import { buildMapScenario } from "../lib/mapScenario";
 
 interface Center {
@@ -32,6 +33,8 @@ interface MapScreenProps {
   heatSource?: "mock" | "fortyguard";
   heatUnavailable?: string | null;
   pattern?: PatternAnalysis | null;
+  weather?: WeatherNow | null;
+  heatwave?: HeatwaveStatus | null;
   onAssistant?: () => void;
   onSOS?: () => void;
   onDatabase?: () => void;
@@ -44,7 +47,7 @@ interface MapScreenProps {
 export default function MapScreen(props: MapScreenProps) {
   const {
     center, zoom, title, onSearch, onPick, onClearPick, picked, reading,
-    land, loading, units, onToggleUnits, heatData, heatSource, heatUnavailable, pattern, onViewSurface,
+    land, loading, units, onToggleUnits, heatData, heatSource, heatUnavailable, pattern, weather, heatwave, onViewSurface,
     onAssistant, onSOS, onDatabase, onGeneratePlan, planLoading,
   } = props;
   const [planSheetOpen, setPlanSheetOpen] = useState(false);
@@ -151,6 +154,7 @@ export default function MapScreen(props: MapScreenProps) {
         onViewSurface={onViewSurface}
         heatSource={heatSource}
         pattern={pattern}
+        weather={weather}
       />
 
       {/* Two different things can be selected: the AREA you are looking at
@@ -189,6 +193,15 @@ export default function MapScreen(props: MapScreenProps) {
         onDatabase={onDatabase || (() => {})}
       />
 
+      {heatwave && heatwave.level !== "none" && (
+        <div className="pointer-events-none absolute inset-x-3 bottom-36 z-20">
+          <div className="rounded-xl bg-rose-700/95 px-3 py-2 text-[11px] font-medium text-white shadow-lg">
+            {heatwave.level === "alert" ? "Heatwave" : "Heat watch"} — {heatwave.reason}
+            {heatwave.level === "alert" ? " Prioritize water + shade (Light plan)." : ""}
+          </div>
+        </div>
+      )}
+
       <PlanSheet
         open={planSheetOpen}
         onClose={() => setPlanSheetOpen(false)}
@@ -196,6 +209,7 @@ export default function MapScreen(props: MapScreenProps) {
         hasPicked={!!picked}
         loading={planLoading}
         pickedTemp={reading?.temp_f ?? null}
+        heatwave={heatwave}
       />
     </div>
   );

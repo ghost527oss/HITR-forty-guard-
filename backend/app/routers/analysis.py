@@ -69,15 +69,15 @@ def heat_surface(
     lng: float = Query(..., ge=-180, le=180),
     radius_m: int = Query(100, ge=50, le=500),
     resolution: int = Query(10, ge=8, le=20),
+    hour: int | None = Query(None, ge=0, le=23),
 ):
     """
     3D temperature raster (the "heat surface" behind the map screen).
 
-    Inputs: lat, lng, radius_m (50-500), resolution (8-20 cells per side).
-    Outputs: grid_sample[] (cells), hotspots[], coolspots[], surface_min/max/avg,
-    temporal (diurnal + seasonal sampling).
+    Inputs: lat, lng, radius_m (50-500), resolution (8-20 cells per side),
+    optional hour (0-23) to apply the diurnal offset without nested temporal sampling.
     """
-    return compute_surface(lat, lng, radius_m, resolution)
+    return compute_surface(lat, lng, radius_m, resolution, hour=hour)
 
 
 @router.get("/simulation_3d")

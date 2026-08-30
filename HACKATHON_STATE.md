@@ -20,7 +20,8 @@ HITR (Heat Intelligence & Territorial Resilience) is a mobile-first web app: tap
 
 Home, map heat overlay, tap-to-spot, planner levels 0–4, Design Studio, Knowledge Set (100 designs), central assistant, emergency, heat surface, city simulation, settings (theme, palettes, mock toggle, units), mock fallback.
 
-**Batch 1 (this session):** Now/After scenario overlay, spot diagnosis card, priority list.
+**Batch 1:** Now/After scenario overlay, spot diagnosis card, priority list.  
+**Batch 2:** Heat-surface time chips, PMV walk comfort, heatwave mode (Open-Meteo + P2 rules).
 
 ## Feature roadmap (from PRODUCT_FEATURE_PLAN.md)
 
@@ -29,12 +30,26 @@ Home, map heat overlay, tap-to-spot, planner levels 0–4, Design Studio, Knowle
 | 2 | Scenario overlay Now/After | COMPLETED |
 | 3 | Spot diagnosis | COMPLETED |
 | 1 | Priority index MVP | COMPLETED |
-| 6 | Time scrubber | NOT STARTED |
-| 7 | PMV walk comfort | NOT STARTED |
-| 8 | Heatwave mode | NOT STARTED |
+| 6 | Time scrubber | COMPLETED |
+| 7 | PMV walk comfort | COMPLETED |
+| 8 | Heatwave mode | COMPLETED |
 | 12 | Walk-to-cool | NOT STARTED |
 | 23 | Fix this hotspot CTA | NOT STARTED |
 | others | see PRODUCT_FEATURE_PLAN.md | NOT STARTED |
+
+## Completed work — Batch 2
+
+### Time scrubber
+- Files: `HeatSurfaceScreen.tsx`, `analysis.py` (`hour` query, optional), `api.ts`
+- Uses `temporal.diurnal_sampling` from the default surface fetch.
+
+### Walk comfort
+- Files: `BottomBar.tsx`, `App.tsx` (`getWeatherNow` once per city)
+- PMV from `uhiFactors`; no weather → no comfort line.
+
+### Heatwave mode
+- Files: `App.tsx`, `HomeScreen.tsx`, `MapScreen.tsx`, `PlanSheet.tsx`
+- `heatwaveStatus` on 3-day Open-Meteo; Light recommended, not auto-applied.
 
 ## Completed work — Batch 1
 
@@ -56,7 +71,7 @@ Home, map heat overlay, tap-to-spot, planner levels 0–4, Design Studio, Knowle
 | API | Provides | Config | Fallback |
 |-----|----------|--------|----------|
 | FortyGuard | Area heatmap | `FORTYGUARD_API_KEY` env (Vercel / backend `.env`) | Mock grid if Settings mock ON; overlay message if OFF |
-| Open-Meteo | Weather | none | unused on map Batch 1 |
+| Open-Meteo | Weather / heatwave / PMV | none | hide PMV + heatwave UI |
 | OSM / Overpass | Land | none | Heuristic; skipped on Vercel for `/spot` |
 | Nominatim | Geocode | none | error banner |
 
