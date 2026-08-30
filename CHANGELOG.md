@@ -5,6 +5,9 @@ All notable changes to this project are documented here. Format inspired by
 
 ## [Unreleased]
 
+### Added — Batch 9 (drop intervention on the heat map)
+- Map tool chips: Drop tree / water / roof. Tap places a pin; After grid uses `simulateDesign` + `cellDropC`. Undo last drop. Not a second Design Studio.
+
 ### Added — Batch 8 (designs for this spot, equity lens, breeze assist)
 - BottomBar: 3 library designs scored from spot temp + land kind (existing 100-design catalogue).
 - Map: Priority people = heat percentile × canopy gap × inverse hospital distance (no census).

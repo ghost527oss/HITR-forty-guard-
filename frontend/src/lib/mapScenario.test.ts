@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { HeatCell } from "../api";
-import { buildMapScenario, nearestCoolerTile, packPlacementsByBudget, rankPriorityCells } from "./mapScenario";
+import { buildMapScenario, mergeManualDrops, nearestCoolerTile, packPlacementsByBudget, rankPriorityCells } from "./mapScenario";
 
 const cell = (lat: number, lng: number, f: number): HeatCell => ({
   lat,
@@ -85,5 +85,15 @@ describe("packPlacementsByBudget", () => {
       { id: "3", kind: "cool_roof", lat: 3, lng: 3 },
     ], "low");
     expect(packed.map((p) => p.kind)).toEqual(["tree_cluster"]);
+  });
+});
+
+describe("mergeManualDrops", () => {
+  it("adds a dropped tree and cools the site cell", () => {
+    const cells = [cell(34.05, -118.24, 104), cell(34.06, -118.24, 90)];
+    const m = mergeManualDrops(cells, [], [{ id: "d1", kind: "tree_cluster", lat: 34.05, lng: -118.24 }]);
+    expect(m.placements).toHaveLength(1);
+    expect(m.summary.maxDropC).toBeGreaterThan(0);
+    expect(m.summary.cells[0].temp_f).toBeLessThan(104);
   });
 });

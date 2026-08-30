@@ -79,3 +79,17 @@ export function scenarioAtBudget(
     priority: full.priority,
   };
 }
+
+/** Auto pack + user-dropped pins (same physics as Design Studio). */
+export function mergeManualDrops(
+  cells: HeatCell[],
+  auto: Placement[],
+  drops: Placement[],
+): MapScenario {
+  const placements = [...auto, ...drops];
+  return {
+    placements,
+    summary: simulateDesign(cells, placements),
+    priority: rankPriorityCells(cells, 3),
+  };
+}

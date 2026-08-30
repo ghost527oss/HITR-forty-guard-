@@ -8,8 +8,9 @@ import PlanSheet from "../components/PlanSheet";
 import type { Units } from "../App";
 import type { HeatReading, HeatCell, LandInfo, ChangeLevel, PatternAnalysis, WeatherNow } from "../api";
 import { getCitySimulation3D } from "../api";
-import type { HeatwaveStatus, PlacementContext } from "../planner/uhiFactors";
-import { buildMapScenario, nearestCoolerTile, scenarioAtBudget, type BudgetTier } from "../lib/mapScenario";
+import type { HeatwaveStatus, Placement, PlacementContext, PlacementKind } from "../planner/uhiFactors";
+import { cellDropC, PLACEMENT_META } from "../planner/uhiFactors";
+import { buildMapScenario, mergeManualDrops, nearestCoolerTile, scenarioAtBudget, type BudgetTier } from "../lib/mapScenario";
 import { rankExposureCells } from "../lib/exposureScore";
 
 interface Center {
@@ -65,6 +66,8 @@ export default function MapScreen(props: MapScreenProps) {
     canopy: false,
     roofs: false,
   });
+  const [dropTool, setDropTool] = useState<PlacementKind | null>(null);
+  const [drops, setDrops] = useState<Placement[]>([]);
 
   useEffect(() => {
     if (!picked) {
@@ -101,9 +104,32 @@ export default function MapScreen(props: MapScreenProps) {
     () => (heatData && heatData.length ? rankExposureCells(heatData, placeCtx, 3) : []),
     [heatData, placeCtx],
   );
-  const displayHeat = scenarioMode === "after" && scenario?.placements.length
-    ? scenario.summary.cells
+  const merged = useMemo(() => {
+    if (!heatData?.length) return null;
+    const auto = scenario?.placements ?? [];
+    if (!auto.length && !drops.length) return null;
+    return mergeManualDrops(heatData, auto, drops);
+  }, [heatData, scenario, drops]);
+
+  const displayHeat = scenarioMode === "after" && merged?.placements.length
+    ? merged.summary.cells
     : heatData;
+
+  const lastDropPreview = drops.length
+    ? cellDropC(drops[drops.length - 1], merged?.placements ?? drops)
+    : null;
+
+  const handleMapTap = (lat: number, lng: number) => {
+    if (dropTool) {
+      setDrops((prev) => [
+        ...prev,
+        { id: `drop-${Date.now()}-${prev.length}`, kind: dropTool, lat, lng },
+      ]);
+      setScenarioMode("after");
+      return;
+    }
+    onPick(lat, lng);
+  };
 
   const coolWalk = picked && heatData?.length
     ? nearestCoolerTile(picked, heatData)
@@ -111,13 +137,14 @@ export default function MapScreen(props: MapScreenProps) {
   const coolPath = picked && coolWalk
     ? { from: picked, to: { lat: coolWalk.cell.lat, lng: coolWalk.cell.lng } }
     : null;
-  const waterStations = (scenario?.placements ?? [])
+  const livePlacements = merged?.placements ?? scenario?.placements ?? [];
+  const waterStations = livePlacements
     .filter((p) => p.kind === "water_station")
     .map((p) => ({ lat: p.lat, lng: p.lng, label: p.reason }));
-  const canopyGaps = (scenario?.placements ?? [])
+  const canopyGaps = livePlacements
     .filter((p) => p.kind === "tree_cluster")
     .map((p) => ({ lat: p.lat, lng: p.lng, label: p.reason }));
-  const roofTargets = (scenario?.placements ?? [])
+  const roofTargets = livePlacements
     .filter((p) => p.kind === "cool_roof")
     .map((p) => ({ lat: p.lat, lng: p.lng, label: p.reason }));
 
@@ -142,7 +169,7 @@ export default function MapScreen(props: MapScreenProps) {
       <MapView
         center={center}
         zoom={zoom}
-        onPick={onPick}
+        onPick={handleMapTap}
         onBoxSelected={setBox}
         heatData={displayHeat}
         selectionBox={box}
@@ -208,6 +235,43 @@ export default function MapScreen(props: MapScreenProps) {
                   </span>
                   {" "}peak · {scenario.summary.affectedCells} cells · {scenario.placements.length} actions
                   ({budget} budget · {scenario.placements.map((p) => p.kind).filter((k, i, a) => a.indexOf(k) === i).join(" + ") || "none"}, capped).
+                </p>
+              )}
+            </div>
+          )}
+          <div className="flex flex-wrap gap-1">
+            {([
+              ["tree_cluster", "Drop tree"],
+              ["water_station", "Drop water"],
+              ["cool_roof", "Drop roof"],
+            ] as const).map(([kind, label]) => (
+              <button
+                key={kind}
+                type="button"
+                onClick={() => setDropTool((t) => (t === kind ? null : kind))}
+                className={`rounded-full px-2 py-0.5 text-[10px] font-bold shadow ${
+                  dropTool === kind ? "bg-teal-600 text-white" : "bg-slate-900/80 text-white/70"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+            {drops.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setDrops((d) => d.slice(0, -1))}
+                className="rounded-full bg-slate-900/80 px-2 py-0.5 text-[10px] font-bold text-white/80"
+              >
+                Undo drop
+              </button>
+            )}
+          </div>
+          {dropTool && (
+            <div className="rounded-xl bg-teal-950/90 px-3 py-2 text-[11px] text-teal-50 shadow-md">
+              Tap the map to place {PLACEMENT_META[dropTool].label}. Preview uses cellDropC (capped).
+              {lastDropPreview != null && drops.length > 0 && (
+                <p className="mt-1 font-semibold">
+                  Last pin: −{lastDropPreview.toFixed(2)}°C at site · {PLACEMENT_META[drops[drops.length - 1].kind].note}
                 </p>
               )}
             </div>

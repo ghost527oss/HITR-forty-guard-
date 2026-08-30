@@ -1,6 +1,6 @@
 # HITR product strategy & feature plan
 
-**Implementation status:** Batches 1–8 COMPLETE (2026-08-30). Batch 8: **14 Design for this spot**, **19 Equity lens**, **20 Breeze assist**. Wait before Batch 9.
+**Implementation status:** Batches 1–9 COMPLETE (2026-08-30). Batch 9: **22 Drop intervention**. All numbered plan items 1–25 are now COMPLETE. Wait before polish-only work.
 
 **Code stays frozen until you pick features.** This document is strategy + implementable ideas only.
 

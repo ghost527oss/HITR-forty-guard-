@@ -27,7 +27,8 @@ Home, map heat overlay, tap-to-spot, planner levels 0–4, Design Studio, Knowle
 **Batch 5:** Canopy gaps, cool-roof targets, analysis layer toggles.  
 **Batch 6:** FortyGuard job chip, block brief export, heat-adjusted hydration.  
 **Batch 7:** Budget pack, cited why, Plan A vs B.  
-**Batch 8:** Designs for this spot, equity lens, breeze assist.
+**Batch 8:** Designs for this spot, equity lens, breeze assist.  
+**Batch 9:** Drop intervention on the map.
 
 ## Feature roadmap (from PRODUCT_FEATURE_PLAN.md)
 
@@ -57,7 +58,8 @@ Home, map heat overlay, tap-to-spot, planner levels 0–4, Design Studio, Knowle
 | 14 | Design for this spot | COMPLETED |
 | 19 | Equity lens | COMPLETED |
 | 20 | Breeze assist | COMPLETED |
-| others | see PRODUCT_FEATURE_PLAN.md | NOT STARTED |
+| 22 | Drop intervention | COMPLETED |
+| others | PRODUCT_FEATURE_PLAN.md 1–25 | COMPLETED |
 
 ## Completed work — Batch 5
 
@@ -154,18 +156,18 @@ Never put keys in `frontend/` or `VITE_*`.
 ## Agent handoff
 
 ```
-CURRENT DEVELOPMENT BATCH: 8 COMPLETE
-FEATURES COMPLETED: batches 1–8 (see table)
+CURRENT DEVELOPMENT BATCH: 9 COMPLETE
+FEATURES COMPLETED: PRODUCT_FEATURE_PLAN.md items 1–25
 FEATURES CURRENTLY IN PROGRESS: none
-NEXT 3 FEATURES: Drop intervention (22) is the last numbered plan item; then polish only
-IMPORTANT FILES: spotDesigns.ts, exposureScore.ts, breezeHint.ts, BottomBar.tsx, MapScreen.tsx
+NEXT 3 FEATURES: none numbered remaining — polish only if asked
+IMPORTANT FILES: MapScreen.tsx, mapScenario.ts
 IMPORTANT ARCHITECTURAL DECISIONS:
-  - Designs scored from catalogue climate + land zone; no new API.
-  - Equity uses vegetation/hospitals from existing 3D twin; no census.
-  - Breeze is copy + compass; no fake pin offset.
+  - Drops reuse simulateDesign/cellDropC; no second Studio.
+  - Tool mode intercepts tap so spot analysis is not required to place.
 KNOWN PROBLEMS: live FortyGuard unverified; Open-Meteo needs network
-LAST VERIFIED STATE: tsc + vitest spotDesigns/exposure/breeze (2026-08-30)
+LAST VERIFIED STATE: tsc + mapScenario vitest including mergeManualDrops (2026-08-30)
 ```
+
 
 
 
