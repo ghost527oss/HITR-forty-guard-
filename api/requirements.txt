@@ -1,0 +1,10 @@
+# Python dependencies for the Vercel serverless function (api/index.py).
+# Placed here so @vercel/python finds them alongside the function file.
+# Keep in sync with the root requirements.txt and backend/requirements.txt.
+fastapi>=0.115
+pydantic>=2.7
+pydantic-settings>=2.3
+httpx>=0.27
+python-dotenv>=1.0
+supabase>=2.0
+mangum>=0.17
