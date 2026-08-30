@@ -272,6 +272,29 @@ export default function App() {
     }
   }, [picked, changeLevel]);
 
+  const handleFixHotspot = useCallback(async (lat: number, lng: number) => {
+    setPicked({ lat, lng });
+    setChangeLevel(1);
+    const id = ++planCounterRef.current;
+    setPlanLoading(true);
+    setStatus(null);
+    try {
+      const p = await getPlan(lat, lng, 1);
+      if (id === planCounterRef.current) {
+        setPlan(p);
+        setView("planner");
+      }
+    } catch (err: any) {
+      if (id === planCounterRef.current) {
+        setStatus(`Couldn't generate plan: ${err?.message ?? "network error"}`);
+      }
+    } finally {
+      if (id === planCounterRef.current) {
+        setPlanLoading(false);
+      }
+    }
+  }, []);
+
   const toggleUnits = useCallback(
     () => setUnits((u) => (u === "imperial" ? "metric" : "imperial")),
     []
@@ -397,6 +420,8 @@ export default function App() {
             lng={picked.lng}
             locationName={title}
             onBack={() => setView("map")}
+            onFixHotspot={handleFixHotspot}
+            fixBusy={planLoading}
           />
         )}
 

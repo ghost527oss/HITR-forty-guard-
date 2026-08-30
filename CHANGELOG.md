@@ -5,6 +5,11 @@ All notable changes to this project are documented here. Format inspired by
 
 ## [Unreleased]
 
+### Added — Batch 3 (walk-to-cool, fix-hotspot CTA, water-refuge pins)
+- Map: dashed teal path from picked pin to nearest cooler tile (mean − 1.5°F, skip <8 m) on the existing heat grid; BottomBar shows meters.
+- Heat Surface hotspot cards: “Fix this hotspot” runs Light (`change_level=1`) `getPlan` at cluster `center_lat/lng` (not stale `picked`), then opens Planner.
+- Map: blue water-station dots from `buildMapScenario` water placements (same `suggestPlacements` as After overlay).
+
 ### Added — Batch 2 (diurnal scrubber, PMV walk comfort, heatwave mode)
 - Heat Surface: hour chips 00/06/12/18 using existing `temporal.diurnal_sampling` (one fetch).
 - Optional `hour` query on `GET /api/analysis/surface` (default unchanged).

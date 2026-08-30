@@ -1,6 +1,6 @@
 # HITR product strategy & feature plan
 
-**Implementation status:** Batch 1 COMPLETE. Batch 2 COMPLETE (2026-08-30) — **6 Time scrubber**, **7 PMV walk comfort**, **8 Heatwave mode**. Wait before Batch 3.
+**Implementation status:** Batch 1 COMPLETE. Batch 2 COMPLETE. Batch 3 COMPLETE (2026-08-30) — **12 Walk-to-cool**, **23 Fix this hotspot**, **11 Water-refuge**. Wait before Batch 4.
 
 **Code stays frozen until you pick features.** This document is strategy + implementable ideas only.
 

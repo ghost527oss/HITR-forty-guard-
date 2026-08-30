@@ -29,6 +29,12 @@ export interface BoxBounds {
   north: number;
 }
 
+export interface MapOverlayPoint {
+  lat: number;
+  lng: number;
+  label?: string;
+}
+
 interface MapViewProps {
   center: { lat: number; lng: number };
   zoom: number;
@@ -37,9 +43,14 @@ interface MapViewProps {
   heatData: HeatCell[] | null;
   selectionBox?: BoxBounds | null;
   picked?: { lat: number; lng: number } | null;
+  coolPath?: { from: { lat: number; lng: number }; to: { lat: number; lng: number } } | null;
+  waterStations?: MapOverlayPoint[] | null;
 }
 
-export default function MapView({ center, zoom, onPick, onBoxSelected, heatData, selectionBox, picked }: MapViewProps) {
+export default function MapView({
+  center, zoom, onPick, onBoxSelected, heatData, selectionBox, picked,
+  coolPath = null, waterStations = null,
+}: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const drawingBoxRef = useRef(false);
@@ -147,6 +158,79 @@ export default function MapView({ center, zoom, onPick, onBoxSelected, heatData,
         .addTo(map);
     }
   }, [picked]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      if (coolPath) {
+        const line: GeoJSON.Feature = {
+          type: "Feature",
+          geometry: {
+            type: "LineString",
+            coordinates: [
+              [coolPath.from.lng, coolPath.from.lat],
+              [coolPath.to.lng, coolPath.to.lat],
+            ],
+          },
+          properties: {},
+        };
+        if (map.getSource("cool-path")) {
+          (map.getSource("cool-path") as maplibregl.GeoJSONSource).setData(line);
+        } else {
+          map.addSource("cool-path", { type: "geojson", data: line });
+          map.addLayer({
+            id: "cool-path-line",
+            type: "line",
+            source: "cool-path",
+            paint: { "line-color": "#0d9488", "line-width": 3, "line-dasharray": [2, 1] },
+          });
+        }
+      } else if (map.getSource("cool-path")) {
+        if (map.getLayer("cool-path-line")) map.removeLayer("cool-path-line");
+        map.removeSource("cool-path");
+      }
+    };
+    if (!map.isStyleLoaded()) {
+      map.once("load", apply);
+      return;
+    }
+    apply();
+  }, [coolPath]);
+
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      const features = (waterStations ?? []).map((w) => ({
+        type: "Feature" as const,
+        geometry: { type: "Point" as const, coordinates: [w.lng, w.lat] },
+        properties: { label: w.label ?? "water" },
+      }));
+      const fc: GeoJSON.FeatureCollection = { type: "FeatureCollection", features };
+      if (map.getSource("water-refuges")) {
+        (map.getSource("water-refuges") as maplibregl.GeoJSONSource).setData(fc);
+      } else {
+        map.addSource("water-refuges", { type: "geojson", data: fc });
+        map.addLayer({
+          id: "water-refuges-dots",
+          type: "circle",
+          source: "water-refuges",
+          paint: {
+            "circle-radius": 6,
+            "circle-color": "#0284c7",
+            "circle-stroke-width": 2,
+            "circle-stroke-color": "#ffffff",
+          },
+        });
+      }
+    };
+    if (!map.isStyleLoaded()) {
+      map.once("load", apply);
+      return;
+    }
+    apply();
+  }, [waterStations]);
 
   // Toggle 3D pitch/tilt mode (55 degree camera pitch tilt towards target)
   const toggle3DMode = () => {

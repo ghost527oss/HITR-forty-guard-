@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { HeatCell } from "../api";
-import { buildMapScenario, rankPriorityCells } from "./mapScenario";
+import { buildMapScenario, nearestCoolerTile, rankPriorityCells } from "./mapScenario";
 
 const cell = (lat: number, lng: number, f: number): HeatCell => ({
   lat,
@@ -21,6 +21,20 @@ describe("rankPriorityCells", () => {
       cell(4, 4, 95),
     ], 3);
     expect(ranked.map((c) => c.temp_f)).toEqual([110, 100, 95]);
+  });
+});
+
+describe("nearestCoolerTile", () => {
+  it("picks a cooler cell that is not the origin", () => {
+    const cells = [
+      cell(34.05, -118.24, 110),
+      cell(34.06, -118.24, 88),
+      cell(34.05, -118.25, 92),
+    ];
+    const n = nearestCoolerTile({ lat: 34.05, lng: -118.24 }, cells);
+    expect(n).not.toBeNull();
+    expect(n!.cell.temp_f).toBe(92);
+    expect(n!.meters).toBeGreaterThan(8);
   });
 });
 

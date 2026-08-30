@@ -8,7 +8,7 @@ import PlanSheet from "../components/PlanSheet";
 import type { Units } from "../App";
 import type { HeatReading, HeatCell, LandInfo, ChangeLevel, PatternAnalysis, WeatherNow } from "../api";
 import type { HeatwaveStatus } from "../planner/uhiFactors";
-import { buildMapScenario } from "../lib/mapScenario";
+import { buildMapScenario, nearestCoolerTile } from "../lib/mapScenario";
 
 interface Center {
   lat: number;
@@ -59,6 +59,16 @@ export default function MapScreen(props: MapScreenProps) {
     ? scenario.summary.cells
     : heatData;
 
+  const coolWalk = picked && heatData?.length
+    ? nearestCoolerTile(picked, heatData)
+    : null;
+  const coolPath = picked && coolWalk
+    ? { from: picked, to: { lat: coolWalk.cell.lat, lng: coolWalk.cell.lng } }
+    : null;
+  const waterStations = (scenario?.placements ?? [])
+    .filter((p) => p.kind === "water_station")
+    .map((p) => ({ lat: p.lat, lng: p.lng, label: p.reason }));
+
   const handlePlanConfirm = (level: ChangeLevel) => {
     setPlanSheetOpen(false);
     if (onGeneratePlan) onGeneratePlan(level);
@@ -85,6 +95,8 @@ export default function MapScreen(props: MapScreenProps) {
         heatData={displayHeat}
         selectionBox={box}
         picked={picked}
+        coolPath={coolPath}
+        waterStations={waterStations}
       />
       <TopBar title={title} onSearch={onSearch} units={units} onToggleUnits={onToggleUnits} />
 
@@ -155,6 +167,7 @@ export default function MapScreen(props: MapScreenProps) {
         heatSource={heatSource}
         pattern={pattern}
         weather={weather}
+        coolWalk={coolWalk}
       />
 
       {/* Two different things can be selected: the AREA you are looking at

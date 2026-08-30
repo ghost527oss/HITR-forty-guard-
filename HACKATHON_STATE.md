@@ -21,7 +21,8 @@ HITR (Heat Intelligence & Territorial Resilience) is a mobile-first web app: tap
 Home, map heat overlay, tap-to-spot, planner levels 0–4, Design Studio, Knowledge Set (100 designs), central assistant, emergency, heat surface, city simulation, settings (theme, palettes, mock toggle, units), mock fallback.
 
 **Batch 1:** Now/After scenario overlay, spot diagnosis card, priority list.  
-**Batch 2:** Heat-surface time chips, PMV walk comfort, heatwave mode (Open-Meteo + P2 rules).
+**Batch 2:** Heat-surface time chips, PMV walk comfort, heatwave mode (Open-Meteo + P2 rules).  
+**Batch 3:** Walk-to-cool path, Fix this hotspot CTA, water-refuge pins.
 
 ## Feature roadmap (from PRODUCT_FEATURE_PLAN.md)
 
@@ -33,9 +34,23 @@ Home, map heat overlay, tap-to-spot, planner levels 0–4, Design Studio, Knowle
 | 6 | Time scrubber | COMPLETED |
 | 7 | PMV walk comfort | COMPLETED |
 | 8 | Heatwave mode | COMPLETED |
-| 12 | Walk-to-cool | NOT STARTED |
-| 23 | Fix this hotspot CTA | NOT STARTED |
+| 12 | Walk-to-cool | COMPLETED |
+| 23 | Fix this hotspot CTA | COMPLETED |
+| 11 | Water-refuge pins | COMPLETED |
 | others | see PRODUCT_FEATURE_PLAN.md | NOT STARTED |
+
+## Completed work — Batch 3
+
+### Walk-to-cool
+- Files: `mapScenario.ts` `nearestCoolerTile`, `MapView.tsx` `cool-path`, `MapScreen.tsx`, `BottomBar.tsx`
+- Uses current overlay grid only; no extra surface fetch.
+
+### Fix this hotspot
+- Files: `HeatSurfaceScreen.tsx`, `App.tsx` `handleFixHotspot`
+- Light plan at hotspot coords via `getPlan(lat, lng, 1)` then Planner view.
+
+### Water-refuge
+- Files: `MapView.tsx` `water-refuges`, `MapScreen.tsx` from scenario `water_station` placements.
 
 ## Completed work — Batch 2
 
@@ -97,15 +112,15 @@ Never put keys in `frontend/` or `VITE_*`.
 ## Agent handoff
 
 ```
-CURRENT DEVELOPMENT BATCH: 2 COMPLETE
-FEATURES COMPLETED: overlay/diagnosis/priority; time scrubber; PMV; heatwave
+CURRENT DEVELOPMENT BATCH: 3 COMPLETE
+FEATURES COMPLETED: overlay/diagnosis/priority; time scrubber; PMV; heatwave; walk-to-cool; fix-hotspot; water-refuge
 FEATURES CURRENTLY IN PROGRESS: none
-NEXT 3 FEATURES: Walk-to-cool (12), Fix this hotspot CTA (23), Water-refuge (11)
-IMPORTANT FILES: HeatSurfaceScreen.tsx, BottomBar.tsx, PlanSheet.tsx, App.tsx, analysis.py
+NEXT 3 FEATURES: see PRODUCT_FEATURE_PLAN.md (do not start until asked)
+IMPORTANT FILES: mapScenario.ts, MapView.tsx, MapScreen.tsx, HeatSurfaceScreen.tsx, App.tsx, BottomBar.tsx
 IMPORTANT ARCHITECTURAL DECISIONS:
-  - Diurnal UI uses existing temporal samples (one surface fetch).
-  - PMV omitted if Open-Meteo fails.
-  - Heatwave recommends Light; does not auto-generate a plan.
+  - Cooler tile = mean−1.5°F, skip <8 m, existing heat grid only.
+  - Fix-hotspot calls getPlan(lat,lng,1) with cluster coords, not React picked.
+  - Water pins reuse suggestPlacements water_station from buildMapScenario.
 KNOWN PROBLEMS: live FortyGuard unverified; Open-Meteo needs network
-LAST VERIFIED STATE: tsc clean (2026-08-30)
+LAST VERIFIED STATE: tsc + mapScenario vitest (2026-08-30)
 ```

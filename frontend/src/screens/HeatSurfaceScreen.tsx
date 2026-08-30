@@ -9,11 +9,15 @@ export default function HeatSurfaceScreen({
   lng,
   locationName,
   onBack,
+  onFixHotspot,
+  fixBusy = false,
 }: {
   lat: number;
   lng: number;
   locationName: string;
   onBack: () => void;
+  onFixHotspot?: (lat: number, lng: number) => void;
+  fixBusy?: boolean;
 }) {
   const [data, setData] = useState<HeatSurfaceResult | null>(null);
   const [error, setError] = useState("");
@@ -107,6 +111,16 @@ export default function HeatSurfaceScreen({
                 <li key={i} className="rounded-xl bg-white p-3 text-xs ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-600">
                   <span className="font-bold">{z.label}</span> · {z.peak_temp_f}°F · {z.pattern}
                   <p className="mt-1 text-slate-500">{z.pattern_explanation}</p>
+                  {onFixHotspot && (
+                    <button
+                      type="button"
+                      disabled={fixBusy}
+                      onClick={() => onFixHotspot(z.center_lat, z.center_lng)}
+                      className="mt-2 rounded-full bg-orange-500 px-3 py-1 text-[11px] font-bold text-white disabled:opacity-50"
+                    >
+                      {fixBusy ? "Planning…" : "Fix this hotspot"}
+                    </button>
+                  )}
                 </li>
               ))}
             </ul>

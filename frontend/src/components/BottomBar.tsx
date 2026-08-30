@@ -13,10 +13,11 @@ interface BottomBarProps {
   heatSource?: "mock" | "fortyguard";
   pattern?: PatternAnalysis | null;
   weather?: WeatherNow | null;
+  coolWalk?: { cell: { lat: number; lng: number; temp_f: number }; meters: number } | null;
 }
 
 // Bottom bar showing the selected spot's live temperature + land use (structure first).
-export default function BottomBar({ picked, reading, land, loading, units, onViewSurface, heatSource = "mock", pattern = null, weather = null }: BottomBarProps) {
+export default function BottomBar({ picked, reading, land, loading, units, onViewSurface, heatSource = "mock", pattern = null, weather = null, coolWalk = null }: BottomBarProps) {
   const comfort = (() => {
     if (!reading || !weather) return null;
     const pmv = pmvFanger({
@@ -96,6 +97,11 @@ export default function BottomBar({ picked, reading, land, loading, units, onVie
             {" · "}
             {Math.round(comfort.ppd)}% dissatisfied · wind {weather?.wind_ms.toFixed(1)} m/s · RH {Math.round(weather?.rh ?? 0)}%
           </div>
+        )}
+        {picked && !loading && coolWalk && (
+          <p className="mt-1 text-[11px] text-teal-700 dark:text-teal-300">
+            Nearest cooler tile: {Math.round(coolWalk.meters)} m · {Math.round(coolWalk.cell.temp_f)}°F (teal path)
+          </p>
         )}
       </div>
     </footer>
