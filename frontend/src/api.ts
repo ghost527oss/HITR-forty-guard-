@@ -318,6 +318,17 @@ export interface KnowledgeStats {
   };
 }
 
+export interface EncyclopediaEntry {
+  slug: string;
+  title: string;
+  plain_language: string;
+  category?: string;
+}
+
+export function browseEncyclopedia(): Promise<{ category: string; entries: EncyclopediaEntry[] }> {
+  return get<{ category: string; entries: EncyclopediaEntry[] }>("/api/ai/browse");
+}
+
 export async function askAssistant(question: string): Promise<AssistantReply> {
   const res = await fetch("/api/ai/ask", {
     method: "POST",

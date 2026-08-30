@@ -25,7 +25,8 @@ Home, map heat overlay, tap-to-spot, planner levels 0–4, Design Studio, Knowle
 **Batch 3:** Walk-to-cool path, Fix this hotspot CTA, water-refuge pins.  
 **Batch 4:** Peak vs now, seasonal surface chips, Rebuild honesty banner.  
 **Batch 5:** Canopy gaps, cool-roof targets, analysis layer toggles.  
-**Batch 6:** FortyGuard job chip, block brief export, heat-adjusted hydration.
+**Batch 6:** FortyGuard job chip, block brief export, heat-adjusted hydration.  
+**Batch 7:** Budget pack, cited why, Plan A vs B.
 
 ## Feature roadmap (from PRODUCT_FEATURE_PLAN.md)
 
@@ -49,6 +50,9 @@ Home, map heat overlay, tap-to-spot, planner levels 0–4, Design Studio, Knowle
 | 17 | FortyGuard job chip | COMPLETED |
 | 18 | Block brief export | COMPLETED |
 | 24 | Heat-adjusted hydration | COMPLETED |
+| 4 | Budget pack | COMPLETED |
+| 13 | Cited why | COMPLETED |
+| 5 | Plan A vs B | COMPLETED |
 | others | see PRODUCT_FEATURE_PLAN.md | NOT STARTED |
 
 ## Completed work — Batch 5
@@ -146,17 +150,18 @@ Never put keys in `frontend/` or `VITE_*`.
 ## Agent handoff
 
 ```
-CURRENT DEVELOPMENT BATCH: 6 COMPLETE
-FEATURES COMPLETED: batches 1–6 (see table)
+CURRENT DEVELOPMENT BATCH: 7 COMPLETE
+FEATURES COMPLETED: batches 1–7 (see table)
 FEATURES CURRENTLY IN PROGRESS: none
-NEXT 3 FEATURES: Budget pack (4), Cited why (13), Plan A vs B (5)
-IMPORTANT FILES: realHeat.ts, App.tsx, MapScreen.tsx, PlannerScreen.tsx, HomeScreen.tsx, hydrationGoal.ts, blockBrief.ts
+NEXT 3 FEATURES: Design for this spot (14), Equity lens (19), Breeze assist (20)
+IMPORTANT FILES: mapScenario.ts, MapScreen.tsx, PlannerScreen.tsx, encyclopediaCite.ts, studioCompare.ts, DesignStudioScreen.tsx
 IMPORTANT ARCHITECTURAL DECISIONS:
-  - Job chip reports real status; mock underlay remains during processing.
-  - Brief is markdown copy, not a new backend.
-  - Hydration goal omitted extra ml if no forecast (stays 2500).
+  - Budget filters existing placements; does not invent extra cooling.
+  - Cite miss is shown honestly; no LLM fill-in.
+  - A/B is localStorage of Studio placements + DesignSummary numbers.
 KNOWN PROBLEMS: live FortyGuard unverified; Open-Meteo needs network
-LAST VERIFIED STATE: tsc + vitest hydration/brief/realHeat (2026-08-30)
+LAST VERIFIED STATE: tsc + vitest mapScenario/cite/studioCompare (2026-08-30)
 ```
+
 
 

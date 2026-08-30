@@ -5,6 +5,11 @@ All notable changes to this project are documented here. Format inspired by
 
 ## [Unreleased]
 
+### Added — Batch 7 (budget pack, cited why, Plan A vs B)
+- Map Low/Med/High budget packs the existing tree/water/roof suggestions and re-simulates After.
+- Planner Learn why: encyclopedia snippet by intervention key (miss is honest).
+- Design Studio Save A / Save B in localStorage; compare peak drop, cells, counts.
+
 ### Added — Batch 6 (FortyGuard job chip, block brief, heat-adjusted hydration)
 - Map chip: processing / ready / failed / unavailable / mock. Mock underlay stays while real job polls. Failures are not hidden.
 - Planner: Copy block brief (markdown: spot, temps, top 3 actions, scale). Clipboard, else download.

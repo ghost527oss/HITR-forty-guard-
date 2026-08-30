@@ -41,6 +41,15 @@ export function rankPriorityCells(cells: HeatCell[], n = 3): HeatCell[] {
   return [...cells].sort((a, b) => b.temp_f - a.temp_f || a.lat - b.lat).slice(0, n);
 }
 
+export type BudgetTier = "low" | "med" | "high";
+
+/** Cost buckets aligned with planner `_COST`: trees=low, water/roof=medium. */
+export function packPlacementsByBudget(placements: Placement[], tier: BudgetTier): Placement[] {
+  if (tier === "low") return placements.filter((p) => p.kind === "tree_cluster");
+  if (tier === "med") return placements.filter((p) => p.kind === "tree_cluster" || p.kind === "water_station");
+  return placements;
+}
+
 export function buildMapScenario(cells: HeatCell[], ctx: PlacementContext = EMPTY_CTX): MapScenario | null {
   if (!cells.length) return null;
   const trees = suggestPlacements(cells, ctx, "tree_cluster", { count: 5 });
@@ -55,5 +64,18 @@ export function buildMapScenario(cells: HeatCell[], ctx: PlacementContext = EMPT
     placements,
     summary,
     priority: rankPriorityCells(cells, 3),
+  };
+}
+
+export function scenarioAtBudget(
+  cells: HeatCell[],
+  full: MapScenario,
+  tier: BudgetTier,
+): MapScenario {
+  const placements = packPlacementsByBudget(full.placements, tier);
+  return {
+    placements,
+    summary: simulateDesign(cells, placements),
+    priority: full.priority,
   };
 }

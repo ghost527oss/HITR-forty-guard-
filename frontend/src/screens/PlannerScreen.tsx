@@ -1,13 +1,17 @@
+import { useEffect, useState } from "react";
 import { Eye, HardHat, Info, MapPin } from "lucide-react";
 import {
   CHANGE_LEVELS,
+  browseEncyclopedia,
   type ChangeLevel,
+  type EncyclopediaEntry,
   type HeatReading,
   type LandInfo,
   type PatternAnalysis,
   type Plan,
 } from "../api";
 import { formatBlockBrief } from "../lib/blockBrief";
+import { citeForKey } from "../lib/encyclopediaCite";
 
 interface PlannerScreenProps {
   changeLevel: ChangeLevel;
@@ -34,6 +38,23 @@ const COST_COLOR: Record<string, string> = {
 export default function PlannerScreen(props: PlannerScreenProps) {
   const { changeLevel, onSetChangeLevel, plan, loading, onGenerate, hasPicked, onGoMap, lightCompare = null, locationName = "Selected block", picked = null, reading = null, land = null, pattern = null } = props;
   const activeLevel = CHANGE_LEVELS.find((l) => l.value === changeLevel);
+  const [wiki, setWiki] = useState<EncyclopediaEntry[] | null>(null);
+  const [wikiErr, setWikiErr] = useState("");
+  const [openCite, setOpenCite] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    browseEncyclopedia()
+      .then((r) => {
+        if (!cancelled) setWiki(r.entries ?? []);
+      })
+      .catch((e) => {
+        if (!cancelled) setWikiErr(e?.message ?? "Encyclopedia unavailable");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <div className="flex h-full flex-col bg-slate-50/60 dark:bg-slate-900/90 pt-10 text-slate-800 dark:text-slate-100 overflow-y-auto pb-20">
@@ -234,6 +255,27 @@ export default function PlannerScreen(props: PlannerScreenProps) {
             </p>
             <p className="text-xs text-slate-700 dark:text-slate-300 font-medium">{it.impact}</p>
             <p className="text-[11px] text-slate-400 dark:text-slate-500 font-light">{it.why}</p>
+            <button
+              type="button"
+              onClick={() => setOpenCite(openCite === it.key ? null : it.key)}
+              className="text-[11px] font-bold text-sky-700 dark:text-sky-300"
+            >
+              {openCite === it.key ? "Hide citation" : "Learn why"}
+            </button>
+            {openCite === it.key && (
+              <p className="rounded-lg bg-slate-50 p-2 text-[11px] leading-relaxed text-slate-600 dark:bg-slate-900/60 dark:text-slate-300">
+                {wikiErr
+                  ? `Could not load encyclopedia: ${wikiErr}`
+                  : wiki == null
+                    ? "Loading grounded article…"
+                    : (() => {
+                        const c = citeForKey(it.key, wiki);
+                        return c
+                          ? `${c.title} — ${c.plain_language}`
+                          : "No encyclopedia article mapped to this action (knowledge miss, not invented).";
+                      })()}
+              </p>
+            )}
           </div>
         ))}
       </div>

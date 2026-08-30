@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { HeatCell } from "../api";
-import { buildMapScenario, nearestCoolerTile, rankPriorityCells } from "./mapScenario";
+import { buildMapScenario, nearestCoolerTile, packPlacementsByBudget, rankPriorityCells } from "./mapScenario";
 
 const cell = (lat: number, lng: number, f: number): HeatCell => ({
   lat,
@@ -74,5 +74,16 @@ describe("buildMapScenario", () => {
       buildings: cells.map((c) => ({ lat: c.lat, lng: c.lng, height_m: 18 })),
     });
     expect(withB!.placements.some((p) => p.kind === "cool_roof")).toBe(true);
+  });
+});
+
+describe("packPlacementsByBudget", () => {
+  it("keeps only trees on Low", () => {
+    const packed = packPlacementsByBudget([
+      { id: "1", kind: "tree_cluster", lat: 1, lng: 1 },
+      { id: "2", kind: "water_station", lat: 2, lng: 2 },
+      { id: "3", kind: "cool_roof", lat: 3, lng: 3 },
+    ], "low");
+    expect(packed.map((p) => p.kind)).toEqual(["tree_cluster"]);
   });
 });

@@ -9,7 +9,7 @@ import type { Units } from "../App";
 import type { HeatReading, HeatCell, LandInfo, ChangeLevel, PatternAnalysis, WeatherNow } from "../api";
 import { getCitySimulation3D } from "../api";
 import type { HeatwaveStatus, PlacementContext } from "../planner/uhiFactors";
-import { buildMapScenario, nearestCoolerTile } from "../lib/mapScenario";
+import { buildMapScenario, nearestCoolerTile, scenarioAtBudget, type BudgetTier } from "../lib/mapScenario";
 
 interface Center {
   lat: number;
@@ -55,6 +55,7 @@ export default function MapScreen(props: MapScreenProps) {
   const [planSheetOpen, setPlanSheetOpen] = useState(false);
   const [box, setBox] = useState<BoxBounds | null>(null);
   const [scenarioMode, setScenarioMode] = useState<"now" | "after">("now");
+  const [budget, setBudget] = useState<BudgetTier>("med");
   const [placeCtx, setPlaceCtx] = useState<PlacementContext>({ vegetation: [], buildings: [] });
   const [layers, setLayers] = useState({
     heat: true,
@@ -87,9 +88,13 @@ export default function MapScreen(props: MapScreenProps) {
     };
   }, [picked?.lat, picked?.lng]);
 
-  const scenario = useMemo(
+  const fullScenario = useMemo(
     () => (heatData && heatData.length ? buildMapScenario(heatData, placeCtx) : null),
     [heatData, placeCtx],
+  );
+  const scenario = useMemo(
+    () => (heatData && fullScenario ? scenarioAtBudget(heatData, fullScenario, budget) : null),
+    [heatData, fullScenario, budget],
   );
   const displayHeat = scenarioMode === "after" && scenario?.placements.length
     ? scenario.summary.cells
@@ -175,6 +180,18 @@ export default function MapScreen(props: MapScreenProps) {
               After plan
             </button>
           </div>
+          <div className="flex overflow-hidden rounded-full bg-slate-900/90 text-[10px] font-bold text-white shadow-lg ring-1 ring-white/15">
+            {(["low", "med", "high"] as const).map((tier) => (
+              <button
+                key={tier}
+                type="button"
+                onClick={() => { setBudget(tier); setScenarioMode("after"); }}
+                className={`px-3 py-1.5 ${budget === tier ? "bg-emerald-600 text-white" : "text-white/70"}`}
+              >
+                {tier === "low" ? "Low $" : tier === "med" ? "Med $" : "High $"}
+              </button>
+            ))}
+          </div>
           {scenarioMode === "after" && scenario && (
             <div className="rounded-xl bg-[var(--hitr-surface)] px-3 py-2 text-[11px] text-slate-700 shadow-md ring-1 ring-slate-200 dark:text-slate-200 dark:ring-slate-600">
               {scenario.placements.length === 0 ? (
@@ -185,7 +202,7 @@ export default function MapScreen(props: MapScreenProps) {
                     −{scenario.summary.maxDropC.toFixed(1)}°C
                   </span>
                   {" "}peak · {scenario.summary.affectedCells} cells · {scenario.placements.length} actions
-                  (trees + water{scenario.placements.some((p) => p.kind === "cool_roof") ? " + roofs" : ""}, capped).
+                  ({budget} budget · {scenario.placements.map((p) => p.kind).filter((k, i, a) => a.indexOf(k) === i).join(" + ") || "none"}, capped).
                 </p>
               )}
             </div>

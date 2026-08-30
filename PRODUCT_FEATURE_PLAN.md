@@ -1,6 +1,6 @@
 # HITR product strategy & feature plan
 
-**Implementation status:** Batches 1–6 COMPLETE (2026-08-30). Batch 6: **17 FortyGuard job chip**, **18 Block brief**, **24 Heat-adjusted hydration**. Wait before Batch 7.
+**Implementation status:** Batches 1–7 COMPLETE (2026-08-30). Batch 7: **4 Budget pack**, **13 Cited why**, **5 Plan A vs B**. Wait before Batch 8.
 
 **Code stays frozen until you pick features.** This document is strategy + implementable ideas only.
 
