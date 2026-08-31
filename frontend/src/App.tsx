@@ -56,7 +56,6 @@ async function geocode(q: string): Promise<Center | null> {
 
 export default function App() {
   const [showStartScreen, setShowStartScreen] = useState(() => {
-    // Show start screen once per session or initial load
     return !sessionStorage.getItem("hitr.start-screen-dismissed");
   });
   const [view, setView] = useState<View>("home");
@@ -70,7 +69,6 @@ export default function App() {
   const [weather, setWeather] = useState<WeatherNow | null>(null);
   const [loading, setLoading] = useState(false);
   const [heatData, setHeatData] = useState<HeatCell[] | null>(null);
-  // Which provider produced `heatData`. Drives the map's source badge.
   const [heatSource, setHeatSource] = useState<"mock" | "fortyguard">("mock");
   const [heatUnavailable, setHeatUnavailable] = useState<string | null>(null);
   const [heatJob, setHeatJob] = useState<HeatJobPhase | "mock">("mock");
@@ -82,27 +80,21 @@ export default function App() {
   const [lightCompare, setLightCompare] = useState<Plan | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
-  // Planner launch flow: popup → (optional) map pick → Design Studio.
   const [plannerModal, setPlannerModal] = useState(false);
   const [plannerPicking, setPlannerPicking] = useState(false);
   const [studioSpot, setStudioSpot] = useState<{ lat: number; lng: number } | null>(null);
   const [studioScope, setStudioScope] = useState<PlannerScope>("spot");
 
-  // Race-condition guards.
   const clickCounterRef = useRef(0);
   const planCounterRef = useRef(0);
 
-  // Bug #8 fix: Home screen should show a real temperature for the default city.
-  // Fetch on mount + whenever the city (center) changes via search.
   useEffect(() => {
     let cancelled = false;
     analyzeSpot(center.lat, center.lng)
       .then((r) => {
         if (!cancelled) setReading(r.heat);
       })
-      .catch(() => {
-        // Silent — Home falls back to "—" if backend is down.
-      });
+      .catch(() => {});
     return () => { cancelled = true; };
   }, [center.lat, center.lng]);
 
@@ -124,15 +116,15 @@ export default function App() {
     ? heatwaveStatus(weather.days.map((d) => ({ tMaxC: d.t_max_c, tMinC: d.t_min_c })))
     : null;
 
-  // Heat grid, two phases.
-  //
-  // 1. The mock paints instantly so the map is never empty. It costs nothing.
-  // 2. Real FortyGuard tiles replace it if (and only if) a key is configured.
-  //    That task takes seconds to minutes, so showing it late is strictly
-  //    better than blocking the whole screen on it.
-  //
-  // Phase 1 runs one provider call per cell (576 for 24x24); phase 2 is a
-  // single task for the entire area.
+  // FIXED: Never show absurd temps like 4000°F - filter aggressively
+  const isValidTempF = (t: number) => typeof t === "number" && !isNaN(t) && t >= 50 && t <= 130;
+  const filterValidCells = (pts: HeatCell[]) => {
+    const valid = pts.filter((c) => isValidTempF(c.temp_f));
+    if (valid.length > 0 && valid.length >= pts.length * 0.2) return valid;
+    if (valid.length >= 3) return valid;
+    return [];
+  };
+
   useEffect(() => {
     let cancelled = false;
     let realArrived = false;
@@ -144,12 +136,11 @@ export default function App() {
       loadHeatGrid(center.lat, center.lng)
         .then((pts) => {
           if (!cancelled && !realArrived && pts && pts.length > 0) {
-            setHeatData(pts);
+            const filtered = filterValidCells(pts);
+            if (filtered.length > 0) setHeatData(filtered);
           }
         })
-        .catch(() => {
-          /* mock paint is best-effort while real heat is in flight */
-        });
+        .catch(() => {});
     } else {
       setHeatData(null);
     }
@@ -161,25 +152,28 @@ export default function App() {
     })
       .then((pts) => {
         if (cancelled) return;
-        if (pts && pts.length > 0) {
+        const filtered = filterValidCells(pts);
+        if (filtered.length > 0) {
           realArrived = true;
           setHeatUnavailable(null);
-          setHeatData(pts);
+          setHeatData(filtered);
           setHeatSource("fortyguard");
           return;
         }
+        console.warn("Real heat data invalid (e.g., 4000°F), falling back to mock", pts.slice(0, 2));
         if (allowMockHeat) {
           loadHeatGrid(center.lat, center.lng).then((mockPts) => {
             if (!cancelled && mockPts && mockPts.length > 0) {
-              setHeatData(mockPts);
-              setHeatSource("mock");
+              const mf = filterValidCells(mockPts);
+              if (mf.length > 0) {
+                setHeatData(mf);
+                setHeatSource("mock");
+              }
             }
           });
         } else {
           setHeatData(null);
-          setHeatUnavailable(
-            "Real heat data returned no tiles. Mock fallback is turned off in Settings.",
-          );
+          setHeatUnavailable("Real heat data invalid. Mock fallback off in Settings.");
         }
       })
       .catch((err) => {
@@ -189,15 +183,18 @@ export default function App() {
         if (allowMockHeat) {
           loadHeatGrid(center.lat, center.lng).then((mockPts) => {
             if (!cancelled && mockPts && mockPts.length > 0) {
-              setHeatData(mockPts);
-              setHeatSource("mock");
+              const mf = filterValidCells(mockPts);
+              if (mf.length > 0) {
+                setHeatData(mf);
+                setHeatSource("mock");
+              }
             }
           });
         } else {
           setHeatData(null);
           setHeatUnavailable(
             err instanceof RealHeatUnavailable
-              ? "Real FortyGuard heat is unavailable (missing or invalid API key). Turn on Auto-fallback Mock Heat Grid in Settings to view sample tiles."
+              ? "Real FortyGuard heat unavailable (no key). Turn on mock fallback in Settings."
               : (err?.message ?? "FortyGuard job failed."),
           );
         }
@@ -209,7 +206,6 @@ export default function App() {
   }, [center, allowMockHeat]);
 
   const handlePick = useCallback(async (lat: number, lng: number) => {
-    // Planner setup: capture the tap and return to the launch popup.
     if (plannerPicking) {
       setPlannerPicking(false);
       setPlannerModal(true);
@@ -319,11 +315,6 @@ export default function App() {
     []
   );
 
-  // The heat alert banner (AlertBanner) is absolute-positioned over the top of
-  // every screen. When it is showing (≥90 °F) it used to cover each screen's
-  // own top bar — the Map search bar, the Design Studio back button + title.
-  // Push the whole content area down by the banner's height (40px) so screens
-  // start below it instead of underneath it.
   const heatAlertActive = (reading?.temp_f ?? 0) >= 90;
 
   const handleStartPlatform = useCallback(() => {
@@ -489,7 +480,6 @@ export default function App() {
         </Suspense>
       </main>
 
-      {/* Planner launch popup (Database → City Planner) */}
       <PlannerStartModal
         open={plannerModal}
         spot={picked}
@@ -512,7 +502,6 @@ export default function App() {
         }}
       />
 
-      {/* Floating pill: planner location-pick mode on the map */}
       {plannerPicking && view === "map" && (
         <div className="absolute inset-x-4 bottom-16 z-40 flex items-center justify-between gap-3 rounded-2xl bg-slate-900/95 px-4 py-3 shadow-2xl ring-1 ring-white/15">
           <p className="flex items-center text-xs font-medium text-white">
