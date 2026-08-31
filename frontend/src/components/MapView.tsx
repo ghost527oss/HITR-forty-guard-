@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import { Box, Trees } from "lucide-react";
 import type { HeatCell } from "../api";
 import { boundsAround, loadRealHeatGrid } from "../lib/realHeat";
 import { loadHeatGrid } from "../lib/heatGrid";
@@ -33,6 +32,7 @@ export interface MapOverlayPoint {
   lat: number;
   lng: number;
   label?: string;
+  kind?: "tree" | "water" | "roof" | "manual";
 }
 
 interface MapViewProps {
@@ -47,6 +47,7 @@ interface MapViewProps {
   waterStations?: MapOverlayPoint[] | null;
   canopyGaps?: MapOverlayPoint[] | null;
   roofTargets?: MapOverlayPoint[] | null;
+  manualDrops?: MapOverlayPoint[] | null;
   showHeat?: boolean;
   showWater?: boolean;
   showCoolPath?: boolean;
@@ -58,6 +59,7 @@ export default function MapView({
   center, zoom, onPick, onBoxSelected, heatData, selectionBox, picked,
   coolPath = null, waterStations = null,
   canopyGaps = null, roofTargets = null,
+  manualDrops = null,
   showHeat = true, showWater = true, showCoolPath = true, showCanopy = false, showRoofs = false,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -65,9 +67,6 @@ export default function MapView({
   const drawingBoxRef = useRef(false);
   const boxStartRef = useRef<{ lng: number; lat: number } | null>(null);
   const markerRef = useRef<maplibregl.Marker | null>(null);
-
-  const [is3D, setIs3D] = useState(false);
-  const [show3DTrees, setShow3DTrees] = useState(true);
 
   // Initialize map once
   useEffect(() => {
@@ -81,7 +80,7 @@ export default function MapView({
       bearing: 0,
     });
 
-    map.addControl(new maplibregl.NavigationControl({ showCompass: true, visualizePitch: true }), "top-right");
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false, visualizePitch: false }), "top-right");
 
     map.on("click", (e) => {
       if (!drawingBoxRef.current) onPick(e.lngLat.lat, e.lngLat.lng);
@@ -124,19 +123,19 @@ export default function MapView({
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
-    map.flyTo({ center: [center.lng, center.lat], zoom, duration: 1500 });
+    map.flyTo({ center: [center.lng, center.lat], zoom, duration: 1200 });
   }, [center.lat, center.lng, zoom]);
 
-  // Render heat overlay & 3D heat extrusions / trees
+  // Render heat overlay - CLEAN SQUARE GRID
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !heatData || !heatData.length) return;
     if (!map.isStyleLoaded()) {
-      map.once("load", () => renderHeatTiles(map, heatData, is3D, show3DTrees));
+      map.once("load", () => renderHeatTiles(map, heatData));
       return;
     }
-    renderHeatTiles(map, heatData, is3D, show3DTrees);
-  }, [heatData, is3D, show3DTrees]);
+    renderHeatTiles(map, heatData);
+  }, [heatData]);
 
   // Selection box filtering
   useEffect(() => {
@@ -160,8 +159,8 @@ export default function MapView({
     if (picked) {
       const el = document.createElement("div");
       el.style.cssText =
-        "width:20px;height:20px;border-radius:50%;background:#f97316;" +
-        "border:3px solid white;box-shadow:0 4px 10px rgba(0,0,0,0.5);cursor:pointer;";
+        "width:18px;height:18px;border-radius:50%;background:#f97316;" +
+        "border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.4);cursor:pointer;";
       markerRef.current = new maplibregl.Marker({ element: el })
         .setLngLat([picked.lng, picked.lat])
         .addTo(map);
@@ -217,7 +216,7 @@ export default function MapView({
       const features = (waterStations ?? []).map((w) => ({
         type: "Feature" as const,
         geometry: { type: "Point" as const, coordinates: [w.lng, w.lat] },
-        properties: { label: w.label ?? "water" },
+        properties: { label: w.label ?? "water", kind: w.kind ?? "water" },
       }));
       const fc: GeoJSON.FeatureCollection = { type: "FeatureCollection", features };
       if (map.getSource("water-refuges")) {
@@ -229,7 +228,7 @@ export default function MapView({
           type: "circle",
           source: "water-refuges",
           paint: {
-            "circle-radius": 6,
+            "circle-radius": 7,
             "circle-color": "#0284c7",
             "circle-stroke-width": 2,
             "circle-stroke-color": "#ffffff",
@@ -247,26 +246,26 @@ export default function MapView({
     apply();
   }, [waterStations, showWater]);
 
-
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
     const vis = (on: boolean) => (on ? "visible" : "none");
     const apply = () => {
-      for (const id of ["heat-tiles", "heat-tile-borders", "heat-3d-buildings", "tree-3d-canopy"]) {
+      for (const id of ["heat-tiles", "heat-tile-borders"]) {
         if (map.getLayer(id)) map.setLayoutProperty(id, "visibility", vis(showHeat));
       }
       if (map.getLayer("cool-path-line")) map.setLayoutProperty("cool-path-line", "visibility", vis(showCoolPath));
       if (map.getLayer("water-refuges-dots")) map.setLayoutProperty("water-refuges-dots", "visibility", vis(showWater));
       if (map.getLayer("canopy-gaps-dots")) map.setLayoutProperty("canopy-gaps-dots", "visibility", vis(showCanopy));
       if (map.getLayer("roof-targets-dots")) map.setLayoutProperty("roof-targets-dots", "visibility", vis(showRoofs));
+      if (map.getLayer("manual-drops-dots")) map.setLayoutProperty("manual-drops-dots", "visibility", "visible");
     };
     if (!map.isStyleLoaded()) {
       map.once("load", apply);
       return;
     }
     apply();
-  }, [showHeat, showCoolPath, showWater, showCanopy, showRoofs, heatData, coolPath, waterStations, canopyGaps, roofTargets]);
+  }, [showHeat, showCoolPath, showWater, showCanopy, showRoofs, heatData, coolPath, waterStations, canopyGaps, roofTargets, manualDrops]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -277,11 +276,12 @@ export default function MapView({
       pts: MapOverlayPoint[] | null,
       color: string,
       visible: boolean,
+      radius = 6,
     ) => {
       const features = (pts ?? []).map((w) => ({
         type: "Feature" as const,
         geometry: { type: "Point" as const, coordinates: [w.lng, w.lat] },
-        properties: { label: w.label ?? "" },
+        properties: { label: w.label ?? "", kind: w.kind ?? "" },
       }));
       const fc: GeoJSON.FeatureCollection = { type: "FeatureCollection", features };
       if (map.getSource(sourceId)) {
@@ -293,7 +293,7 @@ export default function MapView({
           type: "circle",
           source: sourceId,
           paint: {
-            "circle-radius": 6,
+            "circle-radius": radius,
             "circle-color": color,
             "circle-stroke-width": 2,
             "circle-stroke-color": "#ffffff",
@@ -305,74 +305,131 @@ export default function MapView({
       }
     };
     const apply = () => {
-      paintDots("canopy-gaps", "canopy-gaps-dots", canopyGaps, "#16a34a", showCanopy);
-      paintDots("roof-targets", "roof-targets-dots", roofTargets, "#a855f7", showRoofs);
+      paintDots("canopy-gaps", "canopy-gaps-dots", canopyGaps, "#16a34a", showCanopy, 6);
+      paintDots("roof-targets", "roof-targets-dots", roofTargets, "#a855f7", showRoofs, 6);
+      // Manual drops are ALWAYS visible with distinct styling
+      if (manualDrops && manualDrops.length > 0) {
+        const features = manualDrops.map((w) => ({
+          type: "Feature" as const,
+          geometry: { type: "Point" as const, coordinates: [w.lng, w.lat] },
+          properties: { label: w.label ?? "", kind: w.kind ?? "manual" },
+        }));
+        const fc: GeoJSON.FeatureCollection = { type: "FeatureCollection", features };
+        if (map.getSource("manual-drops")) {
+          (map.getSource("manual-drops") as maplibregl.GeoJSONSource).setData(fc);
+        } else {
+          map.addSource("manual-drops", { type: "geojson", data: fc });
+          map.addLayer({
+            id: "manual-drops-dots",
+            type: "circle",
+            source: "manual-drops",
+            paint: {
+              "circle-radius": [
+                "match",
+                ["get", "kind"],
+                "tree", 9,
+                "water", 9,
+                "roof", 9,
+                8,
+              ] as any,
+              "circle-color": [
+                "match",
+                ["get", "kind"],
+                "tree", "#16a34a",
+                "water", "#0284c7",
+                "roof", "#a855f7",
+                "#f59e0b",
+              ] as any,
+              "circle-stroke-width": 3,
+              "circle-stroke-color": "#ffffff",
+            },
+          });
+          // Pulse effect via second larger transparent circle
+          map.addLayer({
+            id: "manual-drops-pulse",
+            type: "circle",
+            source: "manual-drops",
+            paint: {
+              "circle-radius": 18,
+              "circle-color": [
+                "match",
+                ["get", "kind"],
+                "tree", "#16a34a",
+                "water", "#0284c7",
+                "roof", "#a855f7",
+                "#f59e0b",
+              ] as any,
+              "circle-opacity": 0.25,
+              "circle-stroke-width": 0,
+            },
+          });
+        }
+      } else if (map.getSource("manual-drops")) {
+        if (map.getLayer("manual-drops-pulse")) map.removeLayer("manual-drops-pulse");
+        if (map.getLayer("manual-drops-dots")) map.removeLayer("manual-drops-dots");
+        map.removeSource("manual-drops");
+      }
     };
     if (!map.isStyleLoaded()) {
       map.once("load", apply);
       return;
     }
     apply();
-  }, [canopyGaps, roofTargets, showCanopy, showRoofs]);
-
-  // Toggle 3D pitch/tilt mode (55 degree camera pitch tilt towards target)
-  const toggle3DMode = () => {
-    const map = mapRef.current;
-    if (!map) return;
-    const nextIs3D = !is3D;
-    setIs3D(nextIs3D);
-
-    if (nextIs3D) {
-      map.easeTo({ pitch: 55, bearing: 0, duration: 1000 });
-    } else {
-      map.easeTo({ pitch: 0, bearing: 0, duration: 1000 });
-    }
-  };
+  }, [canopyGaps, roofTargets, manualDrops, showCanopy, showRoofs]);
 
   return (
     <div className="relative h-full w-full">
       <div ref={containerRef} className="h-full w-full" />
-
-      {/* Floating 3D Perspective Controls */}
-      <div className="absolute bottom-6 right-4 z-10 flex flex-col gap-2">
-        <button
-          onClick={toggle3DMode}
-          className={`flex items-center gap-2 rounded-2xl px-3.5 py-2.5 text-xs font-bold shadow-lg backdrop-blur-md transition-all ${
-            is3D
-              ? "bg-orange-500 text-white ring-2 ring-orange-300 shadow-orange-500/30"
-              : "bg-white/90 text-slate-700 hover:bg-white dark:bg-slate-800/90 dark:text-slate-200 ring-1 ring-slate-200 dark:ring-slate-700"
-          }`}
-        >
-          <Box className="h-4 w-4" />
-          <span>{is3D ? "3D Buildings Active" : "3D Perspective"}</span>
-        </button>
-
-        {is3D && (
-          <button
-            onClick={() => setShow3DTrees(!show3DTrees)}
-            className={`flex items-center gap-2 rounded-2xl px-3.5 py-2 text-xs font-bold shadow-md backdrop-blur-md transition-all ${
-              show3DTrees
-                ? "bg-emerald-600 text-white ring-2 ring-emerald-300"
-                : "bg-white/90 text-slate-700 dark:bg-slate-800/90 dark:text-slate-200"
-            }`}
-          >
-            <Trees className="h-4 w-4" />
-            <span>3D Canopy Models</span>
-          </button>
-        )}
-      </div>
     </div>
   );
 }
 
-function renderHeatTiles(map: maplibregl.Map, cells: HeatCell[], is3D: boolean, show3DTrees: boolean) {
-  const spanDeg = estimateSpan(cells);
-  const halfLat = spanDeg.lat / 2;
-  const halfLng = spanDeg.lng / 2;
+// FIXED: Clean square grid, no 3D distortion, robust span calculation
+function renderHeatTiles(map: maplibregl.Map, cells: HeatCell[]) {
+  if (!cells.length) return;
 
-  const buildingFeatures = cells.map((c) => {
-    const baseTemp = c.temp_f ?? 80;
-    const height = Math.max(10, (baseTemp - 70) * 12);
+  // Filter out absurd temperatures that cause visual bugs (e.g., 4586°F)
+  const validCells = cells.filter((c) => {
+    const t = c.temp_f;
+    return typeof t === "number" && t >= 50 && t <= 130 && !isNaN(t);
+  });
+
+  const useCells = validCells.length > 0 ? validCells : cells;
+
+  // Calculate robust cell size from actual data bounds
+  const lats = useCells.map((c) => c.lat);
+  const lngs = useCells.map((c) => c.lng);
+  const minLat = Math.min(...lats);
+  const maxLat = Math.max(...lats);
+  const minLng = Math.min(...lngs);
+  const maxLng = Math.max(...lngs);
+
+  const latSpan = maxLat - minLat;
+  const lngSpan = maxLng - minLng;
+  const count = useCells.length;
+  const gridDim = Math.sqrt(count) || 1;
+
+  // Cell size = total span / grid dimension, with 85% factor to leave tiny gap
+  // Clamped to 0.0003 - 0.003 degrees (~30m - 300m) for clean squares
+  let cellLatSize = gridDim > 1 ? (latSpan / gridDim) * 0.88 : 0.001;
+  let cellLngSize = gridDim > 1 ? (lngSpan / gridDim) * 0.88 : 0.001;
+
+  // Fallback for sparse or single-point data
+  if (!isFinite(cellLatSize) || cellLatSize <= 0) cellLatSize = 0.001;
+  if (!isFinite(cellLngSize) || cellLngSize <= 0) cellLngSize = 0.001;
+
+  // Clamp to clean, professional size
+  cellLatSize = Math.max(0.00025, Math.min(0.0035, cellLatSize));
+  cellLngSize = Math.max(0.00025, Math.min(0.0035, cellLngSize));
+
+  const halfLat = cellLatSize / 2;
+  const halfLng = cellLngSize / 2;
+
+  const features = useCells.map((c) => {
+    // Clamp temp for color but preserve original temp_f in properties for debugging
+    const clampedTemp = Math.max(60, Math.min(130, c.temp_f ?? 80));
+    // Use original color if valid, else generate from clamped temp
+    const color = c.color || tempColorFallback(clampedTemp);
 
     return {
       type: "Feature" as const,
@@ -387,42 +444,14 @@ function renderHeatTiles(map: maplibregl.Map, cells: HeatCell[], is3D: boolean, 
         ]],
       },
       properties: {
-        color: c.color,
+        color,
         temp_f: c.temp_f,
         risk: c.risk,
-        lng: c.lng,
-        lat: c.lat,
-        height,
       },
     };
   });
 
-  const treeFeatures = cells
-    .filter((_, idx) => idx % 3 === 0)
-    .map((c) => {
-      const radius = halfLng * 0.4;
-      return {
-        type: "Feature" as const,
-        geometry: {
-          type: "Polygon" as const,
-          coordinates: [[
-            [c.lng - radius, c.lat - radius],
-            [c.lng + radius, c.lat - radius],
-            [c.lng + radius, c.lat + radius],
-            [c.lng - radius, c.lat + radius],
-            [c.lng - radius, c.lat - radius],
-          ]],
-        },
-        properties: {
-          height: 14,
-          base_height: 4,
-          color: "#10b981",
-        },
-      };
-    });
-
-  const geojson: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: buildingFeatures };
-  const treeGeojson: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: treeFeatures };
+  const geojson: GeoJSON.FeatureCollection = { type: "FeatureCollection", features };
 
   if (map.getSource("heat")) {
     (map.getSource("heat") as maplibregl.GeoJSONSource).setData(geojson);
@@ -433,53 +462,43 @@ function renderHeatTiles(map: maplibregl.Map, cells: HeatCell[], is3D: boolean, 
       id: "heat-tiles",
       type: "fill",
       source: "heat",
-      paint: { "fill-color": ["get", "color"], "fill-opacity": 0.55 },
+      paint: {
+        "fill-color": ["get", "color"],
+        "fill-opacity": 0.52,
+      },
     });
 
     map.addLayer({
       id: "heat-tile-borders",
       type: "line",
       source: "heat",
-      paint: { "line-color": ["get", "color"], "line-width": 0.5, "line-opacity": 0.7 },
-    });
-
-    map.addLayer({
-      id: "heat-3d-buildings",
-      type: "fill-extrusion",
-      source: "heat",
       paint: {
-        "fill-extrusion-color": ["get", "color"],
-        "fill-extrusion-height": ["get", "height"],
-        "fill-extrusion-base": 0,
-        "fill-extrusion-opacity": 0.75,
+        "line-color": ["get", "color"],
+        "line-width": 0.4,
+        "line-opacity": 0.18,
       },
     });
   }
 
-  if (map.getSource("3d-trees")) {
-    (map.getSource("3d-trees") as maplibregl.GeoJSONSource).setData(treeGeojson);
-  } else {
-    map.addSource("3d-trees", { type: "geojson", data: treeGeojson });
-    map.addLayer({
-      id: "tree-3d-canopy",
-      type: "fill-extrusion",
-      source: "3d-trees",
-      paint: {
-        "fill-extrusion-color": "#059669",
-        "fill-extrusion-height": ["get", "height"],
-        "fill-extrusion-base": ["get", "base_height"],
-        "fill-extrusion-opacity": 0.85,
-      },
-    });
+  // Clean up any old 3D layers that caused distorted cube/mesh artifacts
+  for (const layerId of ["heat-3d-buildings", "tree-3d-canopy", "3d-trees"]) {
+    if (map.getLayer(layerId)) {
+      try { map.removeLayer(layerId); } catch {}
+    }
   }
+  for (const sourceId of ["3d-trees"]) {
+    if (map.getSource(sourceId)) {
+      try { map.removeSource(sourceId); } catch {}
+    }
+  }
+}
 
-  if (map.getLayer("heat-3d-buildings")) {
-    map.setLayoutProperty("heat-3d-buildings", "visibility", is3D ? "visible" : "none");
-  }
-
-  if (map.getLayer("tree-3d-canopy")) {
-    map.setLayoutProperty("tree-3d-canopy", "visibility", is3D && show3DTrees ? "visible" : "none");
-  }
+function tempColorFallback(tempF: number): string {
+  if (tempF <= 70) return "#3b82f6";
+  if (tempF <= 80) return "#4caf50";
+  if (tempF <= 90) return "#ff9800";
+  if (tempF <= 100) return "#f44336";
+  return "#b71c1c";
 }
 
 function drawSelectionLayer(map: maplibregl.Map, a: { lng: number; lat: number }, b: { lng: number; lat: number }) {
@@ -561,9 +580,6 @@ function applyHeatFilter(map: maplibregl.Map, bounds: BoxBounds) {
   ] as any;
   map.setFilter("heat-tiles", filter);
   map.setFilter("heat-tile-borders", filter);
-  if (map.getLayer("heat-3d-buildings")) {
-    map.setFilter("heat-3d-buildings", filter);
-  }
 }
 
 function normalizeBounds(a: { lng: number; lat: number }, b: { lng: number; lat: number }): BoxBounds {
@@ -574,22 +590,3 @@ function normalizeBounds(a: { lng: number; lat: number }, b: { lng: number; lat:
     north: Math.max(a.lat, b.lat),
   };
 }
-
-function estimateSpan(cells: HeatCell[]): { lat: number; lng: number } {
-  if (cells.length < 2) return { lat: 0.001, lng: 0.001 };
-  const c0 = cells[0];
-  let cLat: HeatCell | null = null;
-  let cLng: HeatCell | null = null;
-  for (let k = 1; k < cells.length; k++) {
-    const c = cells[k];
-    if (!cLat && Math.abs(c.lat - c0.lat) > 1e-5) cLat = c;
-    if (!cLng && Math.abs(c.lng - c0.lng) > 1e-5) cLng = c;
-    if (cLat && cLng) break;
-  }
-  return {
-    lat: cLat ? Math.abs(cLat.lat - c0.lat) : 0.005,
-    lng: cLng ? Math.abs(cLng.lng - c0.lng) : 0.005,
-  };
-}
-
-

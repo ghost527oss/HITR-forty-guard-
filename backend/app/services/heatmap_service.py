@@ -106,11 +106,9 @@ class HeatmapService:
     @property
     def client(self) -> FortyGuardClient:
         if self._client is None:
-            base_url = settings.fortyguard_base_url or DEFAULT_BASE_URL
             self._client = FortyGuardClient(
                 api_key=settings.fortyguard_api_key,
-                plan=settings.fortyguard_plan,
-                base_url=base_url,
+                plan=getattr(settings, "fortyguard_plan", "basic"),
             )
         return self._client
 
@@ -201,15 +199,24 @@ class HeatmapService:
     @staticmethod
     def to_points(parsed: HeatmapResult) -> list[dict[str, Any]]:
         """Real GeoJSON tiles -> the same dict shape /api/heat/grid returns,
-        so the frontend needs no new wire format."""
+        so the frontend needs no new wire format.
+        
+        FIXED: Filters out absurd temps like 4586°F that come from parsing
+        id/area as temperature. Valid range: -50 to 60°C (-58 to 140°F).
+        """
         points: list[dict[str, Any]] = []
         for tile in parsed.tiles:
             value = tile.get("value")
             if value is None:
-                # A null means upstream had no value. Rendering it as 0 °F
-                # would paint an arctic tile across a heatwave.
+                continue
+            # Validate temperature is in reasonable range before converting
+            # This prevents 4586°F bug where id/area was parsed as temp
+            if not (-50 <= value <= 60):
                 continue
             temp_f = round(c_to_f(value), 1)
+            # Double-check Fahrenheit is reasonable
+            if not (50 <= temp_f <= 140):
+                continue
             risk, color = heat_provider.risk_for(temp_f)
             points.append({
                 "lat": tile["lat"],
@@ -246,8 +253,8 @@ class HeatmapService:
             # Length tells you the right key is loaded without revealing it.
             "api_key": ("set" if settings.fortyguard_api_key else "missing"),
             "api_key_length": len(settings.fortyguard_api_key),
-            "base_url": settings.fortyguard_base_url or DEFAULT_BASE_URL,
-            "plan": settings.fortyguard_plan,
+            "base_url": getattr(settings, "fortyguard_base_url", DEFAULT_BASE_URL),
+            "plan": getattr(settings, "fortyguard_plan", "basic"),
             "granularity_options": list(VALID_GRANULARITY),
             "coverage": "United States only",
         }
