@@ -549,21 +549,41 @@ def _clean_number(value: Any) -> float | None:
 def _extract_temperature_c(properties: dict) -> float | None:
     """Pull a tile's °C value out of a map_data feature.
 
-    ASSUMPTION A: the docs never show a sample feature's properties, so this
-    tries known candidates first, then falls back to the first numeric property.
-    Replace with the confirmed key once a real response has been inspected.
+    FIXED: Now validates temperature range to avoid picking id/area as temp.
+    Real temps are -50 to 60°C (-58 to 140°F). Values like 4586 are clearly not temps.
     """
     if not isinstance(properties, dict):
         return None
+
+    def is_reasonable_temp_c(v: float | None) -> bool:
+        if v is None:
+            return False
+        # Real world temps: -50°C to 60°C covers Death Valley to Arctic
+        # FortyGuard US data should be roughly -20 to 50°C
+        # Reject absurd values like 4586, 2538 which are ids/areas
+        return -50 <= v <= 60
+
+    # Try known temperature keys first, with range validation
     for key in _TEMPERATURE_KEYS:
         if key in properties:
             value = _clean_number(properties[key])
-            if value is not None:
+            if is_reasonable_temp_c(value):
                 return value
+
+    # Fallback: try all numeric properties but ONLY if in reasonable temp range
+    # This prevents picking "id": 4586 or "area": 2538 as temperature
     for value in properties.values():
         num = _clean_number(value)
-        if num is not None:
+        if is_reasonable_temp_c(num):
             return num
+
+    # Last resort: try known keys even if slightly out of range (but not absurd)
+    for key in _TEMPERATURE_KEYS:
+        if key in properties:
+            value = _clean_number(properties[key])
+            if value is not None and -100 <= value <= 100:
+                return value
+
     return None
 
 

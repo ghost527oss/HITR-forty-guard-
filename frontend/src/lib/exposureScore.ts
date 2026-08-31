@@ -8,6 +8,10 @@ export interface ExposureRank {
   hospitalM: number | null;
 }
 
+function isValidTemp(tempF: number): boolean {
+  return typeof tempF === "number" && !isNaN(tempF) && tempF >= 50 && tempF <= 130;
+}
+
 /** Heat percentile × canopy gap × inverse hospital access. No invented census. */
 export function rankExposureCells(
   cells: HeatCell[],
@@ -15,12 +19,15 @@ export function rankExposureCells(
   n = 3,
 ): ExposureRank[] {
   if (!cells.length) return [];
-  const temps = [...cells].map((c) => c.temp_f).sort((a, b) => a - b);
+  const valid = cells.filter((c) => isValidTemp(c.temp_f));
+  const useCells = valid.length >= n ? valid : cells;
+  if (!useCells.length) return [];
+  const temps = [...useCells].map((c) => c.temp_f).sort((a, b) => a - b);
   const pct = (t: number) => {
     const i = temps.findIndex((x) => x >= t);
     return temps.length <= 1 ? 1 : Math.max(0, i) / (temps.length - 1);
   };
-  const ranked = cells.map((cell) => {
+  const ranked = useCells.map((cell) => {
     const canopyGap =
       ctx.vegetation.length === 0
         ? true

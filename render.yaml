@@ -1,0 +1,17 @@
+# Render.com - SINGLE URL deploy (frontend + backend together)
+# Works with both Python and Docker env
+services:
+  - type: web
+    name: hitr-forty-guard
+    env: docker
+    region: singapore
+    plan: free
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.0
+      - key: FORTYGUARD_API_KEY
+        sync: false
+      - key: HEAT_PROVIDER
+        value: mock

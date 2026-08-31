@@ -18,16 +18,22 @@ export interface MapScenario {
 
 const EMPTY_CTX = { vegetation: [] as { lat: number; lng: number }[], buildings: [] as { lat: number; lng: number; height_m: number }[] };
 
+function isValidTemp(tempF: number): boolean {
+  return typeof tempF === "number" && !isNaN(tempF) && tempF >= 50 && tempF <= 130;
+}
+
 /** Cooler = at least 1.5°F below the grid mean; skip tiles closer than 8 m. */
 export function nearestCoolerTile(
   from: LatLng,
   cells: HeatCell[],
 ): { cell: HeatCell; meters: number } | null {
-  if (!cells.length) return null;
-  const mean = cells.reduce((s, c) => s + c.temp_f, 0) / cells.length;
+  const valid = cells.filter((c) => isValidTemp(c.temp_f));
+  const useCells = valid.length >= 3 ? valid : cells;
+  if (!useCells.length) return null;
+  const mean = useCells.reduce((s, c) => s + c.temp_f, 0) / useCells.length;
   const threshold = mean - 1.5;
   let best: { cell: HeatCell; meters: number } | null = null;
-  for (const cell of cells) {
+  for (const cell of useCells) {
     if (cell.temp_f > threshold) continue;
     const meters = metersBetween(from, cell);
     if (meters < 8) continue;
@@ -38,7 +44,9 @@ export function nearestCoolerTile(
 
 export function rankPriorityCells(cells: HeatCell[], n = 3): HeatCell[] {
   if (!cells.length) return [];
-  return [...cells].sort((a, b) => b.temp_f - a.temp_f || a.lat - b.lat).slice(0, n);
+  const valid = cells.filter((c) => isValidTemp(c.temp_f));
+  const useCells = valid.length >= n ? valid : cells;
+  return [...useCells].sort((a, b) => b.temp_f - a.temp_f || a.lat - b.lat).slice(0, n);
 }
 
 export type BudgetTier = "low" | "med" | "high";
@@ -51,19 +59,21 @@ export function packPlacementsByBudget(placements: Placement[], tier: BudgetTier
 }
 
 export function buildMapScenario(cells: HeatCell[], ctx: PlacementContext = EMPTY_CTX): MapScenario | null {
-  if (!cells.length) return null;
-  const trees = suggestPlacements(cells, ctx, "tree_cluster", { count: 5 });
-  const water = suggestPlacements(cells, ctx, "water_station", {
+  const valid = cells.filter((c) => isValidTemp(c.temp_f));
+  const useCells = valid.length >= 3 ? valid : cells;
+  if (!useCells.length) return null;
+  const trees = suggestPlacements(useCells, ctx, "tree_cluster", { count: 5 });
+  const water = suggestPlacements(useCells, ctx, "water_station", {
     count: 4,
     existing: trees,
   });
-  const roofs = suggestPlacements(cells, ctx, "cool_roof", { count: 4 });
+  const roofs = suggestPlacements(useCells, ctx, "cool_roof", { count: 4 });
   const placements = [...trees, ...water, ...roofs];
-  const summary = simulateDesign(cells, placements);
+  const summary = simulateDesign(useCells, placements);
   return {
     placements,
     summary,
-    priority: rankPriorityCells(cells, 3),
+    priority: rankPriorityCells(useCells, 3),
   };
 }
 
@@ -86,10 +96,12 @@ export function mergeManualDrops(
   auto: Placement[],
   drops: Placement[],
 ): MapScenario {
+  const valid = cells.filter((c) => isValidTemp(c.temp_f));
+  const useCells = valid.length >= 3 ? valid : cells;
   const placements = [...auto, ...drops];
   return {
     placements,
-    summary: simulateDesign(cells, placements),
-    priority: rankPriorityCells(cells, 3),
+    summary: simulateDesign(useCells, placements),
+    priority: rankPriorityCells(useCells, 3),
   };
 }

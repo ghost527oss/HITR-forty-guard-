@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Crosshair } from "lucide-react";
+import { Crosshair, Trees, Droplets, Home as HomeIcon } from "lucide-react";
 import MapView, { type BoxBounds } from "../components/MapView";
 import TopBar from "../components/TopBar";
 import BottomBar from "../components/BottomBar";
@@ -46,8 +46,16 @@ interface MapScreenProps {
   planLoading?: boolean;
 }
 
-// Full-screen live heat map with FAB menu, iPhone-style plan sheet,
-// and shift+drag box-selection (Google Lens style).
+// Helper: filter out absurd temps like 4586°F from broken FortyGuard parsing
+function isValidTemp(tempF: number): boolean {
+  return typeof tempF === "number" && !isNaN(tempF) && tempF >= 50 && tempF <= 130;
+}
+
+function safeTempDisplay(tempF: number): string {
+  if (!isValidTemp(tempF)) return "—";
+  return `${Math.round(tempF)}°F`;
+}
+
 export default function MapScreen(props: MapScreenProps) {
   const {
     center, zoom, title, onSearch, onPick, onClearPick, picked, reading,
@@ -68,6 +76,7 @@ export default function MapScreen(props: MapScreenProps) {
   });
   const [dropTool, setDropTool] = useState<PlacementKind | null>(null);
   const [drops, setDrops] = useState<Placement[]>([]);
+  const [lastDropFeedback, setLastDropFeedback] = useState<string | null>(null);
 
   useEffect(() => {
     if (!picked) {
@@ -92,24 +101,32 @@ export default function MapScreen(props: MapScreenProps) {
     };
   }, [picked?.lat, picked?.lng]);
 
+  // Filter heatData to valid temps only for scenario calculations
+  const validHeatData = useMemo(() => {
+    if (!heatData) return null;
+    const filtered = heatData.filter((c) => isValidTemp(c.temp_f));
+    // If filtering removes too many, fall back to original but clamped
+    return filtered.length >= 3 ? filtered : heatData;
+  }, [heatData]);
+
   const fullScenario = useMemo(
-    () => (heatData && heatData.length ? buildMapScenario(heatData, placeCtx) : null),
-    [heatData, placeCtx],
+    () => (validHeatData && validHeatData.length ? buildMapScenario(validHeatData, placeCtx) : null),
+    [validHeatData, placeCtx],
   );
   const scenario = useMemo(
-    () => (heatData && fullScenario ? scenarioAtBudget(heatData, fullScenario, budget) : null),
-    [heatData, fullScenario, budget],
+    () => (validHeatData && fullScenario ? scenarioAtBudget(validHeatData, fullScenario, budget) : null),
+    [validHeatData, fullScenario, budget],
   );
   const exposure = useMemo(
-    () => (heatData && heatData.length ? rankExposureCells(heatData, placeCtx, 3) : []),
-    [heatData, placeCtx],
+    () => (validHeatData && validHeatData.length ? rankExposureCells(validHeatData, placeCtx, 3) : []),
+    [validHeatData, placeCtx],
   );
   const merged = useMemo(() => {
-    if (!heatData?.length) return null;
+    if (!validHeatData?.length) return null;
     const auto = scenario?.placements ?? [];
     if (!auto.length && !drops.length) return null;
-    return mergeManualDrops(heatData, auto, drops);
-  }, [heatData, scenario, drops]);
+    return mergeManualDrops(validHeatData, auto, drops);
+  }, [validHeatData, scenario, drops]);
 
   const displayHeat = scenarioMode === "after" && merged?.placements.length
     ? merged.summary.cells
@@ -119,20 +136,40 @@ export default function MapScreen(props: MapScreenProps) {
     ? cellDropC(drops[drops.length - 1], merged?.placements ?? drops)
     : null;
 
+  // FIXED: Drop functionality now produces immediate visible change
   const handleMapTap = (lat: number, lng: number) => {
     if (dropTool) {
-      setDrops((prev) => [
-        ...prev,
-        { id: `drop-${Date.now()}-${prev.length}`, kind: dropTool, lat, lng },
-      ]);
+      const newDrop: Placement = {
+        id: `drop-${Date.now()}-${drops.length}`,
+        kind: dropTool,
+        lat,
+        lng,
+        reason: `Manual ${PLACEMENT_META[dropTool].label} placed by user`,
+      };
+      setDrops((prev) => [...prev, newDrop]);
       setScenarioMode("after");
+      
+      // Auto-enable relevant layer so user immediately sees the drop
+      if (dropTool === "tree_cluster") {
+        setLayers((l) => ({ ...l, canopy: true, heat: true }));
+      } else if (dropTool === "water_station") {
+        setLayers((l) => ({ ...l, water: true, heat: true }));
+      } else if (dropTool === "cool_roof") {
+        setLayers((l) => ({ ...l, roofs: true, heat: true }));
+      }
+
+      // Immediate feedback
+      const meta = PLACEMENT_META[dropTool];
+      setLastDropFeedback(`${meta.label} placed! Tap more or switch to After plan to see cooling.`);
+      setTimeout(() => setLastDropFeedback(null), 4000);
+      
       return;
     }
     onPick(lat, lng);
   };
 
-  const coolWalk = picked && heatData?.length
-    ? nearestCoolerTile(picked, heatData)
+  const coolWalk = picked && validHeatData?.length
+    ? nearestCoolerTile(picked, validHeatData)
     : null;
   const coolPath = picked && coolWalk
     ? { from: picked, to: { lat: coolWalk.cell.lat, lng: coolWalk.cell.lng } }
@@ -140,20 +177,27 @@ export default function MapScreen(props: MapScreenProps) {
   const livePlacements = merged?.placements ?? scenario?.placements ?? [];
   const waterStations = livePlacements
     .filter((p) => p.kind === "water_station")
-    .map((p) => ({ lat: p.lat, lng: p.lng, label: p.reason }));
+    .map((p) => ({ lat: p.lat, lng: p.lng, label: p.reason, kind: "water" as const }));
   const canopyGaps = livePlacements
     .filter((p) => p.kind === "tree_cluster")
-    .map((p) => ({ lat: p.lat, lng: p.lng, label: p.reason }));
+    .map((p) => ({ lat: p.lat, lng: p.lng, label: p.reason, kind: "tree" as const }));
   const roofTargets = livePlacements
     .filter((p) => p.kind === "cool_roof")
-    .map((p) => ({ lat: p.lat, lng: p.lng, label: p.reason }));
+    .map((p) => ({ lat: p.lat, lng: p.lng, label: p.reason, kind: "roof" as const }));
+  
+  // Manual drops are always visible with distinct styling
+  const manualDrops = drops.map((d) => ({
+    lat: d.lat,
+    lng: d.lng,
+    label: `${PLACEMENT_META[d.kind].label} (manual)`,
+    kind: d.kind === "tree_cluster" ? "tree" as const : d.kind === "water_station" ? "water" as const : "roof" as const,
+  }));
 
   const handlePlanConfirm = (level: ChangeLevel) => {
     setPlanSheetOpen(false);
     if (onGeneratePlan) onGeneratePlan(level);
   };
 
-  // Suppress unused vars warning for the prop names used by App wiring.
   void box; void setBox;
 
   return (
@@ -176,6 +220,14 @@ export default function MapScreen(props: MapScreenProps) {
         picked={picked}
         coolPath={coolPath}
         waterStations={waterStations}
+        canopyGaps={canopyGaps}
+        roofTargets={roofTargets}
+        manualDrops={manualDrops}
+        showHeat={layers.heat}
+        showWater={layers.water}
+        showCoolPath={layers.path}
+        showCanopy={layers.canopy}
+        showRoofs={layers.roofs}
       />
       <TopBar title={title} onSearch={onSearch} units={units} onToggleUnits={onToggleUnits} />
       <div className="pointer-events-none absolute right-3 top-16 z-20">
@@ -239,41 +291,62 @@ export default function MapScreen(props: MapScreenProps) {
               )}
             </div>
           )}
-          <div className="flex flex-wrap gap-1">
+          {/* FIXED DROP CONTROLS - Now produce immediate visible feedback */}
+          <div className="flex flex-wrap gap-1.5">
             {([
-              ["tree_cluster", "Drop tree"],
-              ["water_station", "Drop water"],
-              ["cool_roof", "Drop roof"],
-            ] as const).map(([kind, label]) => (
+              ["tree_cluster", "Drop tree", Trees],
+              ["water_station", "Drop water", Droplets],
+              ["cool_roof", "Drop roof", HomeIcon],
+            ] as const).map(([kind, label, Icon]) => (
               <button
                 key={kind}
                 type="button"
                 onClick={() => setDropTool((t) => (t === kind ? null : kind))}
-                className={`rounded-full px-2 py-0.5 text-[10px] font-bold shadow ${
-                  dropTool === kind ? "bg-teal-600 text-white" : "bg-slate-900/80 text-white/70"
+                className={`flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-bold shadow-md transition-all ${
+                  dropTool === kind 
+                    ? "bg-teal-600 text-white ring-2 ring-teal-300 scale-105" 
+                    : "bg-white text-slate-700 hover:bg-slate-50 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
                 }`}
               >
+                <Icon className="h-3.5 w-3.5" />
                 {label}
+                {dropTool === kind && <span className="ml-1 text-[9px]">● TAP MAP</span>}
               </button>
             ))}
             {drops.length > 0 && (
               <button
                 type="button"
-                onClick={() => setDrops((d) => d.slice(0, -1))}
-                className="rounded-full bg-slate-900/80 px-2 py-0.5 text-[10px] font-bold text-white/80"
+                onClick={() => {
+                  setDrops((d) => d.slice(0, -1));
+                  setLastDropFeedback("Last drop removed");
+                  setTimeout(() => setLastDropFeedback(null), 2000);
+                }}
+                className="rounded-full bg-slate-100 px-3 py-1.5 text-[11px] font-bold text-slate-600 ring-1 ring-slate-200 hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-300"
               >
-                Undo drop
+                Undo
               </button>
             )}
           </div>
           {dropTool && (
-            <div className="rounded-xl bg-teal-950/90 px-3 py-2 text-[11px] text-teal-50 shadow-md">
-              Tap the map to place {PLACEMENT_META[dropTool].label}. Preview uses cellDropC (capped).
+            <div className="rounded-xl bg-teal-600 px-3 py-2.5 text-[11px] text-white shadow-lg ring-1 ring-teal-500 animate-pulse">
+              <p className="font-bold">📍 Tap map to place {PLACEMENT_META[dropTool].label}</p>
+              <p className="mt-1 text-teal-100 text-[10px]">{PLACEMENT_META[dropTool].note}</p>
               {lastDropPreview != null && drops.length > 0 && (
-                <p className="mt-1 font-semibold">
-                  Last pin: −{lastDropPreview.toFixed(2)}°C at site · {PLACEMENT_META[drops[drops.length - 1].kind].note}
+                <p className="mt-2 font-bold bg-teal-700 rounded-lg px-2 py-1">
+                  ✓ Last: −{lastDropPreview.toFixed(2)}°C cooling · {drops.length} placed
                 </p>
               )}
+            </div>
+          )}
+          {lastDropFeedback && !dropTool && (
+            <div className="rounded-xl bg-emerald-600 px-3 py-2 text-[11px] font-bold text-white shadow-lg animate-in fade-in">
+              {lastDropFeedback}
+            </div>
+          )}
+          {drops.length > 0 && (
+            <div className="rounded-xl bg-white px-3 py-2 text-[11px] shadow-md ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-600 dark:text-slate-200">
+              <p className="font-bold">{drops.length} manual interventions</p>
+              <p className="text-[10px] text-slate-500">Switch to After plan to see total cooling effect</p>
             </div>
           )}
           <div className="flex flex-wrap gap-1">
@@ -288,8 +361,8 @@ export default function MapScreen(props: MapScreenProps) {
                 key={key}
                 type="button"
                 onClick={() => setLayers((l) => ({ ...l, [key]: !l[key] }))}
-                className={`rounded-full px-2 py-0.5 text-[10px] font-bold shadow ${
-                  layers[key] ? "bg-orange-500 text-white" : "bg-slate-900/80 text-white/70"
+                className={`rounded-full px-2.5 py-1 text-[10px] font-bold shadow-sm transition-colors ${
+                  layers[key] ? "bg-orange-500 text-white" : "bg-white/90 text-slate-600 ring-1 ring-slate-200 dark:bg-slate-800 dark:text-slate-300"
                 }`}
               >
                 {label}
@@ -303,7 +376,7 @@ export default function MapScreen(props: MapScreenProps) {
                 <button
                   type="button"
                   onClick={() => setScenarioMode("after")}
-                  className="mt-1 rounded-full bg-emerald-600 px-2.5 py-0.5 text-[10px] font-bold text-white"
+                  className="mt-1 rounded-full bg-emerald-600 px-2.5 py-1 text-[10px] font-bold text-white"
                 >
                   Plant suggested clusters
                 </button>
@@ -319,7 +392,7 @@ export default function MapScreen(props: MapScreenProps) {
                 <button
                   type="button"
                   onClick={() => setScenarioMode("after")}
-                  className="mt-1 block rounded-full bg-violet-600 px-2.5 py-0.5 text-[10px] font-bold text-white"
+                  className="mt-1 block rounded-full bg-violet-600 px-2.5 py-1 text-[10px] font-bold text-white"
                 >
                   Apply cool-roof set
                 </button>
@@ -327,20 +400,20 @@ export default function MapScreen(props: MapScreenProps) {
             </div>
           )}
           {scenario && scenario.priority.length > 0 && (
-            <div className="rounded-xl bg-[var(--hitr-surface)] px-2.5 py-2 shadow-md ring-1 ring-slate-200 dark:ring-slate-600">
+            <div className="rounded-xl bg-white px-2.5 py-2 shadow-md ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-600">
               <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-slate-400">Act here first</p>
               <ul className="space-y-1">
-                {scenario.priority.map((c, i) => (
+                {scenario.priority.filter((c) => isValidTemp(c.temp_f)).map((c, i) => (
                   <li key={`${c.lat}-${c.lng}`}>
                     <button
                       type="button"
                       onClick={() => onPick(c.lat, c.lng)}
-                      className="flex w-full items-center justify-between rounded-lg px-1.5 py-1 text-left text-[11px] hover:bg-slate-100 dark:hover:bg-slate-700"
+                      className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-[11px] hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                     >
-                      <span className="font-semibold text-slate-800 dark:text-slate-100">
-                        #{i + 1} {Math.round(c.temp_f)}°F
+                      <span className="font-bold text-slate-800 dark:text-slate-100">
+                        #{i + 1} {safeTempDisplay(c.temp_f)}
                       </span>
-                      <span className="text-slate-500">{c.risk}</span>
+                      <span className="text-slate-500 capitalize">{c.risk}</span>
                     </button>
                   </li>
                 ))}
@@ -348,22 +421,22 @@ export default function MapScreen(props: MapScreenProps) {
             </div>
           )}
           {exposure.length > 0 && (
-            <div className="rounded-xl bg-[var(--hitr-surface)] px-2.5 py-2 shadow-md ring-1 ring-slate-200 dark:ring-slate-600">
+            <div className="rounded-xl bg-white px-2.5 py-2 shadow-md ring-1 ring-slate-200 dark:bg-slate-800 dark:ring-slate-600">
               <p className="mb-1 text-[10px] font-bold uppercase tracking-wide text-slate-400">Priority people</p>
               <ul className="space-y-1">
-                {exposure.map((e, i) => (
+                {exposure.filter((e) => isValidTemp(e.cell.temp_f)).map((e, i) => (
                   <li key={`eq-${e.cell.lat}-${e.cell.lng}`}>
                     <button
                       type="button"
                       onClick={() => onPick(e.cell.lat, e.cell.lng)}
-                      className="flex w-full items-center justify-between rounded-lg px-1.5 py-1 text-left text-[11px] hover:bg-slate-100 dark:hover:bg-slate-700"
+                      className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-[11px] hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
                     >
-                      <span className="font-semibold text-slate-800 dark:text-slate-100">
-                        #{i + 1} {Math.round(e.cell.temp_f)}°F
+                      <span className="font-bold text-slate-800 dark:text-slate-100">
+                        #{i + 1} {safeTempDisplay(e.cell.temp_f)}
                       </span>
-                      <span className="text-slate-500">
+                      <span className="text-slate-500 text-[10px]">
                         {e.canopyGap ? "no canopy" : "has trees"}
-                        {e.hospitalM != null ? ` · ${Math.round(e.hospitalM)} m hospital` : ""}
+                        {e.hospitalM != null ? ` · ${Math.round(e.hospitalM)}m` : ""}
                       </span>
                     </button>
                   </li>
@@ -387,10 +460,6 @@ export default function MapScreen(props: MapScreenProps) {
         coolWalk={coolWalk}
       />
 
-      {/* Two different things can be selected: the AREA you are looking at
-          (set by search) and the SPOT you picked by tapping. Plans, heat
-          surface and simulation all act on the SPOT, so surfacing it here
-          answers "why won't my plan generate?" before it is asked. */}
       <div className="pointer-events-none absolute inset-x-0 top-3 z-20 flex justify-center px-4">
         {picked ? (
           <div className="pointer-events-auto flex items-center gap-2 rounded-full bg-slate-900/90 py-1.5 pl-3 pr-1.5 text-[10px] font-medium text-white shadow-lg ring-1 ring-white/15">
@@ -423,14 +492,8 @@ export default function MapScreen(props: MapScreenProps) {
         onDatabase={onDatabase || (() => {})}
       />
 
-      {heatwave && heatwave.level !== "none" && (
-        <div className="pointer-events-none absolute inset-x-3 bottom-36 z-20">
-          <div className="rounded-xl bg-rose-700/95 px-3 py-2 text-[11px] font-medium text-white shadow-lg">
-            {heatwave.level === "alert" ? "Heatwave" : "Heat watch"} — {heatwave.reason}
-            {heatwave.level === "alert" ? " Prioritize water + shade (Light plan)." : ""}
-          </div>
-        </div>
-      )}
+      {/* REMOVED: Heatwave banner that was marked R - was covering map at bottom-36 */}
+      {/* Heatwave info now shown via TopBar AlertBanner only for cleaner map */}
 
       <PlanSheet
         open={planSheetOpen}
